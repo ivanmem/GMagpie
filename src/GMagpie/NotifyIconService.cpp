@@ -116,20 +116,7 @@ LRESULT NotifyIconService::_NotifyIconWndProc(HWND hWnd, UINT message, WPARAM wP
 			hstring mainWindowText = resourceLoader.GetString(L"NotifyIcon_MainWindow");
 			AppendMenu(hMenu.get(), MF_STRING, 1, mainWindowText.c_str());
 
-			hstring fmtStr = resourceLoader.GetString(L"NotifyIcon_Timer_Fullscreen");
-			std::wstring timerText = fmt::format(
-				fmt::runtime(std::wstring_view(fmtStr)),
-				AppSettings::Get().CountdownSeconds()
-			);
-			AppendMenu(hMenu.get(), MF_STRING, 2, timerText.c_str());
-
-			fmtStr = resourceLoader.GetString(L"NotifyIcon_Timer_Windowed");
-			timerText = fmt::format(
-				fmt::runtime(std::wstring_view(fmtStr)),
-				AppSettings::Get().CountdownSeconds()
-			);
-			AppendMenu(hMenu.get(), MF_STRING, 3, timerText.c_str());
-
+			// Пункты таймера масштабирования (2, 3) галерее не нужны: в меню только главное окно и выход
 			hstring exitText = resourceLoader.GetString(L"NotifyIcon_Exit");
 			AppendMenu(hMenu.get(), MF_STRING, 4, exitText.c_str());
 
@@ -151,12 +138,6 @@ LRESULT NotifyIconService::_NotifyIconWndProc(HWND hWnd, UINT message, WPARAM wP
 			switch (selectedMenuId) {
 			case 1:
 				App::Get().ShowMainWindow();
-				break;
-			case 2:
-				ScalingService::Get().StartTimer(false);
-				break;
-			case 3:
-				ScalingService::Get().StartTimer(true);
 				break;
 			case 4:
 				App::Get().Quit();

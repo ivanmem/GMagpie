@@ -13,6 +13,7 @@
 		                        ChildrenTransitions="{StaticResource SettingsCardsAnimations}"
 		                        Spacing="{StaticResource SettingsGroupSpacing}">
 			<muxc:InfoBar x:Name="UpdateCard"
+			              Visibility="Collapsed"
 			              Title="{x:Bind ViewModel.UpdateCardTitle, Mode=OneWay}"
 			              x:Load="{x:Bind ViewModel.ShowUpdateCard, Mode=OneWay}"
 			              IsOpen="{x:Bind ViewModel.ShowUpdateCard, Mode=TwoWay}"
@@ -43,6 +44,7 @@
 			</muxc:InfoBar>
 			<muxc:InfoBar x:Name="RecentIssueCard"
 			              x:Uid="Home_RecentIssue"
+			              Visibility="Collapsed"
 			              x:Load="{x:Bind ViewModel.ShowRecentIssue, Mode=OneWay}"
 			              IsOpen="{x:Bind ViewModel.ShowRecentIssue, Mode=TwoWay}"
 			              IsClosable="True"
