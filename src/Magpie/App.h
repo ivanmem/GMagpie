@@ -47,6 +47,14 @@ public:
 		return *_mainWindow;
 	}
 
+	// Запуск с --gallery — «лёгкий» экземпляр: без глобальных горячих клавиш,
+	// проверки обновлений и следящего заforeground таймера, в собственной группе
+	// единственного экземпляра. Такой показ уживается с основным Magpie: не перехватывает
+	// чужие хоткеи, не масштабирует чужие окна и не вытесняет запущенный экземпляр.
+	bool IsGalleryLiteMode() const noexcept {
+		return _galleryLiteMode;
+	}
+
 	bool IsLightTheme() const noexcept {
 		return _isLightTheme.load(std::memory_order_relaxed);
 	}
@@ -72,6 +80,8 @@ private:
 	wil::unique_mutex_nothrow _hSingleInstanceMutex;
 	// 以管理员身份运行时持有此锁
 	wil::unique_mutex_nothrow _hElevatedMutex;
+	// Устанавливается до проверки единственного экземпляра по наличию --gallery
+	bool _galleryLiteMode = false;
 
 	Hosting::WindowsXamlManager _windowsXamlManager{ nullptr };
 

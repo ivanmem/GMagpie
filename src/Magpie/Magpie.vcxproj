@@ -197,6 +197,7 @@
     <ClInclude Include="IconHelper.h" />
     <ClInclude Include="JsonHelper.h" />
     <ClInclude Include="LocalizationService.h" />
+    <ClInclude Include="GalleryService.h" />
     <ClInclude Include="ScalingService.h" />
     <ClInclude Include="NewProfileViewModel.h">
       <DependentUpon>NewProfileViewModel.idl</DependentUpon>
@@ -398,6 +399,7 @@
     <ClCompile Include="IconHelper.cpp" />
     <ClCompile Include="JsonHelper.cpp" />
     <ClCompile Include="LocalizationService.cpp" />
+    <ClCompile Include="GalleryService.cpp" />
     <ClCompile Include="ScalingService.cpp" />
     <ClCompile Include="RtssProfileAccess.cpp" />
     <ClCompile Include="RtssService.cpp" />

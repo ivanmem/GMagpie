@@ -35,6 +35,14 @@ namespace Magpie {
 		void OpenScreenshotSaveDirectory();
 		void ChangeScreenshotSaveDirectory();
 
+		Double GalleryInterval;
+		void PickGalleryFolder();
+		void ResumeGallery();
+		void StopGallery();
+		Boolean HasGalleryResume { get; };
+		String GalleryResumeInfo { get; };
+		String GalleryProgressText { get; };
+
 		Boolean IsTouchSupportEnabled;
 		Windows.Foundation.Uri TouchSupportLearnMoreUrl { get; };
 		Boolean IsShowTouchSupportInfoBar { get; };

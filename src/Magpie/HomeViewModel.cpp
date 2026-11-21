@@ -15,6 +15,8 @@
 #include "App.h"
 #include "RootPage.h"
 #include "FileDialogHelper.h"
+#include "GalleryService.h"
+#include "ToastService.h"
 #include "Logger.h"
 #include "ErrorService.h"
 #include "ContentDialogHelper.h"
@@ -44,6 +46,10 @@ HomeViewModel::HomeViewModel() {
 		RaisePropertyChanged(L"RecentIssueSummary");
 		RaisePropertyChanged(L"RecentIssueSeverity");
 		RaisePropertyChanged(L"ShowIssueHistory");
+	});
+	// Прогресс показа у кнопки «Продолжить»: галерея сообщает о каждой странице с UI-потока
+	_galleryProgressRevoker = GalleryService::Get().ProgressChanged(auto_revoke, [this](size_t, size_t) {
+		RaisePropertyChanged(L"GalleryProgressText");
 	});
 	ScalingService& ScalingService = ScalingService::Get();
 
@@ -446,7 +452,7 @@ fire_and_forget HomeViewModel::ChangeScreenshotSaveDirectory() noexcept {
 
 	auto weakThis = get_weak();
 
-	// 在主线程使用 IFileOpenDialog 有些问题，尤其在 Win10 中
+	// IFileOpenDialog в главном потоке ведёт себя проблемно, особенно в Win10
 	co_await resume_background();
 
 	com_ptr<IFileOpenDialog> pickFolderDialog =
@@ -487,6 +493,142 @@ fire_and_forget HomeViewModel::ChangeScreenshotSaveDirectory() noexcept {
 		AppSettings::Get().ScreenshotsDir(*screenshotDir);
 		RaisePropertyChanged(L"ScreenshotSaveDirectory");
 	}
+}
+
+double HomeViewModel::GalleryInterval() const noexcept {
+	return _galleryInterval;
+}
+
+void HomeViewModel::GalleryInterval(double value) noexcept {
+	_galleryInterval = value;
+}
+
+// Выбор папки и (пере)запуск галереи: повторный выбор остановит текущую сессию
+fire_and_forget HomeViewModel::PickGalleryFolder() noexcept {
+	const ResourceLoader resourceLoader =
+		ResourceLoader::GetForCurrentView(CommonSharedConstants::APP_RESOURCE_MAP_ID);
+	const hstring titleStr = resourceLoader.GetString(L"Dialog_SelectGalleryFolder_Title");
+
+	auto weakThis = get_weak();
+
+	// IFileOpenDialog в главном потоке ведёт себя проблемно, особенно в Win10
+	co_await resume_background();
+
+	com_ptr<IFileOpenDialog> pickFolderDialog =
+		try_create_instance<IFileOpenDialog>(CLSID_FileOpenDialog);
+	if (!pickFolderDialog) {
+		Logger::Get().Error("Не удалось создать FileOpenDialog");
+		co_return;
+	}
+
+	pickFolderDialog->SetTitle(titleStr.c_str());
+
+	if (!_galleryFolder.empty()) {
+		com_ptr<IShellItem> shellItem;
+		if (SUCCEEDED(SHCreateItemFromParsingName(
+			_galleryFolder.c_str(), nullptr, IID_PPV_ARGS(&shellItem)))) {
+			pickFolderDialog->SetFolder(shellItem.get());
+		}
+	}
+
+	std::optional<std::filesystem::path> folder =
+		FileDialogHelper::OpenFileDialog(pickFolderDialog.get(), FOS_PICKFOLDERS);
+	if (!folder || folder->empty()) {
+		co_return;
+	}
+
+	co_await App::Get().Dispatcher();
+
+	if (!weakThis.get()) {
+		co_return;
+	}
+
+	GalleryService::Get().Stop();
+	if (!GalleryService::Get().Start(folder->native(), static_cast<uint32_t>(_galleryInterval), -1)) {
+		_NotifyGalleryStartFailure();
+		co_return;
+	}
+
+	_galleryFolder = folder->native();
+	_RaiseGalleryResumeChanged();
+}
+
+// Продолжить прошлый просмотр: та же папка и та же страница, что были при последней остановке
+void HomeViewModel::ResumeGallery() {
+	if (!HasGalleryResume()) {
+		const ResourceLoader resourceLoader =
+			ResourceLoader::GetForCurrentView(CommonSharedConstants::APP_RESOURCE_MAP_ID);
+		ToastService::Get().ShowMessageInApp(
+			resourceLoader.GetString(L"Home_Gallery_Header"),
+			resourceLoader.GetString(L"Home_Gallery_NotResumable"));
+		// папки больше нет — кнопка больше не нужна
+		_RaiseGalleryResumeChanged();
+		return;
+	}
+
+	if (GalleryService::Get().StartLast(static_cast<uint32_t>(_galleryInterval))) {
+		_galleryFolder = AppSettings::Get().GalleryLastFolder().native();
+	} else {
+		_NotifyGalleryStartFailure();
+	}
+	_RaiseGalleryResumeChanged();
+}
+
+void HomeViewModel::StopGallery() noexcept {
+	GalleryService::Get().Stop();
+	_RaiseGalleryResumeChanged();
+}
+
+bool HomeViewModel::HasGalleryResume() const noexcept {
+	const auto& folder = AppSettings::Get().GalleryLastFolder();
+	if (folder.empty()) {
+		return false;
+	}
+	std::error_code ec;
+	return std::filesystem::is_directory(folder, ec);
+}
+
+// Подпись кнопки: папка и страница. Полный путь, а не имя: альбомов может быть несколько
+hstring HomeViewModel::GalleryResumeInfo() const noexcept {
+	const auto& folder = AppSettings::Get().GalleryLastFolder();
+	if (folder.empty()) {
+		return {};
+	}
+	// номер страницы — как в строке состояния показа, с единицы
+	return hstring(fmt::format(L"{} — {}", folder.native(), AppSettings::Get().GalleryLastIndex() + 1));
+}
+
+// Прогресс идущего показа — те же «N / M», что в строке состояния показа; когда
+// показа нет, пустая строка (кнопка «Продолжить» остаётся с прошлой подписью в тултипе)
+hstring HomeViewModel::GalleryProgressText() const noexcept {
+	const size_t index = GalleryService::Get().ProgressIndex();
+	const size_t total = GalleryService::Get().ProgressTotal();
+	if (index == 0 || total == 0) {
+		return {};
+	}
+	return hstring(fmt::format(L"{} / {}", index, total));
+}
+
+void HomeViewModel::_RaiseGalleryResumeChanged() {
+	RaisePropertyChanged(L"HasGalleryResume");
+	RaisePropertyChanged(L"GalleryResumeInfo");
+}
+
+// Причины разные: «в папке нет картинок» и «ещё идёт масштабирование» требуют разных
+// действий. Прочие отказы показывает собственная отчётность приложения, дублировать
+// их тостом не нужно
+void HomeViewModel::_NotifyGalleryStartFailure() {
+	const auto reason = GalleryService::Get().LastStartFailure();
+	if (reason != GalleryStartFailure::NoImages && reason != GalleryStartFailure::SessionBusy) {
+		return;
+	}
+
+	const ResourceLoader resourceLoader =
+		ResourceLoader::GetForCurrentView(CommonSharedConstants::APP_RESOURCE_MAP_ID);
+	ToastService::Get().ShowMessageInApp(
+		resourceLoader.GetString(L"Home_Gallery_Header"),
+		resourceLoader.GetString(reason == GalleryStartFailure::NoImages
+			? L"Home_Gallery_NoImages" : L"Home_Gallery_Busy"));
 }
 
 bool HomeViewModel::IsTouchSupportEnabled() const noexcept {

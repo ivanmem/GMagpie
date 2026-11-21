@@ -19,6 +19,9 @@
     <ClCompile Include="ScalingService.cpp">
       <Filter>Services</Filter>
     </ClCompile>
+    <ClCompile Include="GalleryService.cpp">
+      <Filter>Services</Filter>
+    </ClCompile>
     <ClCompile Include="RtssProfileAccess.cpp">
       <Filter>Services</Filter>
     </ClCompile>
@@ -103,6 +106,9 @@
       <Filter>Helpers</Filter>
     </ClInclude>
     <ClInclude Include="ScalingService.h">
+      <Filter>Services</Filter>
+    </ClInclude>
+    <ClInclude Include="GalleryService.h">
       <Filter>Services</Filter>
     </ClInclude>
     <ClInclude Include="AdminStartupSettings.h" />

@@ -24,12 +24,15 @@
 #include "ControlSizeTrigger.h"
 #include "EffectsService.h"
 #include "ErrorService.h"
+#include "GalleryService.h"
 #include "IsEqualStateTrigger.h"
 #include "IsNullStateTrigger.h"
 #include "LocalizationService.h"
 #include "Logger.h"
 #include "MainWindow.h"
 #include "NotifyIconService.h"
+#include "ScalingMode.h"
+#include "ScalingModesService.h"
 #include "ScalingService.h"
 #include "SettingsCard.h"
 #include "SettingsExpander.h"
@@ -119,9 +122,85 @@ App::App() {
 	});
 }
 
+// Есть ли в командной строке --gallery <папка>: это «лёгкий» экземпляр только для
+// показа слайдшоу (см. App::IsGalleryLiteMode). Чистая функция: argc/argv приходят
+// параметрами, проверка — CPU-тестом без запуска приложения.
+static bool HasGalleryArgument(int argc, LPWSTR* argv) noexcept {
+	for (int i = 1; i < argc; ++i) {
+		if (const std::wstring_view arg(argv[i]); arg == L"--gallery" && i + 1 < argc) {
+			return true;
+		}
+	}
+	return false;
+}
+
+// Фотогалерея из командной строки: Magpie.exe --gallery <папка> [--interval сек] [--mode имя]
+static void _TryStartGalleryFromCommandLine() {
+	int argc = 0;
+	LPWSTR* argv = CommandLineToArgvW(GetCommandLineW(), &argc);
+	if (!argv) return;
+
+	std::wstring folder;
+	uint32_t interval = 0;
+	int modeIdx = -1;
+	bool hasGallery = false;
+	for (int i = 1; i < argc; ++i) {
+		const std::wstring_view arg(argv[i]);
+		if (arg == L"--gallery" && i + 1 < argc) {
+			folder = argv[++i];
+			hasGallery = true;
+		} else if (arg == L"--interval" && i + 1 < argc) {
+			const int value = _wtoi(argv[++i]);
+			interval = value > 0 ? static_cast<uint32_t>(value) : 0;
+		} else if (arg == L"--mode" && i + 1 < argc) {
+			const std::wstring_view name(argv[++i]);
+			auto& modes = ScalingModesService::Get();
+			for (uint32_t m = 0; m < modes.GetScalingModeCount(); ++m) {
+				const auto& modeName = modes.GetScalingMode(m).name;
+				if (CompareStringOrdinal(modeName.data(), -1, name.data(), -1, TRUE) == CSTR_EQUAL) {
+					modeIdx = static_cast<int>(m);
+					break;
+				}
+			}
+			if (modeIdx < 0) {
+				Logger::Get().Warn(fmt::format("Галерея: режим не найден ({}), будет использован профиль по умолчанию",
+					StrHelper::UTF16ToUTF8(name)));
+			}
+		}
+	}
+	if (!hasGallery) {
+		LocalFree(argv);
+		return;
+	}
+
+	if (!std::filesystem::is_directory(folder)) {
+		Logger::Get().Error(fmt::format("Галерея: папка не найдена ({})", StrHelper::UTF16ToUTF8(folder)));
+		LocalFree(argv);
+		return;
+	}
+
+	// Запуск после полного завершения Initialize через очередь диспетчера
+	App::Get().Dispatcher().TryEnqueue([folder = std::move(folder), interval, modeIdx]() mutable {
+		if (!GalleryService::Get().Start(std::move(folder), interval, modeIdx)) {
+			Logger::Get().Error("Галерея: запуск не удался, см. предыдущие записи лога");
+		}
+	});
+	LocalFree(argv);
+}
+
 bool App::Initialize(const wchar_t* arguments) {
 	// 提高时钟分辨率
 	IncreaseTimerResolution();
+
+	// «Лёгкий» режим known сразу: дальше зависит выбор группы единственного
+	// экземпляра, глобальных хоткеев, обновлений и показа главного окна
+	{
+		int argc = 0;
+		if (LPWSTR* argv = CommandLineToArgvW(GetCommandLineW(), &argc)) {
+			_galleryLiteMode = HasGalleryArgument(argc, argv);
+			LocalFree(argv);
+		}
+	}
 
 	InitMessages();
 
@@ -159,12 +238,15 @@ bool App::Initialize(const wchar_t* arguments) {
 		return false;
 	}
 
-	if (settings.IsAlwaysRunAsAdmin() && !Win32Helper::IsProcessElevated()) {
-		Restart(true, arguments);
-		_Uninitialize();
-		return false;
+	if (!_galleryLiteMode) {
+		// Показу elevation не нужен, автозапуск от администратора настраивает обычный экземпляр
+		if (settings.IsAlwaysRunAsAdmin() && !Win32Helper::IsProcessElevated()) {
+			Restart(true, arguments);
+			_Uninitialize();
+			return false;
+		}
+		settings.UpdateAdminAutoStart();
 	}
-	settings.UpdateAdminAutoStart();
 
 	// 延迟注册 DependencyProperty，见 FixThreadPoolCrash
 	SettingsCard::RegisterDependencyProperties();
@@ -182,14 +264,22 @@ bool App::Initialize(const wchar_t* arguments) {
 	LocalizationService::Get().Initialize();
 	ToastService::Get().Initialize();
 	ErrorService::Get().Initialize();
-	settings.PublishStartupNotice();
+	if (!_galleryLiteMode) {
+		settings.PublishStartupNotice();
+	}
 	if (!AdaptersService::Get().Initialize()) {
 		_Uninitialize();
 		return false;
 	}
-	ShortcutService::Get().Initialize();
+	// Лёгкий экземпляр галереи не регистрирует глобальные хоткеи (иначе его
+	// низкоуровневый крюк перехватывал бы чужие сочетания) и не проверяет обновления
+	if (!_galleryLiteMode) {
+		ShortcutService::Get().Initialize();
+	}
 	ScalingService::Get().Initialize();
-	UpdateService::Get().Initialize();
+	if (!_galleryLiteMode) {
+		UpdateService::Get().Initialize();
+	}
 	ThemeHelper::Initialize();
 
 	NotifyIconService& notifyIconService = NotifyIconService::Get();
@@ -200,9 +290,12 @@ bool App::Initialize(const wchar_t* arguments) {
 
 	const std::wstring_view argumentsView = arguments ? arguments : L"";
 	const bool startMinimized = argumentsView == START_MINIMIZED_ARGUMENT;
+	// Показ запускается «в трее»: окно галереи полноэкранное и само по себе,
+	// а главное окно не должно красть фокус у пользователя; откроется с иконки
+	const bool startInTray = _galleryLiteMode || argumentsView == START_IN_TRAY_ARGUMENT;
 
 	// 不显示托盘图标时忽略 -t 参数
-	if (!notifyIconService.IsShow() || argumentsView != START_IN_TRAY_ARGUMENT) {
+	if (!notifyIconService.IsShow() || !startInTray) {
 		if (!_mainWindow->Create(startMinimized)) {
 			_Uninitialize();
 			return false;
@@ -219,6 +312,8 @@ bool App::Initialize(const wchar_t* arguments) {
 	} else {
 		AdaptersService::Get().StartMonitor();
 	}
+
+	_TryStartGalleryFromCommandLine();
 
 	return true;
 }
@@ -356,6 +451,22 @@ void App::_Uninitialize() {
 
 bool App::_CheckSingleInstance() noexcept {
 	static constexpr const wchar_t* ELEVATED_MUTEX_NAME = L"{E494C456-F587-4DAF-B68F-366278D31C45}";
+
+	if (_galleryLiteMode) {
+		// Экземпляр слайдшоу — отдельная группа единственного экземпляра: он не
+		// конфликтует с обычным Magpie (тот остаётся со своими хоткеями и треем),
+		// не вытесняется им elevation-логикой и не шлёт чужим окнам SHOWME/QUIT.
+		// Повторный запуск показа блокируется — но только внутри своей группы.
+		const std::wstring galleryMutexName = std::wstring(CommonSharedConstants::SINGLE_INSTANCE_MUTEX_NAME) + L"-Gallery";
+		bool alreadyExists = false;
+		return _hSingleInstanceMutex.try_create(
+			galleryMutexName.c_str(),
+			CREATE_MUTEX_INITIAL_OWNER,
+			MUTEX_ALL_ACCESS,
+			nullptr,
+			&alreadyExists
+		) && !alreadyExists;
+	}
 
 	if (Win32Helper::IsProcessElevated()) {
 		bool alreadyExists = false;

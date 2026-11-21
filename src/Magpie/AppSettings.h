@@ -68,6 +68,10 @@ struct _AppSettingsData {
 	std::filesystem::path _screenshotsDir;
 	::Magpie::ScreenshotContent _screenshotContent = ::Magpie::ScreenshotContent::OutputOnly;
 
+	// Последнее состояние показа: папка альбома и страница в ней (с нуля). Пустая папка — продолжать некуда
+	std::filesystem::path _galleryLastFolder;
+	uint32_t _galleryLastIndex = 0;
+
 	OverlayOptions _overlayOptions;
 	
 	bool _isPortableMode = false;
@@ -390,6 +394,12 @@ public:
 	}
 
 	void ScreenshotsDir(const std::filesystem::path& value) noexcept;
+
+	// Позиция прошлого показа: кнопка «Продолжить» на главной странице возвращается по ней к той же странице того же альбома.
+	// Меняются всегда вместе, поэтому сеттер один и сохранение происходит один раз.
+	const std::filesystem::path& GalleryLastFolder() const noexcept { return _galleryLastFolder; }
+	uint32_t GalleryLastIndex() const noexcept { return _galleryLastIndex; }
+	void GalleryLastSession(std::wstring folder, uint32_t index) noexcept;
 
 	OverlayOptions& OverlayOptions() noexcept {
 		return _overlayOptions;

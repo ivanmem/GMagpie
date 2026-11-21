@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <root>
   <!-- 
     Microsoft ResX Schema 
@@ -1454,4 +1454,55 @@
     <value>Affected effect group: {}{}</value>
   </data>
   <data name="Overlay_EffectParameters_RestrictedBadge" xml:space="preserve"><value>Restricted</value></data>
+  <data name="Home_Gallery.Header" xml:space="preserve">
+    <value>Фотогалерея</value>
+  </data>
+  <data name="Home_Gallery_Play.Header" xml:space="preserve">
+    <value>Показывать фото из папки</value>
+  </data>
+  <data name="Home_Gallery_Play.Description" xml:space="preserve">
+    <value>Листание — стрелки или колесо мыши, пауза — Space, смена апскейлера — Num6, выход — Esc. Автолистание каждые N секунд; 0 — только вручную. Клавиши действуют, пока окно показа в фокусе. «Продолжить» вернёт к тому же фото последнего просмотра.</value>
+  </data>
+  <data name="Home_Gallery_Interval.Text" xml:space="preserve">
+    <value>Интервал, с</value>
+  </data>
+  <data name="Home_Gallery_Pick.Content" xml:space="preserve">
+    <value>Выбрать папку…</value>
+  </data>
+  <data name="Home_Gallery_Resume.Content" xml:space="preserve">
+    <value>Продолжить</value>
+  </data>
+  <data name="Home_Gallery_Stop.Content" xml:space="preserve">
+    <value>Остановить</value>
+  </data>
+  <data name="Home_Gallery_Header" xml:space="preserve">
+    <value>Фотогалерея</value>
+  </data>
+  <data name="Home_Gallery_NotResumable" xml:space="preserve">
+    <value>Продолжить нечего: папка последнего просмотра недоступна. Выберите папку заново.</value>
+  </data>
+  <data name="Gallery_PausedToast" xml:space="preserve">
+    <value>⏸  Пауза — Space продолжить</value>
+  </data>
+  <data name="Gallery_AutoPlayToast" xml:space="preserve">
+    <value>▶  Автопрокрутка</value>
+  </data>
+  <data name="Gallery_UpscalerToast" xml:space="preserve">
+    <value>Апскейлер: {0}</value>
+  </data>
+  <data name="Gallery_PickerHeader" xml:space="preserve">
+    <value>Апскейлер — ↑↓ выбрать · Esc/F11 закрыть</value>
+  </data>
+  <data name="Gallery_DeletedToast" xml:space="preserve">
+    <value>Файл удалён</value>
+  </data>
+  <data name="Home_Gallery_Busy" xml:space="preserve">
+    <value>Сейчас идёт масштабирование — показ фото нельзя начать. Дождитесь его окончания или остановите масштаб и попробуйте снова.</value>
+  </data>
+  <data name="Dialog_SelectGalleryFolder_Title" xml:space="preserve">
+    <value>Выберите папку с фото</value>
+  </data>
+  <data name="Home_Gallery_NoImages" xml:space="preserve">
+    <value>В выбранной папке нет поддерживаемых изображений.</value>
+  </data>
 </root>

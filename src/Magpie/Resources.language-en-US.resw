@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <root>
   <!--
     Microsoft ResX Schema
@@ -2852,4 +2852,55 @@
   <data name="EffectParam_DLSSNR_DLSSNR_AI_Filter_sparseUpdateInterval_Option_3" xml:space="preserve"><value>Every 3 Frames</value></data>
   <data name="EffectParam_DLSSNR_DLSSNR_AI_Filter_sparseUpdateInterval_Option_4" xml:space="preserve"><value>Every 4 Frames</value></data>
   <data name="EffectParam_DLSSNR_DLSSNR_AI_Filter_sparseUpdateInterval_Description" xml:space="preserve"><value>Alternating Frames updates full NR every 2, 3 or 4 new captures, defaulting to 2. Repeated refreshes, redraws and generated frames do not advance the interval. Longer intervals reduce inference work and use older corrections.</value></data>
+  <data name="Home_Gallery.Header" xml:space="preserve">
+    <value>Photo Gallery</value>
+  </data>
+  <data name="Home_Gallery_Play.Header" xml:space="preserve">
+    <value>Play photos from a folder</value>
+  </data>
+  <data name="Home_Gallery_Play.Description" xml:space="preserve">
+    <value>Browse with arrow keys or the mouse wheel, pause with Space, switch the upscaler with Num6, exit with Esc. Auto-advance every N seconds; 0 means manual only. Hotkeys work while the slideshow window is in focus. Continue returns to the same photo as the last time.</value>
+  </data>
+  <data name="Home_Gallery_Interval.Text" xml:space="preserve">
+    <value>Interval, s</value>
+  </data>
+  <data name="Home_Gallery_Pick.Content" xml:space="preserve">
+    <value>Choose folder…</value>
+  </data>
+  <data name="Home_Gallery_Resume.Content" xml:space="preserve">
+    <value>Continue</value>
+  </data>
+  <data name="Home_Gallery_Stop.Content" xml:space="preserve">
+    <value>Stop</value>
+  </data>
+  <data name="Home_Gallery_Header" xml:space="preserve">
+    <value>Photo Gallery</value>
+  </data>
+  <data name="Home_Gallery_NotResumable" xml:space="preserve">
+    <value>Nothing to continue: the folder of the last slideshow is not available. Choose the folder again.</value>
+  </data>
+  <data name="Gallery_PausedToast" xml:space="preserve">
+    <value>⏸  Paused — press Space to resume</value>
+  </data>
+  <data name="Gallery_AutoPlayToast" xml:space="preserve">
+    <value>▶  Auto-play</value>
+  </data>
+  <data name="Gallery_UpscalerToast" xml:space="preserve">
+    <value>Upscaler: {0}</value>
+  </data>
+  <data name="Gallery_PickerHeader" xml:space="preserve">
+    <value>Upscaler — ↑/↓ choose · Esc/F11 close</value>
+  </data>
+  <data name="Gallery_DeletedToast" xml:space="preserve">
+    <value>File deleted</value>
+  </data>
+  <data name="Home_Gallery_Busy" xml:space="preserve">
+    <value>Scaling is in progress, so the slideshow cannot start now. Wait for it to finish or stop scaling, then try again.</value>
+  </data>
+  <data name="Dialog_SelectGalleryFolder_Title" xml:space="preserve">
+    <value>Select a photo folder</value>
+  </data>
+  <data name="Home_Gallery_NoImages" xml:space="preserve">
+    <value>No supported images found in the selected folder.</value>
+  </data>
 </root>

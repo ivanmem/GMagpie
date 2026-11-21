@@ -2,6 +2,9 @@
 #include "Event.h"
 #include "ScalingRuntime.h"
 #include "EffectParameterPersistence.h"
+#include "FrameRefreshSettings.h"
+#include "ScalingOptions.h"
+#include <wil/resource.h>
 
 namespace Magpie {
 class ScalingRuntime;
@@ -56,6 +59,20 @@ public:
 		const std::string& parameter, float value);
 	void RetryConfigurationSave(std::function<void(bool)> completed);
 
+	// Показ фотографий: фото идёт в эффект-цепь в собственном разрешении и показывается полноэкранным, без захвата окна.
+	static constexpr wchar_t PHOTO_STAGE_CLASS_NAME[] = L"Magpie.PhotoStage";
+	bool StartPhotoSession(const std::wstring& firstFile, int scalingModeIdx);
+	void StopPhotoSession();
+	bool IsPhotoSession() const noexcept { return _photoSessionActive; }
+	// Перейти к указанной фотографии (плейлист ведёт GalleryService)
+	void RequestPhoto(std::wstring path);
+	// Намёк заранее декодировать следующую фотографию на фоне; неудача не влияет на показ
+	void RequestPhotoPrefetch(std::wstring path);
+	// Рабочая копия эффектов текущей сессии (с фото-переопределениями и заменой апскейлера)
+	std::vector<EffectOption> PhotoEffectsSnapshot() const;
+	// Перезапустить текущую фото-сессию на месте с новым списком эффектов (смена апскейлера по Num6)
+	bool RestartPhotoEffects(std::vector<EffectOption>&& effects);
+
 	Event<bool, bool> IsTimerOnChanged;
 	Event<double> TimerTick;
 	Event<bool> IsScalingChanged;
@@ -75,7 +92,14 @@ private:
 
 	void _StartScale(HWND hWnd, const Profile& profile, bool windowedMode, bool force);
 
-	ScalingError _StartScaleImpl(HWND hWnd, const Profile& profile, bool windowedMode, bool force);
+	ScalingError _StartScaleImpl(HWND hWnd, const Profile& profile, bool windowedMode, bool force,
+		const PhotoSessionOptions* photo = nullptr);
+
+	// Окно фото-сцены: прозрачная заглушка окна-источника, чтобы жизнь сессии шла через существующие оконные механизмы
+	HWND _EnsurePhotoStage() noexcept;
+	// Переставляет сцену на монитор текущего положения курсора: показ открывается
+	// там, где мышка
+	void _PlacePhotoStageAtCursor(HWND stage) noexcept;
 	void _SaveToolbarDock(std::weak_ptr<const uint8_t> profileIdentity,
 		bool windowed, ToolbarDock dock, uint32_t runId);
 	void _HandleEffectParametersRequest(
@@ -117,6 +141,13 @@ private:
 	std::vector<PendingEffectParametersSave> _pendingEffectParametersSaves;
 	std::vector<std::weak_ptr<EffectParametersSaveState>> _parameterSaveStates;
 	std::chrono::steady_clock::time_point _firstEffectParametersEdit{};
+
+	// Состояние фото-сессии
+	wil::unique_hwnd _photoStage;
+	bool _photoSessionActive = false;
+	FrameRefreshSettings _photoFrameRefresh;
+	// Рабочая копия эффектов текущей сессии (фото-переопределения и замены Num6), только UI-поток
+	std::vector<EffectOption> _photoWorkingEffects;
 };
 
 }

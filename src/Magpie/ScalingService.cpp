@@ -72,10 +72,15 @@ void ScalingService::Initialize() {
 	_countDownTimer.Interval(25ms);
 	_countDownTimer.Tick({ this, &ScalingService::_CountDownTimer_Tick });
 
-	_checkForegroundTimer = dispatcher.CreateTimer();
-	_checkForegroundTimer.Interval(50ms);
-	_checkForegroundTimer.Tick({ this, &ScalingService::_CheckForegroundTimer_Tick });
-	_checkForegroundTimer.Start();
+	// Лёгкий экземпляр галереи не следит за foreground: при двух запущенных Magpie
+	// второй не должен отбирать масштабирование чужих окон — фото-сессия запускается
+	// явно и масштабирует только собственное окно фото-сцены
+	if (!App::Get().IsGalleryLiteMode()) {
+		_checkForegroundTimer = dispatcher.CreateTimer();
+		_checkForegroundTimer.Interval(50ms);
+		_checkForegroundTimer.Tick({ this, &ScalingService::_CheckForegroundTimer_Tick });
+		_checkForegroundTimer.Start();
+	}
 
 	_shortcutActivatedRevoker = ShortcutService::Get().ShortcutActivated(
 		auto_revoke, std::bind_front(&ScalingService::_ShortcutService_ShortcutPressed, this));
@@ -105,7 +110,9 @@ void ScalingService::Initialize() {
 	});
 
 	// 立即检查前台窗口
-	_CheckForegroundTimer_Tick(nullptr, nullptr);
+	if (_checkForegroundTimer) {
+		_CheckForegroundTimer_Tick(nullptr, nullptr);
+	}
 }
 
 void ScalingService::Uninitialize() {
@@ -113,7 +120,9 @@ void ScalingService::Uninitialize() {
 		return;
 	}
 
-	_checkForegroundTimer.Stop();
+	if (_checkForegroundTimer) {
+		_checkForegroundTimer.Stop();
+	}
 	_countDownTimer.Stop();
 	RtssService::Get().End();
 	_frameSyncChangedRevoker.Revoke();
@@ -338,7 +347,18 @@ void ScalingService::_CheckForegroundTimer_Tick(winrt::DispatcherQueueTimer cons
 
 void ScalingService::_ScalingRuntime_StateChanged(ScalingState value) {
 	App::Get().Dispatcher().TryEnqueue([this, value]() {
-		if (!_scalingRuntime || _scalingRuntime->State() != value) return;
+		if (!_scalingRuntime) return;
+		if (_scalingRuntime->State() != value) {
+			// Idle фото-сессии, вытесненной форс-стартом игры (Scaling→Starting→Scaling без Idle) или обогнанной
+			// очередью, нельзя глотать: иначе флаг и окно-якорь залипают, хуки и _running галереи не снимаются.
+			// Остальное (RTSS, Smooth Motion, _hwndCurSrc) относится уже к новому запуску — его не трогаем.
+			if (value == ScalingState::Idle && _photoSessionActive) {
+				_photoStage.reset();
+				_photoSessionActive = false;
+				IsScalingChanged.Invoke(false);
+			}
+			return;
+		}
 		if (value == ScalingState::Idle || value == ScalingState::Stopping) RtssService::Get().End();
 		bool shouldRestartForSmoothMotion = false;
 
@@ -346,8 +366,20 @@ void ScalingService::_ScalingRuntime_StateChanged(ScalingState value) {
 			StopTimer();
 		} else if (value == ScalingState::Idle) {
 			_FlushEffectParametersSaves();
+			// Перезапуск из-за Smooth Motion нужен после настоящего масштабирования
+			// игр. Фотопоказ — не игра, а перезапуск после каждой сессии делает
+			// следующий запуск непредсказуемым: он успевает столкнуться с уже
+			// запускающимся экземпляром (или с ещё не завершившейся сессией).
 			shouldRestartForSmoothMotion = !_isAutoScaleSuspended && _hwndCurSrc &&
-				AppSettings::Get().IsSmoothMotionCompatibilityMode();
+				!_photoSessionActive && AppSettings::Get().IsSmoothMotionCompatibilityMode();
+			if (_photoSessionActive) {
+				// Фото-сцена нужна только живой сессии: это невидимое окно-якорь, и
+				// держать его до выхода процесса не за чем. Окно создано на этом же
+				// потоке, поэтому DestroyWindow здесь корректен; при следующем показе
+				// _EnsurePhotoStage создаст его заново.
+				_photoStage.reset();
+			}
+			_photoSessionActive = false;
 
 			// 缩放结束后源窗口位于前台则不要检查自动缩放，用户可能刚通过快捷键或
 			// 工具栏终止缩放。_CheckForegroundTimer_Tick 也实现了类似功能，但它
@@ -403,6 +435,193 @@ void ScalingService::_StartScale(HWND hWnd, const Profile& profile, bool windowe
 	}
 }
 
+// Фото-сцена: минимальное видимое окно с alpha=0, проходит все проверки SrcTracker (WS_VISIBLE,
+// пересечение с дисплеем, не WS_EX_TRANSPARENT, DWM-рамка доступна) — только как якорь жизни сессии и
+// выбора дисплея; всё изображение создают PhotoFrameSource и эффект-цепь.
+// Размещается на мониторе под курсором мыши — по этому якорю и открывается показ.
+HWND ScalingService::_EnsurePhotoStage() noexcept {
+	if (_photoStage && IsWindow(_photoStage.get())) {
+		// Сцена могла остаться с прошлой сессии: заякорим её заново по курсору — с какого
+		// экрана начнётся новый показ, решает то, где пользователь сейчас
+		_PlacePhotoStageAtCursor(_photoStage.get());
+		return _photoStage.get();
+	}
+	_photoStage.reset();
+
+	static std::once_flag s_classOnce;
+	std::call_once(s_classOnce, [] {
+		WNDCLASSEXW wc{ .cbSize = sizeof(wc) };
+		wc.lpfnWndProc = DefWindowProcW;
+		wc.hInstance = GetModuleHandle(nullptr);
+		wc.lpszClassName = PHOTO_STAGE_CLASS_NAME;
+		if (!RegisterClassExW(&wc) && GetLastError() != ERROR_CLASS_ALREADY_EXISTS) {
+			Logger::Get().Win32Error("Не удалось зарегистрировать класс окна фото-сцены");
+		}
+	});
+
+	HWND hwnd = CreateWindowExW(
+		WS_EX_TOOLWINDOW | WS_EX_LAYERED, PHOTO_STAGE_CLASS_NAME, L"",
+		WS_POPUP | WS_VISIBLE, 0, 0, 512, 288,
+		NULL, NULL, GetModuleHandle(nullptr), nullptr);
+	if (!hwnd) {
+		Logger::Get().Win32Error("Не удалось создать окно фото-сцены");
+		return NULL;
+	}
+	// Полностью прозрачно; стиль WS_VISIBLE оставляем — того требует проверка IsWindowVisible
+	SetLayeredWindowAttributes(hwnd, 0, 0, LWA_ALPHA);
+	_photoStage.reset(hwnd);
+	_PlacePhotoStageAtCursor(hwnd);
+	return hwnd;
+}
+
+// Позиция сцены: целый прямоугольник на мониторе курсора. SrcTracker требует
+// пересечения окна с дисплеем, а по пересечению с не тем монитором выбрался бы
+// не тот экран — поэтому центр прямоугольника ставим на курсор и клампим по
+// границам монитора. Чистая функция: есть что проверить на CPU без мониторов.
+static RECT PhotoStageRect(POINT cursor, const RECT& monitor, SIZE stage) noexcept {
+	RECT rc{};
+	rc.left = std::max(monitor.left, std::min(cursor.x - stage.cx / 2, monitor.right - stage.cx));
+	rc.top = std::max(monitor.top, std::min(cursor.y - stage.cy / 2, monitor.bottom - stage.cy));
+	rc.right = rc.left + stage.cx;
+	rc.bottom = rc.top + stage.cy;
+	return rc;
+}
+
+void ScalingService::_PlacePhotoStageAtCursor(HWND stage) noexcept {
+	POINT cursor{};
+	if (!GetCursorPos(&cursor)) {
+		return;
+	}
+	const HMONITOR monitorHandle = MonitorFromPoint(cursor, MONITOR_DEFAULTTONEAREST);
+	MONITORINFO mi{ .cbSize = sizeof(mi) };
+	if (!GetMonitorInfoW(monitorHandle, &mi)) {
+		return;
+	}
+	RECT current{};
+	if (!GetWindowRect(stage, &current)) {
+		return;
+	}
+	const SIZE size{ current.right - current.left, current.bottom - current.top };
+	const RECT pos = PhotoStageRect(cursor, mi.rcMonitor, size);
+	SetWindowPos(stage, nullptr, pos.left, pos.top, 0, 0,
+		SWP_NOSIZE | SWP_NOZORDER | SWP_NOACTIVATE);
+}
+
+// Эффекты этих семейств требуют нативного SDK, который выключается флагами сборки
+// (Common.Post.props). Для фото-сессии цепь с неподдерживаемым нативным эффектом
+// гибнет уже при инициализации рендерера — пользователь видит «показ открылся и тут
+// же закрылся». Проверяем это до запуска и называем причину явно.
+static bool EffectDisabledAtBuildTime(const std::wstring& name) noexcept {
+#ifdef MP_ENABLE_RTX_VIDEO_DENOISE
+	// в этой сборке RTX Video живой
+	(void)name;
+	return false;
+#else
+	return name.starts_with(L"RTXVideo\\");
+#endif
+}
+
+bool ScalingService::StartPhotoSession(const std::wstring& firstFile, int scalingModeIdx) {
+	if (!_scalingRuntime) return false;
+	if (_scalingRuntime->State() != ScalingState::Idle) {
+		Logger::Get().Error("Фото-сессия не запущена: уже идёт сессия масштабирования");
+		return false;
+	}
+	if (!std::filesystem::is_regular_file(firstFile)) {
+		Logger::Get().Error(fmt::format("Фото-сессия не запущена: начальный файл не найден ({})", StrHelper::UTF16ToUTF8(firstFile)));
+		return false;
+	}
+
+	// Выбор группы эффектов — как принято: явный индекс > режим профиля по умолчанию > первый доступный
+	Profile profile = AppSettings::Get().DefaultProfile();
+	const uint32_t modeCount = ScalingModesService::Get().GetScalingModeCount();
+	if (scalingModeIdx >= 0 && static_cast<uint32_t>(scalingModeIdx) < modeCount) {
+		profile.scalingMode = scalingModeIdx;
+	} else if (profile.scalingMode < 0 || static_cast<uint32_t>(profile.scalingMode) >= modeCount) {
+		if (modeCount == 0) {
+			Logger::Get().Error("Фото-сессия не запущена: нет доступного режима масштабирования");
+			return false;
+		}
+		profile.scalingMode = 0;
+	}
+
+	// Если выбранный режим в этой сборке нерабочий (нативный эффект выключен флагом),
+	// показ всё равно должен запускаться: берём первый режим без таких эффектов.
+	// Иначе пользователь с режимом «RTX Video VSR Ultra» по умолчанию получал бы
+	// «показ открылся и тут же закрылся» вообще без шанса что-то выбрать.
+	if (profile.scalingMode >= 0 && static_cast<uint32_t>(profile.scalingMode) < modeCount) {
+		const ScalingMode& mode = ScalingModesService::Get().GetScalingMode(profile.scalingMode);
+		if (std::ranges::any_of(mode.effects,
+			[](const EffectItem& effect) { return EffectDisabledAtBuildTime(effect.name); })) {
+			std::optional<uint32_t> fallback;
+			for (uint32_t i = 0; i < modeCount; ++i) {
+				const ScalingMode& candidate = ScalingModesService::Get().GetScalingMode(i);
+				if (!candidate.effects.empty() && !std::ranges::any_of(candidate.effects,
+					[](const EffectItem& effect) { return EffectDisabledAtBuildTime(effect.name); })) {
+					fallback = i;
+					break;
+				}
+			}
+			if (!fallback) {
+				Logger::Get().Error(fmt::format(
+					"Фото-сессия не запущена: режим «{}» использует RTX Video, а он в этой сборке выключен; рабочего режима нет",
+					StrHelper::UTF16ToUTF8(mode.name)));
+				ErrorService::Get().Report(ScalingError::ScalingModeUnknownEffect,
+					"RTX Video disabled at build time");
+				return false;
+			}
+			Logger::Get().Info(fmt::format(
+				"Режим «{}» использует RTX Video, выключенный в этой сборке — показ запущен в режиме «{}»",
+				StrHelper::UTF16ToUTF8(mode.name),
+				StrHelper::UTF16ToUTF8(ScalingModesService::Get().GetScalingMode(*fallback).name)));
+			profile.scalingMode = static_cast<int>(*fallback);
+		}
+	}
+
+	const HWND stage = _EnsurePhotoStage();
+	if (!stage) return false;
+
+	const PhotoSessionOptions photo{ .firstFile = firstFile };
+	const ScalingError error = _StartScaleImpl(stage, profile, false, true, &photo);
+	if (error != ScalingError::NoError) {
+		ErrorService::Get().Report(error, "photo session", stage, 0, MakeIssueContext(stage, profile));
+		return false;
+	}
+	_photoSessionActive = true;
+	Logger::Get().Info(fmt::format("Фото-сессия запущена: {} (режим #{})",
+		StrHelper::UTF16ToUTF8(firstFile), profile.scalingMode));
+	return true;
+}
+
+void ScalingService::StopPhotoSession() {
+	if (_scalingRuntime) _scalingRuntime->Stop();
+}
+
+void ScalingService::RequestPhoto(std::wstring path) {
+	if (!_photoSessionActive || !_scalingRuntime) return;
+	_scalingRuntime->RequestPhotoFile(std::move(path));
+}
+
+void ScalingService::RequestPhotoPrefetch(std::wstring path) {
+	if (!_photoSessionActive || !_scalingRuntime) return;
+	_scalingRuntime->RequestPhotoPrefetch(std::move(path));
+}
+
+std::vector<EffectOption> ScalingService::PhotoEffectsSnapshot() const {
+	return _photoWorkingEffects;
+}
+
+bool ScalingService::RestartPhotoEffects(std::vector<EffectOption>&& effects) {
+	if (!_photoSessionActive || !_scalingRuntime || !IsScaling() || effects.empty() || !_photoStage) {
+		return false;
+	}
+	const HWND hwndScaling = FindWindowW(CommonSharedConstants::SCALING_WINDOW_CLASS_NAME, nullptr);
+	if (!hwndScaling) return false;
+	_photoWorkingEffects = effects;
+	return _scalingRuntime->RestartWithEffectParameters(_photoStage.get(), hwndScaling,
+		_scalingRuntime->RunId(), std::move(effects), _photoFrameRefresh);
+}
+
 void ScalingService::_SaveToolbarDock(std::weak_ptr<const uint8_t> profileIdentity,
 	bool windowed, ToolbarDock dock, uint32_t runId) {
 	// Run and identity checks happen on the settings/UI thread. Never retain a
@@ -428,7 +647,8 @@ void ScalingService::_SaveToolbarDock(std::weak_ptr<const uint8_t> profileIdenti
 	settings.SaveAsync();
 }
 
-ScalingError ScalingService::_StartScaleImpl(HWND hWnd, const Profile& profile, bool windowedMode, bool force) {
+ScalingError ScalingService::_StartScaleImpl(HWND hWnd, const Profile& profile, bool windowedMode, bool force,
+	const PhotoSessionOptions* photo) {
 	// ScalingRuntime::Start 会检查是否正在缩放，这里提前检查以避免无效操作
 	if (!force && _scalingRuntime->State() == ScalingState::Scaling) {
 		return ScalingError::NoError;
@@ -484,7 +704,15 @@ ScalingError ScalingService::_StartScaleImpl(HWND hWnd, const Profile& profile, 
 
 	options.effects.reserve(effects.size());
 	for (const EffectItem& effectItem : effects) {
+		// В фотографии нет движения — интерполяция кадров бессмысленна, убираем из цепи сессии сразу
+		if (photo && ClassifyFrameGenerationEffect(effectItem.name) != FrameGenerationEffectKind::None) {
+			continue;
+		}
 		options.effects.push_back((EffectOption)effectItem);
+	}
+	if (photo && options.effects.empty()) {
+		Logger::Get().Error("Фото-сессия: режим масштабирования состоит только из интерполяции кадров");
+		return ScalingError::ScalingModeEmpty;
 	}
 
 	// 尝试启用触控支持
@@ -537,7 +765,7 @@ ScalingError ScalingService::_StartScaleImpl(HWND hWnd, const Profile& profile, 
 		break;
 	}
 
-	if (profile.isCroppingEnabled) {
+	if (!photo && profile.isCroppingEnabled) {
 		options.cropping = profile.cropping;
 	}
 
@@ -619,6 +847,32 @@ ScalingError ScalingService::_StartScaleImpl(HWND hWnd, const Profile& profile, 
 	}
 
 	options.overlayOptions = settings.OverlayOptions();
+
+	if (photo) {
+		// Фото-сессия: вход — декодированное PhotoFrameSource изображение, путь захвата окна целиком обойдён.
+		// Принудительно полноэкранный SDR-конвейер; поведения окна, не относящегося к фото (курсор, касания, кадровая синхронизация), выключены.
+		options.photoSession = *photo;
+		options.IsWindowedMode(false);
+		options.Is3DGameMode(false);
+		options.IsHdrCompatibilityEnabled(false);
+		options.hdrComponents = {};
+		options.legacyHdrCaptureIntent = std::nullopt;
+		options.captureMethod = CaptureMethod::GDI;  // заглушка, PhotoFrameSource короткозамыкает до выбора источника
+		options.duplicateFrameDetectionMode = DuplicateFrameDetectionMode::Never;
+		options.IsStatisticsForDynamicDetectionEnabled(false);
+		options.IsTouchSupportEnabled(false);
+		options.IsAdjustCursorSpeed(false);
+		options.cursorScaling = 1.0f;
+		options.isFrontEdgeSyncEnabled = false;
+		// letterbox требует центрирования кадра на экране
+		options.destAlignment = DestAlignment::Center;
+
+		// Единственное допустимое масштабирование делает эффект-цепь: первый эффект отвечает за то, чтобы исходник заполнил экран
+		if (options.effects[0].scalingType == ScalingType::Normal) {
+			options.effects[0].scalingType = ScalingType::Fit;
+			options.effects[0].scale = { 1.f, 1.f };
+		}
+	}
 
 	options.showToast = [](HWND hwndTarget, std::wstring_view msg) noexcept {
 		ToastService::Get().ShowMessageOnWindow({}, msg, hwndTarget);
@@ -706,15 +960,23 @@ ScalingError ScalingService::_StartScaleImpl(HWND hWnd, const Profile& profile, 
 		}
 	};
 
-	const auto rtssSession = RtssService::Get().Begin(hWnd, profile.runtimeIdentity,
-		EffectiveRtssSettings(profile.rtss, options.isSimpleFrameRefresh));
+	uint64_t rtssSession = 0;
+	if (!photo) {
+		rtssSession = RtssService::Get().Begin(hWnd, profile.runtimeIdentity,
+			EffectiveRtssSettings(profile.rtss, options.isSimpleFrameRefresh));
+	}
 	options.contentTargetChanged = [rtssSession](HWND source, bool fixed, double baseRate, bool constrained) {
 		App::Get().Dispatcher().TryEnqueue([rtssSession, source, fixed, baseRate, constrained] {
 			RtssService::Get().ContentTargetChanged(rtssSession, source, fixed, baseRate, constrained);
 		});
 	};
+	if (photo) {
+		// Эти два снимка нужны перезапуску с параметрами исходной сессии при смене эффекта по Num6
+		_photoFrameRefresh = profile.frameRefresh;
+		_photoWorkingEffects = options.effects;
+	}
 	if (!_scalingRuntime->Start(hWnd, std::move(options), force)) {
-		RtssService::Get().End();
+		if (!photo) RtssService::Get().End();
 		return ScalingError::ScalingFailedGeneral;
 	}
 

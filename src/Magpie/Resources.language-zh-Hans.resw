@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <root>
   <!--
     Microsoft ResX Schema
@@ -2852,4 +2852,55 @@
   <data name="EffectParam_DLSSNR_DLSSNR_AI_Filter_sparseUpdateInterval_Option_3" xml:space="preserve"><value>每 3 帧</value></data>
   <data name="EffectParam_DLSSNR_DLSSNR_AI_Filter_sparseUpdateInterval_Option_4" xml:space="preserve"><value>每 4 帧</value></data>
   <data name="EffectParam_DLSSNR_DLSSNR_AI_Filter_sparseUpdateInterval_Description" xml:space="preserve"><value>隔帧每 2、3 或 4 个新捕获帧更新一次完整 NR，默认每 2 帧。重复刷新、重绘和生成帧不计数。间隔越长，推理工作越少，历史修正也越旧。</value></data>
+  <data name="Home_Gallery.Header" xml:space="preserve">
+    <value>照片幻灯片</value>
+  </data>
+  <data name="Home_Gallery_Play.Header" xml:space="preserve">
+    <value>播放文件夹中的照片</value>
+  </data>
+  <data name="Home_Gallery_Play.Description" xml:space="preserve">
+    <value>方向键或鼠标滚轮翻页，Space 暂停，Num6 切换放大器，Esc 退出。每 N 秒自动翻页，0 表示仅手动。快捷键仅在放映窗口处于前台时生效。「继续」可回到上次观看的那张照片。</value>
+  </data>
+  <data name="Home_Gallery_Interval.Text" xml:space="preserve">
+    <value>间隔（秒）</value>
+  </data>
+  <data name="Home_Gallery_Pick.Content" xml:space="preserve">
+    <value>选择文件夹…</value>
+  </data>
+  <data name="Home_Gallery_Resume.Content" xml:space="preserve">
+    <value>继续</value>
+  </data>
+  <data name="Home_Gallery_Stop.Content" xml:space="preserve">
+    <value>停止</value>
+  </data>
+  <data name="Home_Gallery_Header" xml:space="preserve">
+    <value>照片幻灯片</value>
+  </data>
+  <data name="Home_Gallery_NotResumable" xml:space="preserve">
+    <value>没有可继续的内容：上次放映的文件夹已不可用，请重新选择文件夹。</value>
+  </data>
+  <data name="Gallery_PausedToast" xml:space="preserve">
+    <value>⏸  已暂停 - 按空格键继续</value>
+  </data>
+  <data name="Gallery_AutoPlayToast" xml:space="preserve">
+    <value>▶  自动播放</value>
+  </data>
+  <data name="Gallery_UpscalerToast" xml:space="preserve">
+    <value>放大算法：{0}</value>
+  </data>
+  <data name="Gallery_PickerHeader" xml:space="preserve">
+    <value>放大算法 — ↑↓ 选择 · Esc/F11 关闭</value>
+  </data>
+  <data name="Gallery_DeletedToast" xml:space="preserve">
+    <value>文件已删除</value>
+  </data>
+  <data name="Home_Gallery_Busy" xml:space="preserve">
+    <value>当前正在缩放，无法开始放映。请等待缩放结束或停止缩放后重试。</value>
+  </data>
+  <data name="Dialog_SelectGalleryFolder_Title" xml:space="preserve">
+    <value>选择照片文件夹</value>
+  </data>
+  <data name="Home_Gallery_NoImages" xml:space="preserve">
+    <value>所选文件夹中没有受支持的图片。</value>
+  </data>
 </root>

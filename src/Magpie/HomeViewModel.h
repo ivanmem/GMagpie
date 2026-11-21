@@ -72,6 +72,19 @@ struct HomeViewModel : HomeViewModelT<HomeViewModel>, wil::notify_property_chang
 
 	fire_and_forget ChangeScreenshotSaveDirectory() noexcept;
 
+	// Фотогалерея: выбор папки и запуск GalleryService, интервал автолистания
+	double GalleryInterval() const noexcept;
+	void GalleryInterval(double value) noexcept;
+	fire_and_forget PickGalleryFolder() noexcept;
+	void ResumeGallery();
+	void StopGallery() noexcept;
+	// Есть ли что продолжать: папка прошлой сессии всё ещё доступна
+	bool HasGalleryResume() const noexcept;
+	hstring GalleryResumeInfo() const noexcept;
+	// Прогресс идущего показа рядом с «Продолжить»: "N / M", как в строке состояния
+	// показа; пусто, когда показа нет
+	hstring GalleryProgressText() const noexcept;
+
 	bool IsTouchSupportEnabled() const noexcept;
 	fire_and_forget IsTouchSupportEnabled(bool value);
 
@@ -141,6 +154,11 @@ private:
 	::Magpie::Event<>::EventRevoker _frameRefreshModeChangedRevoker;
 	void _ScalingService_IsTimerOnChanged(bool value, bool windowedMode);
 
+	void _RaiseGalleryResumeChanged();
+	void _NotifyGalleryStartFailure();
+
+	::Magpie::Event<size_t, size_t>::EventRevoker _galleryProgressRevoker;
+
 	void _ScalingService_TimerTick(double);
 
 	void _ScalingService_IsScalingChanged(bool);
@@ -154,6 +172,11 @@ private:
 	::Magpie::Event<bool>::EventRevoker _isShowOnHomePageChangedRevoker;
 
 	bool _showUpdateCard = false;
+
+	std::wstring _galleryFolder;
+	// Автолистание по умолчанию выключено: альбом смотрят вручную, а интервал
+	// намеренно не сохраняется — после перезапуска снова ручной режим
+	double _galleryInterval = 0.0;
 };
 
 }

@@ -148,6 +148,49 @@
 					</local:SettingsExpander.Items>
 				</local:SettingsExpander>
 			</local:SettingsGroup>
+			<local:SettingsGroup x:Uid="Home_Gallery">
+				<local:SettingsCard x:Uid="Home_Gallery_Play" IsWrapEnabled="True">
+					<!-- Блок содержимого (подпись + числовое поле + две кнопки) шириной ~500 DIP: порога переноса по умолчанию
+						476 никогда не хватает, в узком окне Header сжимается в вертикальную полоску.
+						Для этой карточки порог переноса поднят до 680 (≈ фактическая ширина карточки в максимизированном окне): шире — всё в одну строку, уже — содержимое уходит под Header (тот же приём постраничного переопределения, что в ProfilePage) -->
+					<local:SettingsCard.Resources>
+						<x:Double x:Key="SettingsCardWrapThreshold">680</x:Double>
+						<x:Double x:Key="SettingsCardWrapNoIconThreshold">0</x:Double>
+					</local:SettingsCard.Resources>
+					<local:SettingsCard.HeaderIcon>
+						<FontIcon Glyph="&#xEB9F;" />
+					</local:SettingsCard.HeaderIcon>
+					<local:WrapPanel HorizontalSpacing="8"
+					               VerticalSpacing="8">
+						<TextBlock x:Uid="Home_Gallery_Interval"
+						           VerticalAlignment="Center" />
+						<muxc:NumberBox Width="90"
+						                HorizontalAlignment="Left"
+						                Loaded="NumberBox_Loaded"
+						                LargeChange="5"
+						                Maximum="3600"
+						                Minimum="0"
+						                NumberFormatter="{x:Bind local:App.DoubleFormatter, Mode=OneTime}"
+						                SmallChange="1"
+						                Value="{x:Bind ViewModel.GalleryInterval, Mode=TwoWay}" />
+						<Button x:Uid="Home_Gallery_Pick"
+						        Click="{x:Bind ViewModel.PickGalleryFolder}" />
+						<!-- Продолжить: та же папка и та же страница. Пока смотреть нечего (сессии ещё не было
+							или папку удалили), кнопка выключена, а не скрыта — иначе ряд кнопок прыгает -->
+						<Button x:Uid="Home_Gallery_Resume"
+						        Click="{x:Bind ViewModel.ResumeGallery}"
+						        IsEnabled="{x:Bind ViewModel.HasGalleryResume, Mode=OneWay}"
+						        ToolTipService.ToolTip="{x:Bind ViewModel.GalleryResumeInfo, Mode=OneWay}" />
+						<!-- Прогресс идущего показа — «N / M», как в строке состояния показа -->
+						<TextBlock Margin="8,0,0,0"
+						           VerticalAlignment="Center"
+						           Style="{StaticResource CaptionTextBlockStyle}"
+						           Text="{x:Bind ViewModel.GalleryProgressText, Mode=OneWay}" />
+						<Button x:Uid="Home_Gallery_Stop"
+						        Click="{x:Bind ViewModel.StopGallery}" />
+					</local:WrapPanel>
+				</local:SettingsCard>
+			</local:SettingsGroup>
 			<local:SettingsGroup x:Uid="Home_Toolbar">
 				<local:SettingsExpander x:Uid="Home_Toolbar_Shortcuts"
 				                        IsExpanded="False"

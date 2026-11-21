@@ -706,6 +706,17 @@ void AppSettings::ScreenshotsDir(const std::filesystem::path& value) noexcept {
 	SaveAsync();
 }
 
+void AppSettings::GalleryLastSession(std::wstring folder, uint32_t index) noexcept {
+	const std::filesystem::path path{ std::move(folder) };
+	if (path == _galleryLastFolder && index == _galleryLastIndex) {
+		return;
+	}
+
+	_galleryLastFolder = std::move(path);
+	_galleryLastIndex = index;
+	SaveAsync();
+}
+
 void AppSettings::_UpdateWindowPlacement() noexcept {
 	const HWND hwndMain = implementation::App::Get().MainWindow().Handle();;
 	if (!hwndMain) {
@@ -848,6 +859,13 @@ std::string AppSettings::_Serialize(const _AppSettingsData& data) {
 	writer.Bool(data._isStopEffectsOnTaskSwitchEnabled);
 	writer.Key("vrr");
 	writer.Bool(data._isVRREnabled);
+	// Если продолжать некуда, пустые значения не пишем — в конфиге не появляются лишних ключей
+	if (!data._galleryLastFolder.empty()) {
+		writer.Key("galleryLastFolder");
+		writer.String(StrHelper::UTF16ToUTF8(data._galleryLastFolder.native()).c_str());
+		writer.Key("galleryLastIndex");
+		writer.Uint(data._galleryLastIndex);
+	}
 	writer.Key("experimentalFrameRefreshVersion");
 	writer.Uint(1);
 	writer.Key("disableFP16");
@@ -1084,6 +1102,14 @@ void AppSettings::_LoadSettings(const rapidjson::GenericObject<true, rapidjson::
 	JsonHelper::ReadBool(root, "stopEffectsOnTaskSwitch", _isStopEffectsOnTaskSwitchEnabled);
 	JsonHelper::ReadBool(root, "vrr", _isVRREnabled);
 	JsonHelper::ReadBool(root, "disableFP16", _isFP16Disabled);
+
+	// Последняя позиция показа: альбом могли удалить или переместить — работоспособность проверяет использующий код
+	{
+		std::wstring galleryFolder;
+		JsonHelper::ReadString(root, "galleryLastFolder", galleryFolder);
+		_galleryLastFolder = std::move(galleryFolder);
+		JsonHelper::ReadUInt(root, "galleryLastIndex", _galleryLastIndex);
+	}
 
 	[[maybe_unused]] bool result = ScalingModesService::Get().Import(root, true);
 	assert(result);
