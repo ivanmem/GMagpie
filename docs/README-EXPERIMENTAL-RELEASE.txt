@@ -1,8 +1,8 @@
-GMagpie Experimental v0.6.12 x64
+GMagpie Experimental v0.1.0 x64
 
 安装或升级
 备份设置并从托盘完全退出旧版 GMagpie，将完整 GMagpie-Experimental-x64.zip 解压到新目录，再运行 GMagpie.exe。
-普通配置：%LOCALAPPDATA%\GMagpie\config\v4e\config.json。
+普通配置：%LOCALAPPDATA%\Magpie\config\v4e\config.json。
 便携配置：程序目录内的 config\v4e\config.json。
 保留旧程序目录与升级前的设置备份。回退前完全退出当前版本，恢复原设置后从旧版目录运行。
 
@@ -21,7 +21,7 @@ English
 
 Install or upgrade
 Back up settings and fully exit the previous GMagpie version from the tray. Extract the complete GMagpie-Experimental-x64.zip into a new folder, then run GMagpie.exe.
-Normal settings: %LOCALAPPDATA%\GMagpie\config\v4e\config.json.
+Normal settings: %LOCALAPPDATA%\Magpie\config\v4e\config.json.
 Portable settings: config\v4e\config.json under the program folder.
 Keep the previous program folder and a pre-upgrade settings backup. Before rolling back, fully exit the current version, restore the previous settings and run GMagpie from the older folder.
 

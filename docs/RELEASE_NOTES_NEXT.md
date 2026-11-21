@@ -2,11 +2,12 @@
 
 ## 下一版 / Next release
 
-本地发布候选为 **GMagpie Experimental v0.6.12**，正式标签准备为 `v0.6.12-experimental`，尚未上传或发布。汇总相对 0.6.11 最终保留的 OKLab 调色、DLSSNR 模型与自适应分辨率、逐帧／隔帧处理、参数面板及捕获／输出修复。构建身份与验收结果以对应候选包的构建清单和审核记录为准。
+本地发布候选为 **GMagpie Experimental v0.1.0**（首个 GMagpie 版本），正式标签准备为 `v0.1.0-experimental`，尚未上传或发布。在 0.6.12 基线（OKLab、DLSSNR、参数面板、捕获／输出修复）之上新增全屏照片库。构建身份与验收结果以对应候选包的构建清单和审核记录为准。
 
-The local release candidate is **GMagpie Experimental v0.6.12**, with `v0.6.12-experimental` prepared as its release tag. It has not been uploaded or published. It brings together the retained changes since 0.6.11: OKLab adjustments, DLSSNR models and adaptive resolution, Every Frame / Alternating Frames processing, parameter panels, and capture/output fixes. Refer to the candidate package manifest and review record for its build identity and validation results.
+The local release candidate is **GMagpie Experimental v0.1.0**, the first GMagpie release, with `v0.1.0-experimental` prepared as its release tag. It has not been uploaded or published. It adds a full-screen photo gallery on top of the 0.6.12 base (OKLab, DLSSNR, parameter panels, capture/output fixes). Refer to the candidate package manifest and review record for its build identity and validation results.
 
-- [0.6.12 完整中英说明 / Complete bilingual notes](RELEASE_NOTES_v0.6.12-experimental.md)
+- [0.1.0 说明 / Release notes](RELEASE_NOTES_v0.1.0-experimental.md)
+- [0.6.12 基线说明 / Base notes](RELEASE_NOTES_v0.6.12-experimental.md)
 - [开发基线 / Development baseline](experimental/DEVELOPMENT-BASELINE.md)
 
 ## 当前公开版本 / Current public release

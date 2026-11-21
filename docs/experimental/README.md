@@ -1,6 +1,10 @@
 # GMagpie 实验分支文档索引
 
-## 0.6.12 发布候选 / Release candidate
+## 0.1.0 发布候选 / Release candidate
+
+- [0.1.0 说明 / Release notes](../RELEASE_NOTES_v0.1.0-experimental.md)：首个 GMagpie 版本，新增照片库（Photo gallery），其余功能见下方 0.6.12 基线说明。
+
+## 0.6.12 基线 / Base
 
 - [0.6.12 完整中英说明](../RELEASE_NOTES_v0.6.12-experimental.md)：汇总相对 0.6.11 保留的功能、使用方法和升级说明；本地准备完成后仍按发布流程审核，尚未公开发布。
 - [开发基线](DEVELOPMENT-BASELINE.md)与[下一版计划](../RELEASE_NOTES_NEXT.md)：后续开发、构建和当前公开版本入口。
