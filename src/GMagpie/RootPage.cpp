@@ -87,6 +87,8 @@ void RootPage::InitializeComponent() {
 	_profileNavigationViewModels.reserve(profiles.size());
 	for (uint32_t i = 0; i < profiles.size(); ++i) {
 		MUXC::NavigationViewItem item = _CreateProfileNavigationViewItem(i, profiles[i]);
+		// Профили окон фотогалерее не нужны: пункт остаётся в списке (на нём держатся индексы), но скрыт
+		item.Visibility(Visibility::Collapsed);
 		// 用于占位
 		navMenuItems.InsertAt(navMenuItems.Size() - 1, item);
 	}

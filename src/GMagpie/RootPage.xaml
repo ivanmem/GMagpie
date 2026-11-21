@@ -223,8 +223,11 @@
 						</PathIcon>
 					</muxc:NavigationViewItem.Icon>
 				</muxc:NavigationViewItem>
-				<muxc:NavigationViewItemHeader x:Uid="Root_Profiles" />
-				<muxc:NavigationViewItem x:Uid="Root_Defaults">
+				<!-- Профили окон не нужны фотогалерее: пункты скрыты (индексы навигации в коде остаются прежними) -->
+				<muxc:NavigationViewItemHeader x:Uid="Root_Profiles"
+				                               Visibility="Collapsed" />
+				<muxc:NavigationViewItem x:Uid="Root_Defaults"
+				                         Visibility="Collapsed">
 					<muxc:NavigationViewItem.Icon>
 						<FontIcon Glyph="&#xE81E;" />
 					</muxc:NavigationViewItem.Icon>
@@ -232,7 +235,8 @@
 				<muxc:NavigationViewItem x:Name="NewProfileNavigationViewItem"
 				                         x:Uid="Root_NewProfile"
 				                         Icon="Add"
-				                         SelectsOnInvoked="False">
+				                         SelectsOnInvoked="False"
+				                         Visibility="Collapsed">
 					<FlyoutBase.AttachedFlyout>
 						<Flyout x:Name="NewProfileFlyout"
 						        Placement="Right">
