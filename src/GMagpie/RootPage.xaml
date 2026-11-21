@@ -226,8 +226,8 @@
 				<!-- Профили окон не нужны фотогалерее: пункты скрыты (индексы навигации в коде остаются прежними) -->
 				<muxc:NavigationViewItemHeader x:Uid="Root_Profiles"
 				                               Visibility="Collapsed" />
-				<muxc:NavigationViewItem x:Uid="Root_Defaults"
-				                         Visibility="Collapsed">
+				<!-- Единственный видимый профиль: режим масштабирования, видеокарта и выравнивание нужны галерее -->
+				<muxc:NavigationViewItem x:Uid="Root_Defaults">
 					<muxc:NavigationViewItem.Icon>
 						<FontIcon Glyph="&#xE81E;" />
 					</muxc:NavigationViewItem.Icon>

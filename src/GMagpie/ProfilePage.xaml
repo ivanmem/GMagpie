@@ -160,7 +160,7 @@
 				<local:SettingsCard Style="{StaticResource ProfileCardStyle}"
 					Loaded="ProfileCard_Loaded"
 					SizeChanged="ProfileCard_SizeChanged"
-					x:Uid="Profile_General_CaptureMethod"
+					x:Uid="Profile_General_CaptureMethod" Visibility="Collapsed"
 					IsWrapEnabled="True">
 					<local:SettingsCard.HeaderIcon>
 						<FontIcon Glyph="&#xE9A6;"/>
@@ -170,7 +170,7 @@
 						ItemsSource="{x:Bind ViewModel.CaptureMethods, Mode=OneTime}"
 						SelectedIndex="{x:Bind ViewModel.CaptureMethod, Mode=TwoWay}"/>
 				</local:SettingsCard>
-				<muxc:InfoBar x:Uid="Profile_General_DesktopDuplicationWarning"
+				<muxc:InfoBar x:Uid="Profile_General_DesktopDuplicationWarning" Visibility="Collapsed"
 					IsClosable="False"
 					IsOpen="{x:Bind ViewModel.IsCaptureMethodDesktopDuplication, Mode=OneWay}"
 					Severity="Warning"/>
@@ -178,7 +178,7 @@
 					Loaded="ProfileCard_Loaded"
 					SizeChanged="ProfileCard_SizeChanged"
 					x:Name="AutoScaleSettingsCard"
-					x:Uid="Profile_General_AutoScale"
+					x:Uid="Profile_General_AutoScale" Visibility="Collapsed"
 					x:Load="{x:Bind ViewModel.IsNotDefaultProfile, Mode=OneTime}"
 					IsWrapEnabled="True">
 					<local:SettingsCard.HeaderIcon>
@@ -190,7 +190,7 @@
 						<ComboBoxItem x:Uid="Profile_General_AutoScale_Windowed"/>
 					</ComboBox>
 				</local:SettingsCard>
-				<local:SettingsCard Style="{StaticResource ProfileCardStyle}" Loaded="ProfileCard_Loaded" SizeChanged="ProfileCard_SizeChanged" x:Uid="Profile_General_3DGameMode">
+				<local:SettingsCard Style="{StaticResource ProfileCardStyle}" Loaded="ProfileCard_Loaded" SizeChanged="ProfileCard_SizeChanged" x:Uid="Profile_General_3DGameMode" Visibility="Collapsed">
 					<local:SettingsCard.HeaderIcon>
 						<FontIcon Glyph="&#xE7FC;"/>
 					</local:SettingsCard.HeaderIcon>
@@ -201,7 +201,7 @@
 					Loaded="ProfileCard_Loaded"
 					SizeChanged="ProfileCard_SizeChanged"
 					x:Name="MultimonitorSettingsCard"
-					x:Uid="Profile_General_Multimonitor"
+					x:Uid="Profile_General_Multimonitor" Visibility="Collapsed"
 					x:Load="{x:Bind ViewModel.HasMultipleMonitors, Mode=OneTime}"
 					IsWrapEnabled="True">
 					<local:SettingsCard.HeaderIcon>
@@ -213,7 +213,7 @@
 						SelectedIndex="{x:Bind ViewModel.MonitorSelection, Mode=TwoWay}"/>
 				</local:SettingsCard>
 			</local:SettingsGroup>
-			<local:SettingsGroup x:Uid="Profile_WindowedScaling">
+			<local:SettingsGroup x:Uid="Profile_WindowedScaling" Visibility="Collapsed">
 				<local:SettingsCard Style="{StaticResource ProfileCardStyle}"
 					Loaded="ProfileCard_Loaded"
 					SizeChanged="ProfileCard_SizeChanged"
@@ -341,7 +341,7 @@
 				<local:SettingsExpander Style="{StaticResource ProfileExpanderStyle}"
 					Loaded="ProfileExpander_Loaded"
 					SizeChanged="ProfileExpander_SizeChanged"
-					x:Uid="FrameRefresh_RateGroup"
+					x:Uid="FrameRefresh_RateGroup" Visibility="Collapsed"
 					IsExpanded="True"
 					IsWrapEnabled="True">
 					<local:SettingsExpander.HeaderIcon>
@@ -411,7 +411,7 @@
 				<local:SettingsExpander Style="{StaticResource ProfileExpanderStyle}"
 					Loaded="ProfileExpander_Loaded"
 					SizeChanged="ProfileExpander_SizeChanged"
-					x:Uid="Rtss_Takeover"
+					x:Uid="Rtss_Takeover" Visibility="Collapsed"
 					IsExpanded="True"
 					IsWrapEnabled="True">
 					<local:SettingsExpander.HeaderIcon>
@@ -639,7 +639,7 @@
 				<local:SettingsExpander Style="{StaticResource ProfileExpanderStyle}"
 					Loaded="ProfileExpander_Loaded"
 					SizeChanged="ProfileExpander_SizeChanged"
-					x:Uid="FrameRefresh_StaticGroup"
+					x:Uid="FrameRefresh_StaticGroup" Visibility="Collapsed"
 					IsExpanded="True"
 					IsWrapEnabled="True">
 					<local:SettingsExpander.HeaderIcon>
@@ -708,7 +708,7 @@
 				<local:SettingsExpander Style="{StaticResource ProfileExpanderStyle}"
 					Loaded="ProfileExpander_Loaded"
 					SizeChanged="ProfileExpander_SizeChanged"
-					x:Uid="FrameRefresh_Cursor"
+					x:Uid="FrameRefresh_Cursor" Visibility="Collapsed"
 					IsWrapEnabled="True"
 					IsExpanded="True"
 					Visibility="{x:Bind ViewModel.IsAdvancedFrameRefresh, Mode=OneWay}">
@@ -775,14 +775,14 @@
 						</local:SettingsCard>
 					</local:SettingsExpander.Items>
 				</local:SettingsExpander>
-				<local:SettingsCard Style="{StaticResource ProfileCardStyle}" Loaded="ProfileCard_Loaded" SizeChanged="ProfileCard_SizeChanged" x:Uid="FrameRefresh_VRR" IsWrapEnabled="True">
+				<local:SettingsCard Style="{StaticResource ProfileCardStyle}" Loaded="ProfileCard_Loaded" SizeChanged="ProfileCard_SizeChanged" x:Uid="FrameRefresh_VRR" Visibility="Collapsed" IsWrapEnabled="True">
 					<local:SettingsCard.HeaderIcon>
 						<FontIcon Glyph="&#xE7F4;"/>
 					</local:SettingsCard.HeaderIcon>
 					<ToggleSwitch x:Uid="FrameRefresh_VRR_Input" Style="{StaticResource RightAlignedCompactToggleSwitchStyle}" IsOn="{x:Bind ViewModel.IsVRREnabled, Mode=TwoWay}"/>
 				</local:SettingsCard>
 			</StackPanel>
-			<local:SettingsGroup x:Uid="Profile_SourceWindow">
+			<local:SettingsGroup x:Uid="Profile_SourceWindow" Visibility="Collapsed">
 				<local:SettingsCard Style="{StaticResource ProfileCardStyle}"
 					Loaded="ProfileCard_Loaded"
 					SizeChanged="ProfileCard_SizeChanged"
@@ -886,7 +886,7 @@
 					</local:SettingsExpander.Items>
 				</local:SettingsExpander>
 			</local:SettingsGroup>
-			<local:SettingsGroup x:Uid="Profile_Cursor">
+			<local:SettingsGroup x:Uid="Profile_Cursor" Visibility="Collapsed">
 				<local:SettingsExpander Style="{StaticResource ProfileExpanderStyle}"
 					Loaded="ProfileExpander_Loaded"
 					SizeChanged="ProfileExpander_SizeChanged"
@@ -1009,7 +1009,7 @@
 					x:Name="LaunchParametersSettingsCard"
 					ContentAlignment="Vertical"
 					HorizontalContentAlignment="Stretch"
-					x:Uid="Profile_Advanced_LaunchParameters"
+					x:Uid="Profile_Advanced_LaunchParameters" Visibility="Collapsed"
 					x:Load="{x:Bind ViewModel.IsNotDefaultProfile, Mode=OneTime}"
 					IsWrapEnabled="True">
 					<local:SettingsCard.HeaderIcon>
@@ -1037,7 +1037,7 @@
 						<ComboBoxItem x:Uid="Profile_Advanced_DestAlignment_BottomRight"/>
 					</ComboBox>
 				</local:SettingsCard>
-				<local:SettingsCard Style="{StaticResource ProfileCardStyle}" Loaded="ProfileCard_Loaded" SizeChanged="ProfileCard_SizeChanged" x:Uid="Profile_Advanced_DisableDirectFlip">
+				<local:SettingsCard Style="{StaticResource ProfileCardStyle}" Loaded="ProfileCard_Loaded" SizeChanged="ProfileCard_SizeChanged" x:Uid="Profile_Advanced_DisableDirectFlip" Visibility="Collapsed">
 					<local:SettingsCard.HeaderIcon>
 						<FontIcon Glyph="&#xF259;"/>
 					</local:SettingsCard.HeaderIcon>
@@ -1046,7 +1046,7 @@
 				<local:SettingsCard Style="{StaticResource ProfileCardStyle}"
 					Loaded="ProfileCard_Loaded"
 					SizeChanged="ProfileCard_SizeChanged"
-					x:Uid="Profile_Advanced_ParameterFocusSwitching"
+					x:Uid="Profile_Advanced_ParameterFocusSwitching" Visibility="Collapsed"
 					IsWrapEnabled="True">
 					<local:SettingsCard.HeaderIcon>
 						<FontIcon Glyph="&#xE9E9;"/>
