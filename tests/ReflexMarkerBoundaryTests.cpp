@@ -9,7 +9,7 @@
 #include <string>
 #include <utility>
 #include <vector>
-using namespace Magpie;
+using namespace GMagpie;
 using DWORD = unsigned long;
 using HRESULT = int;
 using HANDLE = int;

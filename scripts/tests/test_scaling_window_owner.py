@@ -2,9 +2,9 @@
 from pathlib import Path
 import sys
 root = Path(__file__).resolve().parents[2]
-window = (root / 'src/Magpie.Core/ScalingWindow.cpp').read_text(encoding='utf-8-sig')
-renderer = (root / 'src/Magpie.Core/Renderer.cpp').read_text(encoding='utf-8-sig')
-runtime = (root / 'src/Magpie.Core/ScalingRuntime.cpp').read_text(encoding='utf-8-sig')
+window = (root / 'src/GMagpie.Core/ScalingWindow.cpp').read_text(encoding='utf-8-sig')
+renderer = (root / 'src/GMagpie.Core/Renderer.cpp').read_text(encoding='utf-8-sig')
+runtime = (root / 'src/GMagpie.Core/ScalingRuntime.cpp').read_text(encoding='utf-8-sig')
 
 def block(text, marker):
     start = text.index(marker)

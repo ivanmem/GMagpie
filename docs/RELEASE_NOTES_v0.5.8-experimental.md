@@ -1,4 +1,4 @@
-# Magpie Experimental v0.5.8 使用说明
+# GMagpie Experimental v0.5.8 使用说明
 
 > **更新提示：** 这个版本主要解决窗口模式的初始缩放倍数不能直接设为 `1x` 的问题。如果你不需要使用 1x 窗口模式缩放，可以不用下载这个版本。与 v0.5.7 相比，本版本没有其他较大的兼容性优化或功能改动。
 
@@ -10,25 +10,25 @@
 
 ## 应该下载哪个文件
 
-### 完整包：`Magpie-Experimental-x64.zip`
+### 完整包：`GMagpie-Experimental-x64.zip`
 
 推荐新安装、不是从 v0.5.7 更新，或者不确定当前文件是否完整的用户下载。
 
-1. 完全退出正在运行的 Magpie，包括托盘中的 Magpie。
+1. 完全退出正在运行的 GMagpie，包括托盘中的 GMagpie。
 2. 将 ZIP 完整解压到一个新目录。
-3. 不要直接在压缩包内运行，也不要只复制其中的 `Magpie.exe`。
-4. 运行新目录中的 `Magpie.exe`。
+3. 不要直接在压缩包内运行，也不要只复制其中的 `GMagpie.exe`。
+4. 运行新目录中的 `GMagpie.exe`。
 
-### 最小更新包：`Magpie-v0.5.8-Minimal-Update-from-v0.5.7.zip`
+### 最小更新包：`GMagpie-v0.5.8-Minimal-Update-from-v0.5.7.zip`
 
 仅适用于当前正在使用本项目发布的 `v0.5.7-experimental` 完整包、且不想重新下载全部运行时文件的用户。
 
-1. 完全退出 Magpie，并确认任务管理器中没有 `Magpie.exe`。
-2. 备份旧目录中的 `Magpie.exe` 和 `resources.pri`。
-3. 将最小更新包中的 `Magpie.exe` 和 `resources.pri` **一起**复制到 v0.5.7 程序目录并覆盖原文件。
-4. 启动 Magpie，在“关于”页面确认版本为 v0.5.8，然后检查“窗口模式缩放 → 初始缩放倍数”中是否出现 `1x`。
+1. 完全退出 GMagpie，并确认任务管理器中没有 `GMagpie.exe`。
+2. 备份旧目录中的 `GMagpie.exe` 和 `resources.pri`。
+3. 将最小更新包中的 `GMagpie.exe` 和 `resources.pri` **一起**复制到 v0.5.7 程序目录并覆盖原文件。
+4. 启动 GMagpie，在“关于”页面确认版本为 v0.5.8，然后检查“窗口模式缩放 → 初始缩放倍数”中是否出现 `1x`。
 
-不能只替换 `Magpie.exe`。新版下拉选项位于 `resources.pri`，而选项对应的程序逻辑位于 `Magpie.exe`；两者版本不一致会造成显示倍率与实际倍率错位。如果当前版本不是 v0.5.7、曾单独替换过程序文件，或更新后出现异常，请改用完整包。
+不能只替换 `GMagpie.exe`。新版下拉选项位于 `resources.pri`，而选项对应的程序逻辑位于 `GMagpie.exe`；两者版本不一致会造成显示倍率与实际倍率错位。如果当前版本不是 v0.5.7、曾单独替换过程序文件，或更新后出现异常，请改用完整包。
 
 ## 如何使用 1x
 
@@ -55,4 +55,4 @@
 
 v0.5.8 mainly adds a directly selectable `1x` initial scale factor for windowed mode. If you do not need 1x scaling, there is no need to update from v0.5.7; this release does not contain other major compatibility improvements or feature changes.
 
-The minimal update ZIP is only for an intact v0.5.7-experimental installation. Replace both `Magpie.exe` and `resources.pri` together. Never replace the executable alone, because the UI definition and its selection mapping must come from the same build.
+The minimal update ZIP is only for an intact v0.5.7-experimental installation. Replace both `GMagpie.exe` and `resources.pri` together. Never replace the executable alone, because the UI definition and its selection mapping must come from the same build.

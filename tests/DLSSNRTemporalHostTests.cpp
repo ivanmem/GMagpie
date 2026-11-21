@@ -13,7 +13,7 @@
 #include <iostream>
 #include <stdexcept>
 
-using namespace Magpie;
+using namespace GMagpie;
 using Pixel = std::array<float,4>;
 constexpr uint32_t WIDTH=16, HEIGHT=16;
 constexpr int64_t STEP=166667;

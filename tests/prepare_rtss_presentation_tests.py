@@ -21,13 +21,13 @@ def body(source, signature):
     return source[start:end]
 
 
-header = (repo / "src/Magpie/RtssService.h").read_text(encoding="utf-8-sig")
+header = (repo / "src/GMagpie/RtssService.h").read_text(encoding="utf-8-sig")
 start = header.index("enum class RtssState {")
 end = header.index("\n};", header.index("struct RtssStatus {")) + 3
 (output / "RtssPresentationTypes.g.h").write_text(header[start:end], encoding="utf-8")
 
-service = (repo / "src/Magpie/RtssService.cpp").read_text(encoding="utf-8-sig")
-vm = (repo / "src/Magpie/ProfileViewModel.cpp").read_text(encoding="utf-8-sig")
+service = (repo / "src/GMagpie/RtssService.cpp").read_text(encoding="utf-8-sig")
+vm = (repo / "src/GMagpie/ProfileViewModel.cpp").read_text(encoding="utf-8-sig")
 methods = [body(service, signature) for signature in (
     "RtssStatus RtssService::Status()", "RtssStatus RtssService::InventoryStatus()", "RtssStatus RtssService::SessionStatus()",
     "RtssStatus RtssService::ManagementStatus()", "RtssStatus RtssService::CurrentSessionStatus(",

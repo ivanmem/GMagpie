@@ -5,7 +5,7 @@ import sys
 
 repo = Path(__file__).resolve().parents[1]
 output = Path(sys.argv[1])
-source = (repo / "src/Magpie/ProfileViewModel.cpp").read_text(encoding="utf-8-sig")
+source = (repo / "src/GMagpie/ProfileViewModel.cpp").read_text(encoding="utf-8-sig")
 names = ("IsSimpleFrameRefresh", "IsAdvancedFrameRefresh", "FrameRefreshModeIndex", "ContentFrameRateModeIndex", "ContentFrameRate", "FrameSyncModeIndex", "IsContentPacingEnabled",
          "ShowContentFrameRate", "CursorRefreshModeIndex", "CursorSupplementModeIndex", "CursorSupplementRate",
          "ShowCursorSupplement", "ShowCursorSupplementRate", "IdleRedrawModeIndex", "IdleRedrawRate",
@@ -26,7 +26,7 @@ prefix = r'''
 #include <cassert>
 #include <iostream>
 #include <limits>
-namespace Magpie {
+namespace GMagpie {
 enum class DuplicateFrameDetectionMode { Always, Dynamic, Never };
 struct Profile { FrameRefreshSettings frameRefresh; RtssSettings rtss; };
 struct ProfileService {
@@ -48,7 +48,7 @@ struct ProfileViewModel {
 suffix = r'''
 }
 int main() {
-    using namespace Magpie;
+    using namespace GMagpie;
     Profile defaults, app;
     ProfileViewModel vm{&defaults};
     vm.IsVRREnabled(true);

@@ -4,7 +4,7 @@ param(
     [Parameter(Mandatory, ParameterSetName = 'Runtime')][string]$RuntimeDirectory,
     [Parameter(Mandatory, ParameterSetName = 'Source')][switch]$SourceResources,
     [Parameter(Mandatory)][string]$GeneratedDirectory,
-    [string]$OutputDirectory = (Join-Path $env:TEMP ('Magpie-RtssResourceTests-' + [guid]::NewGuid()))
+    [string]$OutputDirectory = (Join-Path $env:TEMP ('GMagpie-RtssResourceTests-' + [guid]::NewGuid()))
 )
 $ErrorActionPreference = 'Stop'
 $rtssRepo = Split-Path $PSScriptRoot -Parent
@@ -20,7 +20,7 @@ Enter-VsDevShell -VsInstallPath $rtssVs -SkipAutomaticLocation -DevCmdArguments 
 if ($SourceResources) {
     # Compile only the current language files into an isolated test PRI, not the product.
     $rtssResourceRoot = Join-Path $rtssOutput 'source-resource-index'
-    foreach ($rtssFile in Get-ChildItem -LiteralPath (Join-Path $rtssRepo 'src/Magpie') -Filter 'Resources.language-*.resw') {
+    foreach ($rtssFile in Get-ChildItem -LiteralPath (Join-Path $rtssRepo 'src/GMagpie') -Filter 'Resources.language-*.resw') {
         $rtssLanguage = $rtssFile.BaseName.Substring('Resources.language-'.Length)
         $rtssLanguageRoot = Join-Path $rtssResourceRoot $rtssLanguage
         New-Item -ItemType Directory -Path $rtssLanguageRoot -Force | Out-Null
@@ -33,11 +33,11 @@ if ($SourceResources) {
     if ($LASTEXITCODE) { throw 'Test PRI configuration failed.' }
     # The resw indexer ignores ordinary folders; mirror the product's explicit prefix.
     [xml]$rtssConfig = Get-Content -LiteralPath $rtssPriConfig -Raw
-    $rtssConfig.SelectSingleNode('//indexer-config[@type="resw"]').SetAttribute('initialPath', 'Magpie')
+    $rtssConfig.SelectSingleNode('//indexer-config[@type="resw"]').SetAttribute('initialPath', 'GMagpie')
     # Keep every language in one index, as in the desktop product.
     $rtssConfig.SelectSingleNode('/resources/packaging').RemoveAll()
     $rtssConfig.Save($rtssPriConfig)
-    & $rtssMakePri new /pr $rtssResourceRoot /cf $rtssPriConfig /in Magpie /of (Join-Path $rtssOutput 'resources.pri') /o > (Join-Path $rtssOutput 'makepri.log')
+    & $rtssMakePri new /pr $rtssResourceRoot /cf $rtssPriConfig /in GMagpie /of (Join-Path $rtssOutput 'resources.pri') /o > (Join-Path $rtssOutput 'makepri.log')
     if ($LASTEXITCODE) { throw 'Source resource test PRI failed.' }
 } else {
     $rtssRuntime = [IO.Path]::GetFullPath($RuntimeDirectory)
@@ -52,7 +52,7 @@ $rtssExe = Join-Path $rtssOutput 'RtssResourceTextTests.exe'
 $rtssResourceDefines = @(if ($SourceResources) { '/DRTSS_SOURCE_RESOURCES' })
 & cl.exe /nologo /std:c++20 /EHsc /utf-8 /MT /O2 /W4 /WX /DNOMINMAX /DWIN32_LEAN_AND_MEAN /DWINRT_NO_MODULE_LOCK /DFMT_HEADER_ONLY `
     @rtssResourceDefines `
-    "/I$GeneratedDirectory" "/I$rtssOutput" "/I$rtssRepo/src/Magpie" "/I$rtssRepo/src/Shared" "/I$($rtssFmt.FullName)/p/include" `
+    "/I$GeneratedDirectory" "/I$rtssOutput" "/I$rtssRepo/src/GMagpie" "/I$rtssRepo/src/Shared" "/I$($rtssFmt.FullName)/p/include" `
     (Join-Path $PSScriptRoot 'RtssResourceTextTests.cpp') "/Fe:$rtssExe" "/Fo:$rtssOutput/RtssResourceTextTests.obj" `
     /link WindowsApp.lib /MANIFEST:EMBED "/MANIFESTINPUT:$PSScriptRoot/EffectChoiceItemsTests.manifest"
 if ($LASTEXITCODE) { throw 'Native resource test compilation failed.' }
@@ -66,7 +66,7 @@ $rtssXamlOutput = Join-Path $rtssOutput 'xaml'
 New-Item -ItemType Directory -Path $rtssXamlOutput -Force | Out-Null
 $rtssXamlExe = Join-Path $rtssXamlOutput 'RtssStatusItemsSourceTests.exe'
 & cl.exe /nologo /std:c++20 /EHsc /utf-8 /MT /O2 /W4 /WX /DNOMINMAX /DWIN32_LEAN_AND_MEAN /DWINRT_NO_MODULE_LOCK /DFMT_HEADER_ONLY `
-    "/I$GeneratedDirectory" "/I$rtssOutput" "/I$rtssRepo/src/Magpie" "/I$rtssRepo/src/Shared" "/I$($rtssFmt.FullName)/p/include" `
+    "/I$GeneratedDirectory" "/I$rtssOutput" "/I$rtssRepo/src/GMagpie" "/I$rtssRepo/src/Shared" "/I$($rtssFmt.FullName)/p/include" `
     (Join-Path $PSScriptRoot 'RtssStatusItemsSourceTests.cpp') "/Fe:$rtssXamlExe" "/Fo:$rtssOutput/RtssStatusItemsSourceTests.obj" `
     /link WindowsApp.lib /MANIFEST:EMBED "/MANIFESTINPUT:$PSScriptRoot/EffectChoiceItemsTests.manifest"
 if ($LASTEXITCODE) { throw 'Native status ItemsSource test compilation failed.' }

@@ -1,8 +1,8 @@
-# Magpie Experimental v0.6.12 Beta 1
+# GMagpie Experimental v0.6.12 Beta 1
 
 本地测试版。
 
-## Magpie 本体
+## GMagpie 本体
 
 - 调整窗口大小后，临时 DirectComposition 输出会尝试恢复 DXGI；确认替代帧有效后再撤除兜底画面。恢复失败时保留可用输出并记录原因，静态画面也能触发恢复。
 - 参数面板恢复单页分组与多列布局，保留原有控件和字号，两轴均不滚动；窄浮层按内容自动扩宽。标签精简，成对复选框按列中线对齐。性能分析窗口记住图表、耗时等分区的展开状态。
@@ -32,15 +32,15 @@
 
 ## 安装
 
-完全退出旧版，备份设置，将 `Magpie-Experimental-x64.zip` 完整解压到新目录，再运行 `Magpie.exe`。主包包含配套 EXE、资源与运行库；可选 `DLSSNR-DLL-Options.zip` 沿用原版 RTX 50／社区 RTX 20、30、40 两种组件及切换说明。
+完全退出旧版，备份设置，将 `GMagpie-Experimental-x64.zip` 完整解压到新目录，再运行 `GMagpie.exe`。主包包含配套 EXE、资源与运行库；可选 `DLSSNR-DLL-Options.zip` 沿用原版 RTX 50／社区 RTX 20、30、40 两种组件及切换说明。
 
 ---
 
-# Magpie Experimental v0.6.12 Beta 1 User Guide
+# GMagpie Experimental v0.6.12 Beta 1 User Guide
 
 Local test build.
 
-## Magpie application
+## GMagpie application
 
 - After resizing, temporary DirectComposition output retries DXGI recovery and keeps its fallback until a valid replacement frame is confirmed. Failed recovery retains available output and logs the reason; static scenes can also trigger recovery.
 - Parameter panels restore a single page with grouped columns, original controls and font sizes, and no horizontal or vertical scrolling. Narrow overlays widen to fit their content. Labels are concise and paired checkboxes align to the column midpoint. The profiler remembers graph, timing and other section expansion preferences.
@@ -71,4 +71,4 @@ Local test build.
 
 ## Installation
 
-Completely exit the previous version, back up settings, extract all of `Magpie-Experimental-x64.zip` into a new folder, then run `Magpie.exe`. The package contains matching executable, resources and runtime files. The optional `DLSSNR-DLL-Options.zip` retains the original RTX 50 and community RTX 20/30/40 choices and switching instructions.
+Completely exit the previous version, back up settings, extract all of `GMagpie-Experimental-x64.zip` into a new folder, then run `GMagpie.exe`. The package contains matching executable, resources and runtime files. The optional `DLSSNR-DLL-Options.zip` retains the original RTX 50 and community RTX 20/30/40 choices and switching instructions.

@@ -4,7 +4,7 @@
 #include <cassert>
 #include <iostream>
 
-using namespace Magpie;
+using namespace GMagpie;
 
 int main() {
 	static_assert(static_cast<uint32_t>(ScreenshotContent::InputAndOutput) == 0);

@@ -23,7 +23,7 @@ struct Context {
 };
 
 inline std::string ShaderSource() {
-    return std::string(Magpie::DLSSNR_COLOR_HLSL)+std::string(Magpie::DLSSNR_SPARSE_HLSL)+R"hlsl(
+    return std::string(GMagpie::DLSSNR_COLOR_HLSL)+std::string(GMagpie::DLSSNR_SPARSE_HLSL)+R"hlsl(
 cbuffer AuditParams:register(b1) {
     uint GroupWidth,HasReverse,UseGT,AuditPad;
     float PastGTX,FutureGTX,AuditPad2,AuditPad3;

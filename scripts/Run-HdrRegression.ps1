@@ -10,7 +10,7 @@ if (!(Get-Command cl.exe -ErrorAction SilentlyContinue)) {
     throw 'Open an x64 Native Tools Command Prompt for Visual Studio, then run this script again.'
 }
 if (!$FmtIncludeDirectory) {
-    $conanProps = Join-Path $root 'obj\x64\Release\_ConanDeps\Magpie\conan_fmt__fmt_vars_release_x64.props'
+    $conanProps = Join-Path $root 'obj\x64\Release\_ConanDeps\GMagpie\conan_fmt__fmt_vars_release_x64.props'
     if (Test-Path -LiteralPath $conanProps) {
         [xml]$conan = Get-Content -LiteralPath $conanProps -Raw
         $FmtIncludeDirectory = Join-Path $conan.Project.PropertyGroup.Conanfmt__fmtRootFolder 'include'
@@ -22,7 +22,7 @@ if (!$FmtIncludeDirectory -or !(Test-Path -LiteralPath (Join-Path $FmtIncludeDir
 
 New-Item -ItemType Directory -Path $OutputDirectory -Force | Out-Null
 $OutputDirectory = (Resolve-Path -LiteralPath $OutputDirectory).Path
-$core = Join-Path $root 'src\Magpie.Core'
+$core = Join-Path $root 'src\GMagpie.Core'
 $utf8 = [Text.UTF8Encoding]::new($false)
 foreach ($name in @('HdrFrame.cpp', 'HdrColorTransform.cpp', 'HdrProtocol.cpp', 'HdrAdapterDispatcher.cpp', 'HdrEffectBoundary.cpp')) {
     $text = [IO.File]::ReadAllText((Join-Path $core $name))

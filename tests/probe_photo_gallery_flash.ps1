@@ -6,7 +6,7 @@
 $ErrorActionPreference = 'Continue'
 [Console]::OutputEncoding = [System.Text.Encoding]::UTF8
 $repo = Split-Path -Parent $PSScriptRoot
-$exe = Join-Path $repo "bin\x64\Release\Magpie.exe"
+$exe = Join-Path $repo "bin\x64\Release\GMagpie.exe"
 if (-not (Test-Path $exe)) { Write-Output "НЕТ СБОРКИ $exe"; exit 2 }
 
 Add-Type -AssemblyName System.Drawing
@@ -77,9 +77,9 @@ foreach ($spec in @(@('a_red_wide.png', 2560, 1440, [System.Drawing.Color]::From
     $bmp.Dispose()
 }
 
-$ours = Get-Process Magpie -ErrorAction SilentlyContinue | Where-Object { try { $_.Path -like "$repo\bin\*" } catch { $false } }
+$ours = Get-Process GMagpie -ErrorAction SilentlyContinue | Where-Object { try { $_.Path -like "$repo\bin\*" } catch { $false } }
 if ($ours) { $ours | Stop-Process -Force; Start-Sleep -Seconds 2 }
-# лёгкий показ: свой мьютекс, не мешает оригинальному Magpie
+# лёгкий показ: свой мьютекс, не мешает оригинальному GMagpie
 [void](Start-Process $exe -ArgumentList '--gallery', "`"$album`"" -PassThru)
 [void][F]::SetProcessDPIAware()   # иначе GetWindowRect/CopyFromScreen режут кадр до виртуального размера
 $out = [IntPtr]::Zero
@@ -126,8 +126,8 @@ while ((Get-Date) -lt $deadline) {
 Start-Sleep -Milliseconds 600
 [F]::Press(0x1B)
 Start-Sleep -Milliseconds 600
-# не оставлять нашего Magpie висеть в трее — только свой bin, чужой не трогаем
-Get-Process Magpie -ErrorAction SilentlyContinue | Where-Object { try { $_.Path -like "$repo\bin\*" } catch { $false } } | Stop-Process -Force
+# не оставлять нашего GMagpie висеть в трее — только свой bin, чужой не трогаем
+Get-Process GMagpie -ErrorAction SilentlyContinue | Where-Object { try { $_.Path -like "$repo\bin\*" } catch { $false } } | Stop-Process -Force
 
 # --- разбор ---
 Write-Output "--- кадры ---"

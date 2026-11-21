@@ -13,7 +13,7 @@
 #include "EffectFrameState.h"
 #include "dlss_parameter_descriptors.h"
 
-using namespace Magpie;
+using namespace GMagpie;
 struct Option { std::map<std::string, float> parameters; };
 
 int main() {

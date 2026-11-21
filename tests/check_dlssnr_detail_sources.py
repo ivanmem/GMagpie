@@ -14,8 +14,8 @@ shell.CommandLineToArgvW.argtypes = [ctypes.c_wchar_p, ctypes.POINTER(ctypes.c_i
 shell.CommandLineToArgvW.restype = ctypes.POINTER(ctypes.c_wchar_p)
 ctypes.windll.kernel32.LocalFree.argtypes = [ctypes.c_void_p]
 for project, sources in {
-    "Magpie.Core": ["DLSSNRFilter.cpp", "DLSSNRTemporal.cpp", "NativeEffectBackendFactory.cpp", "Renderer.cpp", "StepTimer.cpp"],
-    "Magpie": ["ScalingModeItem.cpp", "ScalingModesService.cpp"],
+    "GMagpie.Core": ["DLSSNRFilter.cpp", "DLSSNRTemporal.cpp", "NativeEffectBackendFactory.cpp", "Renderer.cpp", "StepTimer.cpp"],
+    "GMagpie": ["ScalingModeItem.cpp", "ScalingModesService.cpp"],
 }.items():
     relative = f"{project}/{project}.tlog/CL.command.1.tlog"
     path = next((build / folder / relative for folder in ("obj", "obj/x64/Release")
@@ -30,7 +30,7 @@ for project, sources in {
     definitions = list(dict.fromkeys(args[i+1] for i,arg in enumerate(args) if arg == "/D"))
     for source in sources:
         command = ["cl.exe", "/nologo", "/Zs", "/std:c++20", "/EHsc", "/utf-8", "/W4", "/WX", "/bigobj",
-                   "/I"+str(repo/"src/Magpie.Core/include"), "/I"+str(repo/"src/Magpie.Core")]
+                   "/I"+str(repo/"src/GMagpie.Core/include"), "/I"+str(repo/"src/GMagpie.Core")]
         command += includes + [item for value in definitions for item in ("/D",value)]
         command += [str(repo/f"src/{project}/{source}")]
         subprocess.run(command, cwd=repo/f"src/{project}", check=True)

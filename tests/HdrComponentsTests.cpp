@@ -7,7 +7,7 @@
 #include <limits>
 #include <map>
 
-using namespace Magpie;
+using namespace GMagpie;
 struct Effect { std::string name; std::map<std::string, float> parameters; };
 using Effects = std::vector<Effect>;
 int main() {

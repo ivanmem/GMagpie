@@ -1,6 +1,6 @@
 # 0.6.7-local 效果器选择器（r1 fix1）
 
-在「效果组」中点击「添加效果器」，左侧按用途和子分组筛选，右侧搜索和选择单个效果器，底部通栏显示详情。选择器可超出主窗口，最大 820×800 DIP，按按钮所在显示器的工作区和 DPI 留出边距。采用 Magpie 现有 WinUI 主题的圆角 Flyout、背景材质、半透明分区和分隔线。
+在「效果组」中点击「添加效果器」，左侧按用途和子分组筛选，右侧搜索和选择单个效果器，底部通栏显示详情。选择器可超出主窗口，最大 820×800 DIP，按按钮所在显示器的工作区和 DPI 留出边距。采用 GMagpie 现有 WinUI 主题的圆角 Flyout、背景材质、半透明分区和分隔线。
 
 - 「入门」沿用原有的入门筛选；新增「进阶」快捷分类，包含 RTXVideo VSR、DLSS FG、XeSS FG 两个版本、DLSSNR 和 Frame Rate Filter，共 6 项。各效果器在原用途分类中也可找到。
 - 搜索覆盖全部分类，匹配名称、用途、关键词和旧名称；点击分类会清空搜索。列表保留名称与一行用途说明。
@@ -22,7 +22,7 @@ DLSS SR 与 FSR2／3／4、XeSS SR 一同归入「放大与超分 → 时序重�
 
 仅在标题和正文超出说明区时，右下角显示「Ctrl + 滚轮：滚动说明」。提示位于独立的底行，保留正文滚动空间，不覆盖文字；切换到可完整显示的短说明时隐藏，切换说明后滚动位置回到顶部。溢出判定使用未扣除提示行的可用高度，避免提示自身造成不必要的滚动。窗口尺寸或文本布局变化后更新提示，鼠标实际移动和键盘聚焦继续更新当前说明。
 
-三区使用同一主题基色的递增半透明覆盖：分类最轻、效果器居中、说明最明显。深色主题由深到浅，浅色主题由浅到深；圆角、分隔线和 Acrylic 材质沿用 Magpie 控件。
+三区使用同一主题基色的递增半透明覆盖：分类最轻、效果器居中、说明最明显。深色主题由深到浅，浅色主题由浅到深；圆角、分隔线和 Acrylic 材质沿用 GMagpie 控件。
 
 ## RTX Video
 
@@ -48,16 +48,16 @@ FP16 路径的高光、颜色和实际 AI 观感仍需验证；该路径下现�
 
 ## 验证与维护
 
-- `tests/Run-EffectPickerR1Tests.ps1 -CoreLibrary <Release Magpie.Core.lib>`：搜索、分类、精确别名、八档迁移、幂等性、参数保留、默认／无效值、旧请求回退保护、自动 HDR 输入／能力判定，以及独立进程中的真实 XAML 集合和三分区布局（820×800、820×640、480×360、280×220）。
+- `tests/Run-EffectPickerR1Tests.ps1 -CoreLibrary <Release GMagpie.Core.lib>`：搜索、分类、精确别名、八档迁移、幂等性、参数保留、默认／无效值、旧请求回退保护、自动 HDR 输入／能力判定，以及独立进程中的真实 XAML 集合和三分区布局（820×800、820×640、480×360、280×220）。
 - `tests/Run-EffectPickerFix1Tests.ps1`：以上回归，以及家族／代际分组、过滤后的精确 ID、自然排序、索引、隐藏 0／1／10／100 行的间距、首尾／全隐藏／单结果、加减号几何、多 DPI 尺寸。加载生产 XAML 样式到同版本 WinUI 2 的独立无窗口进程，检查深浅主题、圆角、半透明画刷和默认 Flyout 模板。回归检查进阶分类的精确 ID、155 项正文在两种宽度下仍保持 200 高度、右下角提示不覆盖正文、长短说明切换、Ctrl／普通／横向滚轮判定及正反向、高精度和边界偏移，以及三区主题覆盖强度的顺序。无窗口测试不模拟实际鼠标、焦点或滚动事件；实际 Ctrl＋滚轮跨区域操作、列表位置不变、说明重置、屏幕边界和主题观感由用户验收。
 - `tests/Validate-EffectCatalog.ps1`：155 个源文件与目录一致、两项 RTX 参数定义、旧名称搜索别名。
 - `EffectPickerThemeTests` 同时检查字母按钮的 18 DIP 尺寸、系统焦点、深浅主题，以及从悬停／按下转为禁用时仅文字透明度降低、背景透明、恢复可用后文字复原。
 - `scripts/tests/hdr_surface_warp.cpp`：提取生产转换着色器，在软件 D3D11 WARP 上验证 HDR 映射，以及 80／203／360 nit 白点下的自动 DLSSNR 边界往返。此测试不调用 NVIDIA 效果器。
-- Release 构建和运行包统一使用 `release/v0.6.7-local/Magpie-Experimental-x64`；中间文件统一在版本 `obj/`，不建立 `.build`。`Deploy-Local067.ps1` 从已提交源码构建、检查内置效果文件并生成清单；保留配置、日志与自定义文件。八个旧 RTX 文件在构建验证后备份至版本目录的 `retired-effects` 再移除。
+- Release 构建和运行包统一使用 `release/v0.6.7-local/GMagpie-Experimental-x64`；中间文件统一在版本 `obj/`，不建立 `.build`。`Deploy-Local067.ps1` 从已提交源码构建、检查内置效果文件并生成清单；保留配置、日志与自定义文件。八个旧 RTX 文件在构建验证后备份至版本目录的 `retired-effects` 再移除。
 
 说明来源：[原始 review](../reviews/20260908-effect-content-catalog.json)；产品目录由 `scripts/Generate-EffectCatalog.ps1` 生成并嵌入 EXE。r1 将 RTX 元数据合并为两项，更新 DLSSNR 自动路径说明。
 
-实际 Magpie UI、NVIDIA GPU 效果与画质由用户自行测试。建议重点检查：点击添加及参数按钮，树形分类与搜索，RTX VSR／Denoise 四档切换及失败回退，旧组重开／导入后的档位和尺寸。HDR 组件接入后共 158 项；旧 HDR 开关仍隐藏。HDR 捕获需要 Graphics Capture 和源屏幕开启 Windows HDR，HDR 输出需要目标屏幕开启 Windows HDR。检查普通转换的配对／重启、RTX HDR 四项参数实时应用、原画对比、NR 所在颜色段及补帧组合的亮度与停止操作。
+实际 GMagpie UI、NVIDIA GPU 效果与画质由用户自行测试。建议重点检查：点击添加及参数按钮，树形分类与搜索，RTX VSR／Denoise 四档切换及失败回退，旧组重开／导入后的档位和尺寸。HDR 组件接入后共 158 项；旧 HDR 开关仍隐藏。HDR 捕获需要 Graphics Capture 和源屏幕开启 Windows HDR，HDR 输出需要目标屏幕开启 Windows HDR。检查普通转换的配对／重启、RTX HDR 四项参数实时应用、原画对比、NR 所在颜色段及补帧组合的亮度与停止操作。
 
 ## 2026-09-08 回归修复
 
@@ -78,7 +78,7 @@ MV 调试效果器 `Diagnostics\FrameGuidance_Motion` 同样提供无／AMDOF／
 
 ## v4e 配置隔离与恢复
 
-- 用户配置写入 `%LOCALAPPDATA%\Magpie\config\v4e\config.json`；便携配置写入程序目录的 `config\v4e\config.json`。原版 v4 与旧便携 config.json 仅用于读取迁移，保留原件。
+- 用户配置写入 `%LOCALAPPDATA%\GMagpie\config\v4e\config.json`；便携配置写入程序目录的 `config\v4e\config.json`。原版 v4 与旧便携 config.json 仅用于读取迁移，保留原件。
 - 优先增强版配置；用户主文件缺失时可读取同目录备份。已有增强版主文件损坏时使用该文件的恢复流程，不退回原版覆盖增强版设置。无法访问或目标为目录时提示修复路径。
 - 正常读取、版本迁移、可修复参数及完整备份恢复成功均不弹提示。只在完全无可恢复配置或读写失败时提示；无法使用的效果在组内显示下一步。
 - 单个结构损坏的效果保留位置及原始数据，缺失效果保留名称与参数；已弃用的深度诊断也保留为待替换项。含失效项的组在启动缩放前拦截。

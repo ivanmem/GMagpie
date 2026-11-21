@@ -12,7 +12,7 @@ Enter-VsDevShell -VsInstallPath $vs -SkipAutomaticLocation -DevCmdArguments '-ar
 if ($LASTEXITCODE) { throw 'Production shader extraction failed.' }
 $exe = Join-Path $target 'DLSSNRGpuFusionTests.exe'
 $object = Join-Path $target 'DLSSNRGpuFusionTests.obj'
-& cl.exe /nologo /std:c++20 /EHsc /utf-8 /W4 /WX /MT /O2 "/I$target" "/I$repo/src/Magpie.Core" (Join-Path $PSScriptRoot 'DLSSNRGpuFusionTests.cpp') "/Fe:$exe" "/Fo:$object" /link d3d11.lib d3dcompiler.lib dxgi.lib
+& cl.exe /nologo /std:c++20 /EHsc /utf-8 /W4 /WX /MT /O2 "/I$target" "/I$repo/src/GMagpie.Core" (Join-Path $PSScriptRoot 'DLSSNRGpuFusionTests.cpp') "/Fe:$exe" "/Fo:$object" /link d3d11.lib d3dcompiler.lib dxgi.lib
 if ($LASTEXITCODE) { throw "GPU fusion WARP test compilation failed ($LASTEXITCODE)." }
 $log = Join-Path $target 'DLSSNRGpuFusionTests.stdout.log'
 if ($Hardware) { & $exe '--hardware' 2>&1 | Tee-Object -FilePath $log } else { & $exe 2>&1 | Tee-Object -FilePath $log }

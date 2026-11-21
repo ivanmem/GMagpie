@@ -3,7 +3,7 @@ import ctypes
 from pathlib import Path
 import sys
 package = Path(sys.argv[1]).resolve()
-dll = ctypes.WinDLL(str(package/'Magpie.RtxVideo.dll'))
+dll = ctypes.WinDLL(str(package/'GMagpie.RtxVideo.dll'))
 create = dll.MagpieRtxHdrCreate
 create.argtypes = [ctypes.c_void_p, ctypes.c_wchar_p, ctypes.POINTER(ctypes.c_void_p), ctypes.POINTER(ctypes.c_uint32)]
 create.restype = ctypes.c_long

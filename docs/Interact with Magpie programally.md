@@ -1,4 +1,4 @@
-Magpie provides mechanisms for interaction with other programs. Through these mechanisms, your application can cooperate with Magpie.
+GMagpie provides mechanisms for interaction with other programs. Through these mechanisms, your application can cooperate with GMagpie.
 
 [MagpieWatcher](https://github.com/Blinue/MagpieWatcher) demonstrates how to use these mechanisms.
 
@@ -21,7 +21,7 @@ The `wParam` parameter indicates the event ID, and the meaning of `lParam` varie
 
 ### Notes
 
-If your process has a higher integrity level than Magpie, you won't receive messages broadcasted by Magpie due to User Interface Privilege Isolation (UIPI). In such cases, call [ChangeWindowMessageFilterEx](https://learn.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-changewindowmessagefilterex) to allow receiving the `MagpieScalingChanged` message.
+If your process has a higher integrity level than GMagpie, you won't receive messages broadcasted by GMagpie due to User Interface Privilege Isolation (UIPI). In such cases, call [ChangeWindowMessageFilterEx](https://learn.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-changewindowmessagefilterex) to allow receiving the `MagpieScalingChanged` message.
 
 ```c++
 ChangeWindowMessageFilterEx(hYourWindow, WM_MAGPIE_SCALINGCHANGED, MSGFLT_ADD, nullptr);
@@ -29,7 +29,7 @@ ChangeWindowMessageFilterEx(hYourWindow, WM_MAGPIE_SCALINGCHANGED, MSGFLT_ADD, n
 
 ## How to Get the Handle of the Scaled Window
 
-You can listen for the `MagpieScalingChanged` message to obtain the handle of the scaled window. Additionally, while Magpie is scaling, you can also search for the window with the class name `Window_Magpie_967EB565-6F73-4E94-AE53-00CC42592A22`. Magpie ensures that this class name remains unchanged and that only one scaled window exists at a time.
+You can listen for the `MagpieScalingChanged` message to obtain the handle of the scaled window. Additionally, while GMagpie is scaling, you can also search for the window with the class name `Window_Magpie_967EB565-6F73-4E94-AE53-00CC42592A22`. GMagpie ensures that this class name remains unchanged and that only one scaled window exists at a time.
 
 ```c++
 HWND hwndScaling = FindWindow(L"Window_Magpie_967EB565-6F73-4E94-AE53-00CC42592A22", nullptr);
@@ -55,26 +55,26 @@ if (message == WM_MAGPIE_SCALINGCHANGED) {
 
 Scaling information is stored in the [window properties](https://learn.microsoft.com/en-us/windows/win32/winmsg/about-window-properties) of the scaled window. Currently available properties include:
 
-* `Magpie.Windowed`：Indicates whether Magpie is performing windowed scaling
-* `Magpie.SrcHWND`: Handle of the source window
-* `Magpie.SrcLeft`、`Magpie.SrcTop`、`Magpie.SrcRight`、`Magpie.SrcBottom`: Source region of scaling
-* `Magpie.DestLeft`、`Magpie.DestTop`、`Magpie.DestRight`、`Magpie.DestBottom`: Destination region of scaling
+* `GMagpie.Windowed`：Indicates whether GMagpie is performing windowed scaling
+* `GMagpie.SrcHWND`: Handle of the source window
+* `GMagpie.SrcLeft`、`GMagpie.SrcTop`、`GMagpie.SrcRight`、`GMagpie.SrcBottom`: Source region of scaling
+* `GMagpie.DestLeft`、`GMagpie.DestTop`、`GMagpie.DestRight`、`GMagpie.DestBottom`: Destination region of scaling
 
 ```c++
-HWND hwndSrc = (HWND)GetProp(hwndScaling, L"Magpie.SrcHWND");
-bool isWindowed = (bool)GetProp(hwndScaling, L"Magpie.Windowed");
+HWND hwndSrc = (HWND)GetProp(hwndScaling, L"GMagpie.SrcHWND");
+bool isWindowed = (bool)GetProp(hwndScaling, L"GMagpie.Windowed");
 
 RECT srcRect;
-srcRect.left = (LONG)(INT_PTR)GetProp(hwndScaling, L"Magpie.SrcLeft");
-srcRect.top = (LONG)(INT_PTR)GetProp(hwndScaling, L"Magpie.SrcTop");
-srcRect.right = (LONG)(INT_PTR)GetProp(hwndScaling, L"Magpie.SrcRight");
-srcRect.bottom = (LONG)(INT_PTR)GetProp(hwndScaling, L"Magpie.SrcBottom");
+srcRect.left = (LONG)(INT_PTR)GetProp(hwndScaling, L"GMagpie.SrcLeft");
+srcRect.top = (LONG)(INT_PTR)GetProp(hwndScaling, L"GMagpie.SrcTop");
+srcRect.right = (LONG)(INT_PTR)GetProp(hwndScaling, L"GMagpie.SrcRight");
+srcRect.bottom = (LONG)(INT_PTR)GetProp(hwndScaling, L"GMagpie.SrcBottom");
 
 RECT destRect;
-destRect.left = (LONG)(INT_PTR)GetProp(hwndScaling, L"Magpie.DestLeft");
-destRect.top = (LONG)(INT_PTR)GetProp(hwndScaling, L"Magpie.DestTop");
-destRect.right = (LONG)(INT_PTR)GetProp(hwndScaling, L"Magpie.DestRight");
-destRect.bottom = (LONG)(INT_PTR)GetProp(hwndScaling, L"Magpie.DestBottom");
+destRect.left = (LONG)(INT_PTR)GetProp(hwndScaling, L"GMagpie.DestLeft");
+destRect.top = (LONG)(INT_PTR)GetProp(hwndScaling, L"GMagpie.DestTop");
+destRect.right = (LONG)(INT_PTR)GetProp(hwndScaling, L"GMagpie.DestRight");
+destRect.bottom = (LONG)(INT_PTR)GetProp(hwndScaling, L"GMagpie.DestBottom");
 ```
 
 ### Notes

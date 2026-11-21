@@ -8,7 +8,7 @@
 #include <thread>
 #include <vector>
 
-using namespace Magpie;
+using namespace GMagpie;
 struct D3D11_TEXTURE2D_DESC { UINT Width, Height; };
 struct ID3D11Texture2D {
 	D3D11_TEXTURE2D_DESC desc;

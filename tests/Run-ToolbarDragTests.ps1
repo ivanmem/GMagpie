@@ -3,7 +3,7 @@ param([string]$OutputDirectory)
 $ErrorActionPreference = 'Stop'
 $repo = Split-Path $PSScriptRoot -Parent
 if (!$OutputDirectory) {
-    $OutputDirectory = Join-Path ([IO.Path]::GetTempPath()) ('Magpie-toolbar-drag-' + [guid]::NewGuid())
+    $OutputDirectory = Join-Path ([IO.Path]::GetTempPath()) ('GMagpie-toolbar-drag-' + [guid]::NewGuid())
 }
 New-Item -ItemType Directory -Path $OutputDirectory -Force | Out-Null
 $vswhere = Join-Path ${env:ProgramFiles(x86)} 'Microsoft Visual Studio/Installer/vswhere.exe'
@@ -21,7 +21,7 @@ if ($LASTEXITCODE) { throw 'Toolbar production extraction failed.' }
 Push-Location $OutputDirectory
 try {
     & cl.exe /nologo /std:c++20 /EHsc /utf-8 /MT /O2 /DNOMINMAX /DUNICODE /D_UNICODE `
-        "/I$repo/src/Magpie.Core/include" "/I$OutputDirectory" "/I$($imgui.FullName)/p/include" "/I$($rapid.FullName)/p/include" `
+        "/I$repo/src/GMagpie.Core/include" "/I$OutputDirectory" "/I$($imgui.FullName)/p/include" "/I$($rapid.FullName)/p/include" `
         (Join-Path $PSScriptRoot 'ToolbarDragTests.cpp') "$($imgui.FullName)/p/lib/imgui.lib" user32.lib imm32.lib `
         "/Fe:$OutputDirectory/ToolbarDragTests.exe" "/Fo:$OutputDirectory/ToolbarDragTests.obj"
     if ($LASTEXITCODE) { throw 'Toolbar test compilation failed.' }
@@ -31,7 +31,7 @@ try {
         & python (Join-Path $repo "scripts/tests/test_$test.py") $OutputDirectory
         if ($LASTEXITCODE) { throw "Extract $test failed" }
         & cl.exe /nologo /std:c++20 /EHsc /utf-8 /MT /O2 /DNOMINMAX `
-            "/I$repo/src/Magpie.Core/include" "/I$($imgui.FullName)/p/include" "$OutputDirectory/$test.cpp" `
+            "/I$repo/src/GMagpie.Core/include" "/I$($imgui.FullName)/p/include" "$OutputDirectory/$test.cpp" `
             "$($imgui.FullName)/p/lib/imgui.lib" user32.lib imm32.lib "/Fe:$OutputDirectory/$test.exe" "/Fo:$OutputDirectory/$test.obj"
         if ($LASTEXITCODE) { throw "Compile $test failed" }
         & "$OutputDirectory/$test.exe"

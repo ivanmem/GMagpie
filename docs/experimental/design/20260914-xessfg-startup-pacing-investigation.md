@@ -26,7 +26,7 @@ RTSS 保持运行，所有六次测试的首帧诊断都记录 `rtss=true`。仅
 
 ## 3. 隔离对照数据
 
-设备：NVIDIA RTX 5070 Ti。原名 `Magpie.exe`，WGC，AMD Quality 光流，SDR，全屏缩放，目标基础上限 60 FPS；动画源窗口仍采用现有 GDI fixture。该源实际稳态约 40 次提交／秒，因此 120 次提交约需 3 秒，不能把它当作严格的 60 Hz 游戏源。
+设备：NVIDIA RTX 5070 Ti。原名 `GMagpie.exe`，WGC，AMD Quality 光流，SDR，全屏缩放，目标基础上限 60 FPS；动画源窗口仍采用现有 GDI fixture。该源实际稳态约 40 次提交／秒，因此 120 次提交约需 3 秒，不能把它当作严格的 60 Hz 游戏源。
 
 RTSS 专用配置保持 `Limit=0`、`ReflexSleep=0`、`ReflexSetLatencyMarker=1`、`UseDetours=1`、`InjectionDelay=15000`。磁盘值不替代生效状态查询，但每次首帧都实际检测到 RTSS 模块，故本轮的 10 秒慢启动不能解释为“等待 15 秒才开始加载 RTSS”。
 
@@ -145,7 +145,7 @@ XeSS FG 当前已由 XeLL 接管内部帧同步；把喜鹊界面的 Reflex 改�
 - 单元回归及固定 DLL 的补丁安装／回滚检查通过；新增超时、索引跳跃、倍率变化、fallback 和启动／低帧率估计用例。
 - SDK 回归通过：完整倍率 2×／3×／4×、历史恢复及同进程销毁重建正常，预热后 45 次提交返回 90／135／180 帧。
 - 正式修复的隔离 EXE SHA-256：`E2D91D4897C0A54E18FA9744DA0B96888569F52DC2AE9E6B8E2BD15C670A3EA3`。RTSS 开启、全屏 WGC＋AMD 质量光流的 30 秒 4×冷启动测试通过：首帧已注入 RTSS，首次完整倍率 27 ms，前 120 次提交 2.941 s，前 240 次提交 5.941 s。最终累计 4782／1200，6 个部分输出 burst。路径：`.tools/xess-mfg-impl/capture-20260914-164918/capture-verification.json`。GDI 源稳态约 40 次接收／秒，以上并非显示 FPS。
-- RTSS 开启的 2→3→4 多轮切换**未通过**：2×、3×正常，进入下一次初始化时崩溃。新转储 `Magpie.exe.34436.dmp`（16:50:38）再次为 `FAST_FAIL_GUARD_ICALL_CHECK_FAILURE`，栈为 `RTSSHooks64 → nvapi64_impl → D3D12Core`，处于 `XeSSFGPresenter::_Initialize`。与旧转储路径一致，不是启动后调度慢的问题。证据：`startup-fix/rtss-rebuild-dump.log`、`capture-20260914-165005`。
+- RTSS 开启的 2→3→4 多轮切换**未通过**：2×、3×正常，进入下一次初始化时崩溃。新转储 `GMagpie.exe.34436.dmp`（16:50:38）再次为 `FAST_FAIL_GUARD_ICALL_CHECK_FAILURE`，栈为 `RTSSHooks64 → nvapi64_impl → D3D12Core`，处于 `XeSSFGPresenter::_Initialize`。与旧转储路径一致，不是启动后调度慢的问题。证据：`startup-fix/rtss-rebuild-dump.log`、`capture-20260914-165005`。
 - 用户要求先部署供自行测试：交付本次慢启动修复，保留上述独立崩溃的已知限制。正式构建的 commit／哈希以 068 local 的 `build-manifest.json` 和 ZIP 校验文件为准；隔离测试 EXE 的旧版本 commit 字符串不作为发布证明。
 
 长时间游戏、HDR／VRR、RTSS 其他限帧组合、独立 Reflex 标记崩溃和最终显示事件验证不由短时启动测试替代。

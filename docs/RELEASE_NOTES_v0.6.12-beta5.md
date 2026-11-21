@@ -1,4 +1,4 @@
-# Magpie Experimental v0.6.12-beta5
+# GMagpie Experimental v0.6.12-beta5
 
 ## 本次更新
 
@@ -14,17 +14,17 @@
 - “帧率与刷新”中的独立 Async 节奏选项继续保留。
 - 补交复用已完成的画面，不重跑 DLSSNR；实际新内容帧率仍取决于源程序、捕获和效果处理速度。此优化不启用于其他捕获方式、Async／NVIDIA Reflex 节奏或带补帧的效果链。
 - VRR 仍为实验功能，默认关闭。帧间隔和目标帧率表现会随源程序、驱动、显示器及配置变化。
-- 首次安装和升级均使用完整主包 `Magpie-Experimental-x64.zip`。先备份设置并从托盘完全退出旧版，将整个 ZIP 解压到新目录，再运行 `Magpie.exe`。
+- 首次安装和升级均使用完整主包 `GMagpie-Experimental-x64.zip`。先备份设置并从托盘完全退出旧版，将整个 ZIP 解压到新目录，再运行 `GMagpie.exe`。
 - 保留 Beta 4 程序目录及升级前的设置备份。需要回退时，完全退出 Beta 5，恢复原设置后从 Beta 4 目录运行。
 
 ---
 
-# Magpie Experimental v0.6.12-beta5 User Guide
+# GMagpie Experimental v0.6.12-beta5 User Guide
 
 ## Changes
 
 - DLSSNR processing now offers only Every Frame and Alternating Frames; Async Every Frame and Async Alternating Frames have been removed. Old configurations automatically fall back from Async Every Frame to Every Frame and from Async Alternating Frames to Alternating Frames. Valid saved NR update intervals, model presets and input-resolution scales are retained.
-- Added refreshes across short WGC/VRR gaps: after roughly two target frame periods without a new content submission, Magpie can resubmit the most recently completed picture at the target cadence.
+- Added refreshes across short WGC/VRR gaps: after roughly two target frame periods without a new content submission, GMagpie can resubmit the most recently completed picture at the target cadence.
 - Pending new pictures and processing already in progress take priority. These refreshes stop after roughly 250 ms without a new content submission.
 - This applies automatically on supported output paths using Graphics Capture (WGC), a chain containing DLSSNR, Front Edge pacing and no frame generation. VRR must be enabled, and tearing support must be available on the active output path. Restart scaling after changing capture, pacing or VRR settings.
 - Includes Beta 4's WGC capture-interval and waiting improvements, reduced polling for static pictures, and fixes for focus changes, DWM occlusion/minimize recovery and capture boundaries.
@@ -35,5 +35,5 @@
 - The separate Async pacing option under Frame rate and refresh remains available.
 - Refreshes reuse a completed picture without rerunning DLSSNR. New-content FPS still depends on the source application, capture and effect processing. This optimization is inactive with other capture methods, Async/NVIDIA Reflex pacing or chains using frame generation.
 - VRR remains experimental and defaults to Off. Frame intervals and the ability to meet the target rate vary with the source application, driver, display and settings.
-- Use the complete `Magpie-Experimental-x64.zip` for both installation and upgrades. Back up settings and fully exit the previous version from the tray, extract the entire ZIP into a new folder, then run `Magpie.exe`.
-- Keep the Beta 4 program folder and a pre-upgrade settings backup. To roll back, fully exit Beta 5, restore the previous settings and run Magpie from the Beta 4 folder.
+- Use the complete `GMagpie-Experimental-x64.zip` for both installation and upgrades. Back up settings and fully exit the previous version from the tray, extract the entire ZIP into a new folder, then run `GMagpie.exe`.
+- Keep the Beta 4 program folder and a pre-upgrade settings backup. To roll back, fully exit Beta 5, restore the previous settings and run GMagpie from the Beta 4 folder.

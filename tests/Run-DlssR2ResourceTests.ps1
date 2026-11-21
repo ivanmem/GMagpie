@@ -15,7 +15,7 @@ if (!(Test-Path -LiteralPath (Join-Path $r2Repo 'packages'))) {
 $r2Wil = Get-ChildItem (Join-Path $r2DependenciesRepo 'packages') -Directory -Filter 'Microsoft.Windows.ImplementationLibrary.*' | Sort-Object Name -Descending | Select-Object -First 1
 & python (Join-Path $PSScriptRoot 'prepare_dlss_r2_test.py') $r2Output
 if ($LASTEXITCODE) { throw 'Extract production functions failed' }
-$r2IncludePaths = @($r2Output; (Join-Path $r2Repo 'src/Magpie.Core'); (Join-Path $r2Wil.FullName 'include'); (Join-Path $r2Workspace 'release/v0.6.7-local/obj/Magpie.Core/Generated Files'))
+$r2IncludePaths = @($r2Output; (Join-Path $r2Repo 'src/GMagpie.Core'); (Join-Path $r2Wil.FullName 'include'); (Join-Path $r2Workspace 'release/v0.6.7-local/obj/GMagpie.Core/Generated Files'))
 $r2Includes = @($r2IncludePaths | ForEach-Object { '/I' + $_ })
 foreach ($r2Timing in @($false, $true)) {
     $r2Name = if ($r2Timing) { 'resources-timing' } else { 'resources-default' }

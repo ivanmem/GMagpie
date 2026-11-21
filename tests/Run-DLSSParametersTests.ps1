@@ -9,7 +9,7 @@ Import-Module (Join-Path $vs 'Common7/Tools/Microsoft.VisualStudio.DevShell.dll'
 Enter-VsDevShell -VsInstallPath $vs -SkipAutomaticLocation -DevCmdArguments '-arch=x64 -host_arch=x64' | Out-Null
 & python "$repo/tests/prepare_dlss_parameters_test.py" $output
 if ($LASTEXITCODE) { throw 'DLSS parameter descriptor preparation failed' }
-& cl.exe /nologo /std:c++20 /EHsc /utf-8 /MT /O2 /W4 /DNOMINMAX "/I$output" "/I$repo/src/Shared" "/I$repo/src/Magpie.Core/include" "$repo/tests/DLSSParametersTests.cpp" "/Fe:$output/DLSSParametersTests.exe" "/Fo:$output/DLSSParametersTests.obj"
+& cl.exe /nologo /std:c++20 /EHsc /utf-8 /MT /O2 /W4 /DNOMINMAX "/I$output" "/I$repo/src/Shared" "/I$repo/src/GMagpie.Core/include" "$repo/tests/DLSSParametersTests.cpp" "/Fe:$output/DLSSParametersTests.exe" "/Fo:$output/DLSSParametersTests.obj"
 if ($LASTEXITCODE) { throw 'DLSS parameter compilation failed' }
 & "$output/DLSSParametersTests.exe"
 if ($LASTEXITCODE) { throw 'DLSS parameter regression failed' }

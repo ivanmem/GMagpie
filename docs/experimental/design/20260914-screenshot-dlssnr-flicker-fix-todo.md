@@ -37,7 +37,7 @@
 
 ## 当前改动位置
 
-- `src/Magpie.Core/GraphicsCaptureFrameSource.cpp`：重复时间戳跳过分支。
+- `src/GMagpie.Core/GraphicsCaptureFrameSource.cpp`：重复时间戳跳过分支。
 - `scripts/tests/test_capture_duplicate_timestamp.py`：正式分支 CPU 回归。
 - 本次分析与修复尚未修改截图读回、成功提示、AMD 光流算法或四条抗闪烁算法。
 

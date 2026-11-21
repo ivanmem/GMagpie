@@ -4,7 +4,7 @@ $scripts = Join-Path $PSScriptRoot '../scripts'
 . (Join-Path $scripts 'DlssgSm86Package.ps1')
 $contract = Assert-DlssgSm86Files $RuntimeDirectory
 $temporaryRoot = [IO.Path]::GetFullPath([IO.Path]::GetTempPath())
-$fixture = Join-Path $temporaryRoot ('Magpie DLSSG 测试 ' + [guid]::NewGuid().ToString('N'))
+$fixture = Join-Path $temporaryRoot ('GMagpie DLSSG 测试 ' + [guid]::NewGuid().ToString('N'))
 $package = Join-Path $fixture 'package with spaces'
 $dependency = Join-Path $fixture 'dependency'
 $checks = 0
@@ -61,6 +61,6 @@ try {
 } finally {
     $resolved = [IO.Path]::GetFullPath($fixture)
     if (!$resolved.StartsWith($temporaryRoot, [StringComparison]::OrdinalIgnoreCase) -or
-        [IO.Path]::GetFileName($resolved) -notlike 'Magpie DLSSG 测试 *') { throw 'Unsafe fixture cleanup path.' }
+        [IO.Path]::GetFileName($resolved) -notlike 'GMagpie DLSSG 测试 *') { throw 'Unsafe fixture cleanup path.' }
     if (Test-Path -LiteralPath $resolved) { Remove-Item -LiteralPath $resolved -Recurse -Force }
 }

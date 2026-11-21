@@ -18,7 +18,7 @@ struct StoredEffect {
 	std::pair<float,float> scale{1.f,1.f};
 };
 int main() {
-	using namespace Magpie;
+	using namespace GMagpie;
 	// Category-restored dimensions are saved with the parameters, while
 	// independent editor changes and conflicting transactions remain protected.
 	StoredEffect before{std::string(NVIDIA_VFX_VSR_ID),{{"category",0.f}},1,{1.f,1.f}};

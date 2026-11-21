@@ -11,7 +11,7 @@
 
 NVOFA 是从 Turing 架构开始提供的独立硬件光流引擎。它不依赖 CUDA 核心完成主要的光流估算，因此适合在图形或计算负载运行的同时生成运动场。
 
-对 Magpie 当前的 DLSSNR 帧引导路径，官方数据支持以下判断：
+对 GMagpie 当前的 DLSSNR 帧引导路径，官方数据支持以下判断：
 
 1. **优先试验 2×2 + SLOW，而不是直接采用 1×1。** 在 NVIDIA 的 KITTI 2015 测试中，更密的输出网格并不保证所有误差指标都更低；1×1 的性能代价却非常明显。
 2. **Turing 只能使用 4×4 输出网格。** Ampere 和 Ada 才支持 2×2、1×1、硬件 cost 和 ROI 等完整能力。
@@ -76,7 +76,7 @@ NVIDIA 应用说明中的光流数据使用以下环境：
 - GPU：RTX 6000（Turing）、RTX 3090（Ampere）、RTX 4090（Ada）。
 - 固定时钟：分别为 1679、1708、2114 MHz。
 
-这些结果用于说明相对趋势，不等同于 Magpie 的 D3D11、ABGR8、桌面内容和后处理链的实际表现。
+这些结果用于说明相对趋势，不等同于 GMagpie 的 D3D11、ABGR8、桌面内容和后处理链的实际表现。
 
 ### 5.2 指标含义
 
@@ -146,7 +146,7 @@ Turing 不支持 1×1 网格。
 
 ## 9. 由官方 FPS 换算的单帧时间
 
-下表是根据 `1000 / FPS` 得到的近似值，属于本文计算，不是 NVIDIA 表格中的原始列。它只反映官方测试环境中的 NVOFA 吞吐量，不包含 Magpie 的纹理复制、格式转换、稠密化、同步及 DLSSNR 调用。
+下表是根据 `1000 / FPS` 得到的近似值，属于本文计算，不是 NVIDIA 表格中的原始列。它只反映官方测试环境中的 NVOFA 吞吐量，不包含 GMagpie 的纹理复制、格式转换、稠密化、同步及 DLSSNR 调用。
 
 | 网格 | 预设 | Turing（ms） | Ampere（ms） | Ada（ms） |
 |---|---|---:|---:|---:|
@@ -209,9 +209,9 @@ NVIDIA 的帧率转换（FRUC）示例数据使用 Windows、1920×1080 NV12 CUD
 
 这些数值属于 NVIDIA 的完整 FRUC 库测试，不应与前述纯 NVOFA FPS 直接互换。
 
-## 13. 对 Magpie 当前实现的对应关系
+## 13. 对 GMagpie 当前实现的对应关系
 
-相关实现：[NvidiaOpticalFlowProvider.cpp](../src/Magpie.Core/NvidiaOpticalFlowProvider.cpp)。
+相关实现：[NvidiaOpticalFlowProvider.cpp](../src/GMagpie.Core/NvidiaOpticalFlowProvider.cpp)。
 
 当前代码的关键行为：
 
@@ -226,7 +226,7 @@ NVIDIA 的帧率转换（FRUC）示例数据使用 Windows、1920×1080 NV12 CUD
 
 ## 14. 面向 DLSSNR 质量的建议
 
-以下属于结合官方数据与当前代码的工程建议，不是 NVIDIA 对 Magpie 的官方结论。
+以下属于结合官方数据与当前代码的工程建议，不是 NVIDIA 对 GMagpie 的官方结论。
 
 ### 14.1 建议的质量档位
 
@@ -270,7 +270,7 @@ NVIDIA 的帧率转换（FRUC）示例数据使用 Windows、1920×1080 NV12 CUD
 ## 15. 使用这些数据时的限制
 
 - 官方质量表来自 KITTI 道路场景，并不代表动漫、桌面文字、UI、粒子、半透明材质或快速镜头运动。
-- 官方输入是 YUV 4:2:0；Magpie 当前 NVOFA 路径使用 ABGR8，输入特征会有差异。
+- 官方输入是 YUV 4:2:0；GMagpie 当前 NVOFA 路径使用 ABGR8，输入特征会有差异。
 - 固定时钟实验不代表用户机器的动态功耗、温度和并发渲染负载。
 - FPS 是光流引擎吞吐量，不等于端到端帧率，也不等于 DLSSNR 的附加延迟。
 - Fl 指标衡量运动估算错误比例，不直接衡量最终重建图像的主观画质。
@@ -278,4 +278,4 @@ NVIDIA 的帧率转换（FRUC）示例数据使用 Windows、1920×1080 NV12 CUD
 
 ## 16. 一句话决策建议
 
-若目标是提升 Magpie 中 DLSSNR 的细节与边缘稳定性，首个实验分支应把 **Ampere/Ada 改为 2×2 SLOW、Turing 改为 4×4 SLOW**，同时保留当前配置作为回退；随后把开发重点放在**边缘感知稠密化、cost/双向一致性门控、历史重置和真实深度/结构信息**上，而不是默认追求 1×1。
+若目标是提升 GMagpie 中 DLSSNR 的细节与边缘稳定性，首个实验分支应把 **Ampere/Ada 改为 2×2 SLOW、Turing 改为 4×4 SLOW**，同时保留当前配置作为回退；随后把开发重点放在**边缘感知稠密化、cost/双向一致性门控、历史重置和真实深度/结构信息**上，而不是默认追求 1×1。

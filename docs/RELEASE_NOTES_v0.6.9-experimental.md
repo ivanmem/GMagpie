@@ -1,10 +1,10 @@
-# Magpie Experimental v0.6.9
+# GMagpie Experimental v0.6.9
 
 本版更新了帧率与刷新设置、工具栏操作、DLSSNR 细节控制和效果器说明，并新增五个 xBR 效果。
 
 ## 功能更新
 
-### Magpie 本体易用性更新
+### GMagpie 本体易用性更新
 
 #### 帧率与刷新
 
@@ -90,20 +90,20 @@
 
 ## 应该下载哪个文件？
 
-**所有用户都下载完整主包 `Magpie-Experimental-x64.zip`。** 无论从旧版或本地 Beta 升级，还是首次安装，步骤相同：
+**所有用户都下载完整主包 `GMagpie-Experimental-x64.zip`。** 无论从旧版或本地 Beta 升级，还是首次安装，步骤相同：
 
-1. 升级前备份设置，并从托盘完全退出 Magpie。
-2. 将 ZIP **完整解压到新目录**，再运行其中的 `Magpie.exe`。
+1. 升级前备份设置，并从托盘完全退出 GMagpie。
+2. 将 ZIP **完整解压到新目录**，再运行其中的 `GMagpie.exe`。
 3. 保留原程序与配置备份，以便需要时回退。
 
-普通安装读取 `%LOCALAPPDATA%\Magpie\config\v4e\config.json`；没有 v4e 时会导入旧 v4 设置。便携用户可将原设置复制到新程序目录的 `config\v4e\config.json`。
+普通安装读取 `%LOCALAPPDATA%\GMagpie\config\v4e\config.json`；没有 v4e 时会导入旧 v4 设置。便携用户可将原设置复制到新程序目录的 `config\v4e\config.json`。
 
 ### 附件的作用与使用
 
 | 附件 | 用途与使用方法 |
 | --- | --- |
-| `Magpie-Experimental-x64.zip` | **必选完整主包**，包含程序、界面资源、效果器与运行组件。完整解压后使用。 |
-| `DLSSNR-DLL-Options-310.8.0.0.zip` | **可选 DLSSNR DLL 包**，提供 NVIDIA 官方版、RTX 40/50 社区兼容版与 SF-v2。需要切换 NR DLL 时下载；完全退出 Magpie，备份现有 DLL，按包内中英说明选择一个版本放到 `Magpie.exe` 旁。 |
+| `GMagpie-Experimental-x64.zip` | **必选完整主包**，包含程序、界面资源、效果器与运行组件。完整解压后使用。 |
+| `DLSSNR-DLL-Options-310.8.0.0.zip` | **可选 DLSSNR DLL 包**，提供 NVIDIA 官方版、RTX 40/50 社区兼容版与 SF-v2。需要切换 NR DLL 时下载；完全退出 GMagpie，备份现有 DLL，按包内中英说明选择一个版本放到 `GMagpie.exe` 旁。 |
 | `NGX_OTA_Switch.bat` | **可选 NGX OTA 设置工具**，在需要查看或切换 NGX OTA 设置时使用。相关操作需管理员权限并影响系统级设置；使用 **Restore default** 恢复设置。 |
 
 ## 使用提示
@@ -117,13 +117,13 @@ Contributor: [liaanj](https://github.com/liaanj) 提供虚拟显示环境下的�
 
 ---
 
-# Magpie Experimental v0.6.9 User Guide
+# GMagpie Experimental v0.6.9 User Guide
 
 This release updates frame-rate and refresh settings, toolbar controls, DLSSNR detail controls and effect descriptions, and adds five xBR effects.
 
 ## Updates
 
-### Magpie usability updates
+### GMagpie usability updates
 
 #### Frame rate and refresh
 
@@ -209,20 +209,20 @@ Add **xBR 2x, xBR 3x, xBR 4x, xBR NoBlend 3x and xBR Hybrid 2x** for pixel art a
 
 ## Which file should I download?
 
-**All users should download the complete `Magpie-Experimental-x64.zip`.** The steps are the same whether upgrading from an older release or local Beta, or installing for the first time:
+**All users should download the complete `GMagpie-Experimental-x64.zip`.** The steps are the same whether upgrading from an older release or local Beta, or installing for the first time:
 
-1. When upgrading, back up your settings and fully exit Magpie from the system tray.
-2. **Extract the entire ZIP into a new folder**, then run its `Magpie.exe`.
+1. When upgrading, back up your settings and fully exit GMagpie from the system tray.
+2. **Extract the entire ZIP into a new folder**, then run its `GMagpie.exe`.
 3. Keep the original application and settings backup for rollback.
 
-Normal installations use `%LOCALAPPDATA%\Magpie\config\v4e\config.json`, importing legacy v4 settings if v4e is absent. Portable users can copy their existing settings to `config\v4e\config.json` in the new program folder.
+Normal installations use `%LOCALAPPDATA%\GMagpie\config\v4e\config.json`, importing legacy v4 settings if v4e is absent. Portable users can copy their existing settings to `config\v4e\config.json` in the new program folder.
 
 ### Assets: purpose and instructions
 
 | Asset | Purpose and instructions |
 | --- | --- |
-| `Magpie-Experimental-x64.zip` | **Required complete package**, with the application, UI resources, effects and runtime components. Extract it fully before use. |
-| `DLSSNR-DLL-Options-310.8.0.0.zip` | **Optional DLSSNR DLL package** with official NVIDIA, community RTX 40/50-compatible and SF-v2 variants. Download only to switch NR DLLs. Fully exit Magpie, back up the existing DLL, and follow the Chinese/English instructions to place one variant beside `Magpie.exe`. |
+| `GMagpie-Experimental-x64.zip` | **Required complete package**, with the application, UI resources, effects and runtime components. Extract it fully before use. |
+| `DLSSNR-DLL-Options-310.8.0.0.zip` | **Optional DLSSNR DLL package** with official NVIDIA, community RTX 40/50-compatible and SF-v2 variants. Download only to switch NR DLLs. Fully exit GMagpie, back up the existing DLL, and follow the Chinese/English instructions to place one variant beside `GMagpie.exe`. |
 | `NGX_OTA_Switch.bat` | **Optional NGX OTA settings tool** for use when you want to inspect or change NGX OTA settings. Relevant operations require administrator privileges and affect system-wide settings. Use **Restore default** to restore settings. |
 
 ## Usage tips

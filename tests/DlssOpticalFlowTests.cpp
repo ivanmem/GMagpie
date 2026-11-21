@@ -10,7 +10,7 @@
 #include <algorithm>
 #include <span>
 
-namespace Magpie {
+namespace GMagpie {
 struct EffectOption { std::map<std::string, float, std::less<>> parameters; };
 struct MotionSettings {
 	MotionVectorRequest motionRequest;
@@ -48,7 +48,7 @@ struct StoredEffect {
 };
 
 int main() {
-	using namespace Magpie;
+	using namespace GMagpie;
 	const auto nvBalanced = MotionVectorRequest::Nvidia(NvidiaOpticalFlowQuality::Balanced);
 	for (auto id : {L"DLSSNR\\DLSSNR_AI_Filter", L"DLSSFG\\DLSS_FrameGeneration"}) {
 		for (int quality = 0; quality <= 5; ++quality) {

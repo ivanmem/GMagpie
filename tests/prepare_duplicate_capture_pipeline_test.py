@@ -8,8 +8,8 @@ import re
 import sys
 
 repo = Path(__file__).resolve().parents[1]
-source = (repo / "src/Magpie.Core/FrameSourceBase.cpp").read_text(encoding="utf-8-sig")
-header = (repo / "src/Magpie.Core/FrameSourceBase.h").read_text(encoding="utf-8-sig")
+source = (repo / "src/GMagpie.Core/FrameSourceBase.cpp").read_text(encoding="utf-8-sig")
+header = (repo / "src/GMagpie.Core/FrameSourceBase.h").read_text(encoding="utf-8-sig")
 def body(signature, following):
     start = source.index(signature)
     text = source[source.index("{", start)+1:source.index(following, start)]

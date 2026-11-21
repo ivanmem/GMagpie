@@ -3,7 +3,7 @@ from pathlib import Path
 import sys
 
 root = Path(__file__).resolve().parents[2]
-source = (root/'src/Magpie.Core/CursorManager.cpp').read_text(encoding='utf-8-sig')
+source = (root/'src/GMagpie.Core/CursorManager.cpp').read_text(encoding='utf-8-sig')
 def method(signature):
     start = source.index(signature)
     return source[start:source.index('\n}', start)+2]
@@ -23,7 +23,7 @@ harness = r'''
 #define GetGUIThreadInfo FakeGetGUIThreadInfo
 #define IsChild FakeIsChild
 #define MonitorFromPoint FakeMonitorFromPoint
-namespace Magpie {
+namespace GMagpie {
 bool operator==(const POINT& a,const POINT& b) { return a.x==b.x&&a.y==b.y; }
 bool operator==(const RECT& a,const RECT& b) { return a.left==b.left&&a.top==b.top&&a.right==b.right&&a.bottom==b.bottom; }
 template<class T> using SmallVectorImpl=std::vector<T>;
@@ -40,7 +40,7 @@ struct Renderer {
 };
 struct Tracker {bool IsMoving() const{return false;} HWND Handle() const{return input;}};
 struct ScalingWindow {
-    Magpie::Renderer renderer; ScalingOptions options; Tracker tracker; RECT surface{0,0,2560,1440};
+    GMagpie::Renderer renderer; ScalingOptions options; Tracker tracker; RECT surface{0,0,2560,1440};
     static ScalingWindow& Get(){static ScalingWindow w;return w;}
     auto& Renderer(){return renderer;} auto& Options(){return options;} auto& SrcTracker(){return tracker;}
     const RECT& RendererRect() const{return surface;}
@@ -77,7 +77,7 @@ struct CursorManager {
 };
 PRODUCTION
 }
-int main(){using namespace Magpie; auto& w=ScalingWindow::Get(); CursorManager c;
+int main(){using namespace GMagpie; auto& w=ScalingWindow::Get(); CursorManager c;
     // Every edge remains reachable before the mouse button is pressed.
     w.renderer.visible=true;
     for(POINT p : {POINT{2350,285},POINT{100,720},POINT{1280,50},POINT{1280,1300}}){

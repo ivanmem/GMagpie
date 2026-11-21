@@ -1,4 +1,4 @@
-# Magpie Experimental 0.6.10 Beta4
+# GMagpie Experimental 0.6.10 Beta4
 
 本地测试版本，继承完整 Beta3 `3c071cc6`，整合截至 2026-10-09 已提交的 HDR、RTSS 与 VRR 更新。公开更新入口仍为 0.6.9。
 

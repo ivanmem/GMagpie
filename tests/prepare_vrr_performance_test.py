@@ -5,7 +5,7 @@ import sys
 repo = Path(__file__).resolve().parents[1]
 output = Path(sys.argv[1]).resolve()
 output.mkdir(parents=True, exist_ok=True)
-source = (repo / "src/Magpie.Core/Renderer.cpp").read_text(encoding="utf-8-sig")
+source = (repo / "src/GMagpie.Core/Renderer.cpp").read_text(encoding="utf-8-sig")
 start = source.index("void Renderer::_CopySceneToTarget(")
 end = source.index("{", start) + 1
 depth = 1

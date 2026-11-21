@@ -49,7 +49,7 @@ change('"<<(o.diagnosticValidity?"diagnostic_readback":o.dumpTail?"quality_gpu_s
        '"<<"probe_gpu_audit_postrun_readback"<<"')
 (output / "DLSSNRFlowRejectionProduction.generated.cpp").write_text(production,encoding="utf-8")
 
-sparse=(repo / "src/Magpie.Core/DLSSNRSparse.h").read_text(encoding="utf-8-sig")
+sparse=(repo / "src/GMagpie.Core/DLSSNRSparse.h").read_text(encoding="utf-8-sig")
 anchor='\t\tdc->CSSetShaderResources(0,28,empty); dc->CSSetUnorderedAccessViews(0,5,out,nullptr); dc->CSSetShader(nullptr,nullptr,0);'
 if sparse.count(anchor)!=1:raise RuntimeError("Sparse audit unbind anchor changed")
 hook="""
@@ -73,7 +73,7 @@ sparse=sparse.replace(anchor,anchor+hook)
 pri=runtime / "resources.pri"
 if pri.is_file():shutil.copy2(pri,output / pri.name)
 source_core_library=options.core_library.resolve()
-core_snapshot=output / "Magpie.Core.probe-source.lib"
+core_snapshot=output / "GMagpie.Core.probe-source.lib"
 shutil.copy2(source_core_library,core_snapshot)
 options.core_library=core_snapshot
 '''
@@ -82,9 +82,9 @@ report = r'''
 report["probe"]="real_production_flow_rejection_factor_audit"
 report["sourceCoreLibrary"]=str(source_core_library)
 report["sourceSha256"].update({name:sha(repo / name) for name in [
-    "src/Magpie.Core/DLSSNRSparse.h","src/Magpie.Core/DLSSNRSparse.inl",
-    "src/Magpie.Core/DLSSNRSparseShader.h","src/Magpie.Core/NvidiaOpticalFlowProvider.cpp",
-    "src/Magpie.Core/AmdOpticalFlowProvider.cpp","tests/DLSSNRSparseProductionProbe.cpp",
+    "src/GMagpie.Core/DLSSNRSparse.h","src/GMagpie.Core/DLSSNRSparse.inl",
+    "src/GMagpie.Core/DLSSNRSparseShader.h","src/GMagpie.Core/NvidiaOpticalFlowProvider.cpp",
+    "src/GMagpie.Core/AmdOpticalFlowProvider.cpp","tests/DLSSNRSparseProductionProbe.cpp",
     "tests/DLSSNRFlowRejectionProbe.cpp","tests/DLSSNRFlowRejectionAudit.h",
     "tests/run_dlssnr_flow_rejection_probe.py"]})
 report["generatedSparseSha256"]=sha(output / "DLSSNRSparse.h")

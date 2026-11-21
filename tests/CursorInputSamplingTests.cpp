@@ -1,7 +1,7 @@
 // Real production sampling with fixture input/window state; no mouse injection.
 #include <Windows.h>
-#include "../src/Magpie.Core/CursorRefreshPolicy.h"
-#include "../src/Magpie.Core/FrameTrace.h"
+#include "../src/GMagpie.Core/CursorRefreshPolicy.h"
+#include "../src/GMagpie.Core/FrameTrace.h"
 #include <iostream>
 #include <optional>
 #include <stdexcept>
@@ -12,7 +12,7 @@ static HCURSOR MockLoadCursor(HINSTANCE, LPCWSTR) { return reinterpret_cast<HCUR
 #undef LoadCursor
 #define LoadCursor MockLoadCursor
 
-namespace Magpie {
+namespace GMagpie {
 struct ScalingOptions { std::optional<float> autoHideCursorDelay; };
 struct CursorManager {
 	POINT pos{100, 200};
@@ -26,15 +26,15 @@ struct Renderer { bool move = false; bool IsToolbarMoveCursor() const { return m
 struct Tracker { bool moving = false; bool IsMoving() const { return moving; } };
 struct ScalingWindow {
 	ScalingOptions options;
-	Magpie::CursorManager cursor;
-	Magpie::Renderer renderer;
+	GMagpie::CursorManager cursor;
+	GMagpie::Renderer renderer;
 	Tracker tracker;
 	RECT rect{10, 20, 1000, 1000};
 	bool moving = false;
 	static ScalingWindow& Get() { static ScalingWindow window; return window; }
 	const ScalingOptions& Options() const { return options; }
-	const Magpie::CursorManager& CursorManager() const { return cursor; }
-	const Magpie::Renderer& Renderer() const { return renderer; }
+	const GMagpie::CursorManager& CursorManager() const { return cursor; }
+	const GMagpie::Renderer& Renderer() const { return renderer; }
 	const RECT& RendererRect() const { return rect; }
 	const Tracker& SrcTracker() const { return tracker; }
 	bool IsResizingOrMoving() const { return moving; }
@@ -56,7 +56,7 @@ struct CursorDrawer {
 }
 #undef LoadCursor
 
-using namespace Magpie;
+using namespace GMagpie;
 using namespace std::chrono_literals;
 static int checks = 0;
 static void Check(bool value, const char* message) {

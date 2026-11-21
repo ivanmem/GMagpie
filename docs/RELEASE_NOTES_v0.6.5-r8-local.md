@@ -1,4 +1,4 @@
-# Magpie 0.6.5 r8 local
+# GMagpie 0.6.5 r8 local
 
 在 r7 fix 基础上，修复光流降级和实时参数状态，合并 SR 效果器入口。
 

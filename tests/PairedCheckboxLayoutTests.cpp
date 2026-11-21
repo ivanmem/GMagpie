@@ -9,7 +9,7 @@
 #include <iostream>
 
 using namespace winrt;
-using namespace ::Magpie;
+using namespace ::GMagpie;
 
 struct LayoutTestApp : ApplicationT<LayoutTestApp, Markup::IXamlMetadataProvider> {
 	winrt::Microsoft::UI::Xaml::XamlTypeInfo::XamlControlsXamlMetaDataProvider provider{ nullptr };
@@ -46,9 +46,9 @@ int main() try {
 		else if (state == 1) right.Visibility(Visibility::Collapsed);
 		const auto column = Markup::XamlReader::Load(ColumnShellXaml).as<Grid>();
 		column.Width(width);
-		const auto content = make_self<winrt::Magpie::implementation::SimpleStackPanel>();
+		const auto content = make_self<winrt::GMagpie::implementation::SimpleStackPanel>();
 		content->Children().Append(row); column.Children().Append(content.as<UIElement>());
-		const auto columns = make_self<winrt::Magpie::implementation::SimpleStackPanel>();
+		const auto columns = make_self<winrt::GMagpie::implementation::SimpleStackPanel>();
 		columns->Orientation(Orientation::Horizontal); columns->Spacing(24);
 		columns->Children().Append(column);
 		Grid nextColumn; nextColumn.Width(260); columns->Children().Append(nextColumn);

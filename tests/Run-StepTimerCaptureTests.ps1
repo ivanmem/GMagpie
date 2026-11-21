@@ -12,12 +12,12 @@ $vswhere = Join-Path ${env:ProgramFiles(x86)} 'Microsoft Visual Studio/Installer
 $vs = & $vswhere -latest -products * -requires Microsoft.Component.MSBuild -property installationPath | Select-Object -First 1
 Import-Module (Join-Path $vs 'Common7/Tools/Microsoft.VisualStudio.DevShell.dll')
 Enter-VsDevShell -VsInstallPath $vs -SkipAutomaticLocation -DevCmdArguments '-arch=x64 -host_arch=x64' | Out-Null
-$commands = Get-Content -LiteralPath (Join-Path $IntermediateDirectory 'Magpie.Core.tlog/CL.command.1.tlog') -Raw
-$includes = @("/I$repo/src/Magpie.Core", "/I$repo/src/Magpie.Core/include")
+$commands = Get-Content -LiteralPath (Join-Path $IntermediateDirectory 'GMagpie.Core.tlog/CL.command.1.tlog') -Raw
+$includes = @("/I$repo/src/GMagpie.Core", "/I$repo/src/GMagpie.Core/include")
 foreach ($match in [regex]::Matches($commands, '(?i)/(?:external:)?I(?:"(?<quoted>[^"]+)"|(?<bare>[^\s]+))')) {
     $include = $match.Groups['quoted'].Value
     if (!$include) { $include = $match.Groups['bare'].Value }
-    if (![IO.Path]::IsPathRooted($include)) { $include = Join-Path "$repo/src/Magpie.Core" $include }
+    if (![IO.Path]::IsPathRooted($include)) { $include = Join-Path "$repo/src/GMagpie.Core" $include }
     $includes += "/I$include"
 }
 $includes = @($includes | Select-Object -Unique)

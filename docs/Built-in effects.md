@@ -1,4 +1,4 @@
-Magpie ships with a handful of effects that can be used in combinations. Most of the effects have parameters that can be customized. All effects are stored in the `effects` folder. You can easily add effects if you are familiar with HLSL. Check the [MagpieFX](https://github.com/Blinue/Magpie/wiki/MagpieFX%20(EN)) page.
+GMagpie ships with a handful of effects that can be used in combinations. Most of the effects have parameters that can be customized. All effects are stored in the `effects` folder. You can easily add effects if you are familiar with HLSL. Check the [MagpieFX](https://github.com/Blinue/Magpie/wiki/MagpieFX%20(EN)) page.
 
 <a id="current-branch-setup"></a>
 
@@ -93,7 +93,7 @@ Start DLSSNR with one pass; up to three passes have independent style and intens
 
 Processing modes are Every Frame, Alternating Frames, Async Every Frame and Async Alternating Frames. Both alternating modes update full NR every 2, 3 or 4 new captures, defaulting to 2. Alternating Frames continuously reuses protected history and rebuilds hard-invalid history at the same specification. Async Every Frame continuously reuses same-spec history up to 3 captures old while updating in the background; only hard-invalid or unavailable history requires rebuilding. Async Alternating Frames updates in the background and uses the current original image in invalid regions. All four output the current picture without lightweight NR or a whole-picture delay control. Changing the mode or update interval requires restarting scaling.
 
-XeSS FG defaults to 2x, AMD optical flow, Quality. Optical-flow options at each multiplier depend on the current application and hardware capabilities; 3x/4x on non-Intel GPUs uses the bundled runtime's experimental compatibility path. DLSS FG uses the bundled compatibility runtime, with multipliers determined by the rendering GPU; restart Magpie after changing that GPU. Multiplier and optical-flow changes in either generator require restarting scaling.
+XeSS FG defaults to 2x, AMD optical flow, Quality. Optical-flow options at each multiplier depend on the current application and hardware capabilities; 3x/4x on non-Intel GPUs uses the bundled runtime's experimental compatibility path. DLSS FG uses the bundled compatibility runtime, with multipliers determined by the rendering GPU; restart GMagpie after changing that GPU. Multiplier and optical-flow changes in either generator require restarting scaling.
 
 The frame-rate limiter controls the group's base input rate regardless of its position. Multiple active caps combine at the lower target. With frame synchronization enabled, Frame rate and refresh manages pacing.
 

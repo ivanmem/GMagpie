@@ -6,7 +6,7 @@
 #include <sstream>
 #include <string_view>
 
-using namespace Magpie;
+using namespace GMagpie;
 #include "RtssFailureText.g.h"
 
 namespace {
@@ -58,7 +58,7 @@ struct Fixture {
 		access._directory = directory;
 		access._module = reinterpret_cast<HMODULE>(1); // The destructor must never FreeLibrary this fixture.
 		access._version = L"mock-7.3.5";
-		access._selfProfile = "Magpie.exe";
+		access._selfProfile = "GMagpie.exe";
 		access._load = Load; access._save = Save; access._delete = Delete;
 		access._get = Get; access._set = Set; access._update = Update;
 		active = this;
@@ -141,10 +141,10 @@ void CapabilityTests(const std::filesystem::path& output) {
 			const bool applied = f.access.Apply("new.exe", 60, f.Snapshot("new.exe"), written, attempted, complete, error, [] { return true; });
 			Require(applied == (missing == 0), "Missing export affects only dependent writes");
 			if (missing) Require(!attempted && f.saves == 0 && f.setters.empty() && error == L"MissingInterface" && original == ReadBytes(f.Path("")), "Required export failure precedes mutation");
-			Require(f.access.InitializeUnlimited("Magpie.exe", written, unlimited, error, [] { return true; }) == (missing != 3), "File initialization has independent export requirements");
+			Require(f.access.InitializeUnlimited("GMagpie.exe", written, unlimited, error, [] { return true; }) == (missing != 3), "File initialization has independent export requirements");
 			if (missing == 3) {
 				f.access._running = false;
-				Require(f.access.InitializeUnlimited("Magpie.exe", written, unlimited, error, [] { return true; }) && f.reloads == 0, "Offline clear works without UpdateProfiles");
+				Require(f.access.InitializeUnlimited("GMagpie.exe", written, unlimited, error, [] { return true; }) && f.reloads == 0, "Offline clear works without UpdateProfiles");
 			}
 		}
 	}
@@ -181,28 +181,28 @@ void CapabilityTests(const std::filesystem::path& output) {
 	}
 	for (auto version : { L"7.3.4.0", L"7.3.5.28314", L"7.4.99.999", L"" }) {
 		Fixture f(output); f.access._version = version;
-		WriteBytes(f.Path("Magpie.exe"), Profile(60, 1000, 16667, 100, 3, "kept"));
+		WriteBytes(f.Path("GMagpie.exe"), Profile(60, 1000, 16667, 100, 3, "kept"));
 		const auto global = ReadBytes(f.Path("")); RtssProfileSnapshot written;
 		std::wstring error; bool unlimited = false;
-		Require(f.access.InitializeUnlimited("Magpie.exe", written, unlimited, error, [] { return true; }) && !unlimited && written.rate[0] == 0 && written.rate[2] == 0, "Version metadata does not gate identical initialization ability");
+		Require(f.access.InitializeUnlimited("GMagpie.exe", written, unlimited, error, [] { return true; }) && !unlimited && written.rate[0] == 0 && written.rate[2] == 0, "Version metadata does not gate identical initialization ability");
 		Require(global == ReadBytes(f.Path("")) && written.rate[1] == 1000 && written.rate[3] == 100 && f.access.Failure().version == version, "Version diagnostic and non-cap fields preserved");
 		f.access._update = nullptr;
-		Require(f.access.InitializeUnlimited("Magpie.exe", written, unlimited, error, [] { return true; }) && unlimited && f.reloads == 1, "Unlimited no-op needs no reload capability");
+		Require(f.access.InitializeUnlimited("GMagpie.exe", written, unlimited, error, [] { return true; }) && unlimited && f.reloads == 1, "Unlimited no-op needs no reload capability");
 	}
 	for (bool exists : { false, true }) {
 		Fixture f(output); f.access._running = false; f.access._save = nullptr; f.access._set = nullptr;
 		f.access._delete = nullptr; f.access._update = nullptr;
-		if (exists) WriteBytes(f.Path("Magpie.exe"), Profile(30));
+		if (exists) WriteBytes(f.Path("GMagpie.exe"), Profile(30));
 		RtssProfileSnapshot written; std::wstring error; bool unlimited = false;
-		Require(f.access.InitializeUnlimited("Magpie.exe", written, unlimited, error, [] { return true; }) && written.exists && written.rate[0] == 0 && written.rate[2] == 0, "Offline initialization persists and reads back");
+		Require(f.access.InitializeUnlimited("GMagpie.exe", written, unlimited, error, [] { return true; }) && written.exists && written.rate[0] == 0 && written.rate[2] == 0, "Offline initialization persists and reads back");
 		Require(f.reloads == 0 && f.saves == 0 && f.setters.empty() && !f.access.CanApply(), "Offline operation never invokes reload or live cap");
 	}
 	{
 		Fixture f(output); f.access._selfProfile = "RenamedMagpie.exe";
 		RtssProfileSnapshot written; std::wstring error; bool unlimited = false;
-		for (const std::string name : {"", "Magpie.exe", "game.exe", "../RenamedMagpie.exe"})
+		for (const std::string name : {"", "GMagpie.exe", "game.exe", "../RenamedMagpie.exe"})
 			Require(!f.access.InitializeUnlimited(name, written, unlimited, error, [] { return true; }) && error == L"InvalidSelfProfile", "Self binding cannot be redirected to Global/game/old name/path");
-		Require(f.access.InitializeUnlimited("RenamedMagpie.exe", written, unlimited, error, [] { return true; }) && !std::filesystem::exists(f.Path("Magpie.exe")), "Actual renamed self has independent profile");
+		Require(f.access.InitializeUnlimited("RenamedMagpie.exe", written, unlimited, error, [] { return true; }) && !std::filesystem::exists(f.Path("GMagpie.exe")), "Actual renamed self has independent profile");
 	}
 	{
 		Fixture f(output);
@@ -221,9 +221,9 @@ void CapabilityTests(const std::filesystem::path& output) {
 	{
 		Fixture f(output);
 		auto bytes = Profile(60); bytes.erase(bytes.find("Detection=3\n"), std::string("Detection=3\n").size());
-		WriteBytes(f.Path("Magpie.exe"), bytes);
+		WriteBytes(f.Path("GMagpie.exe"), bytes);
 		RtssProfileSnapshot written; std::wstring error; bool unlimited = false;
-		Require(f.access.InitializeUnlimited("Magpie.exe", written, unlimited, error, [&f] {
+		Require(f.access.InitializeUnlimited("GMagpie.exe", written, unlimited, error, [&f] {
 			f.getFailure = "AppDetectionLevel"; return true;
 		}) && !written.detectionKnown && written.rate[0] == 0 && written.rate[2] == 0,
 			"Optional getter becoming unavailable is not a profile conflict or a fabricated detection value");
@@ -236,8 +236,8 @@ void CapabilityTests(const std::filesystem::path& output) {
 		Require(!f.access.Apply("", 60, before, written, attempted, complete, error, [] { return true; }) && attempted && complete && written.rate[0] == 0 && f.reloads == 0,
 			"Accepted-but-ignored setter is rejected by disk readback when getter is absent");
 	}
-	for (auto name : {L"Magpie.exe", L"Renamed Magpie.exe", L"UPPER.EXE"}) Require(!RtssProfileAccess::ProfileName(name).empty(), "Legal trusted filename conversion");
-	for (auto name : {L"", L"Global", L"../Magpie.exe", L"C:\\Magpie.exe", L"bad\"name.exe", L"app.dll"}) Require(RtssProfileAccess::ProfileName(name).empty(), "Invalid profile filenames rejected");
+	for (auto name : {L"GMagpie.exe", L"Renamed GMagpie.exe", L"UPPER.EXE"}) Require(!RtssProfileAccess::ProfileName(name).empty(), "Legal trusted filename conversion");
+	for (auto name : {L"", L"Global", L"../GMagpie.exe", L"C:\\GMagpie.exe", L"bad\"name.exe", L"app.dll"}) Require(RtssProfileAccess::ProfileName(name).empty(), "Invalid profile filenames rejected");
 }
 
 void MockTests(const std::filesystem::path& output) {

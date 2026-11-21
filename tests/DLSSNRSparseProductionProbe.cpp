@@ -30,7 +30,7 @@ struct ProductionProbeScene {
     winrt::com_ptr<ID3D11ComputeShader> shader;
     winrt::com_ptr<ID3D11Buffer> constants;
     static std::string Source() {
-        return std::string(Magpie::RecoveryScene::Hlsl)+R"hlsl(
+        return std::string(GMagpie::RecoveryScene::Hlsl)+R"hlsl(
 cbuffer SceneParams:register(b0) { uint width,height,frame,kind; uint warmup,period,translate,pad; };
 RWTexture2D<float4> output:register(u0);
 [numthreads(8,8,1)] void Generate(uint3 id:SV_DispatchThreadID) {
@@ -51,7 +51,7 @@ RWTexture2D<float4> output:register(u0);
         Check(r.GetD3DDevice()->CreateBuffer(&desc,nullptr,constants.put()));
     }
     void Draw(DeviceResources& r,Fixture& f,uint64_t frame,const ProductionProbeOptions& o) {
-        const auto kind=o.base.scene=="translate"?Magpie::RecoveryScene::Kind::Static:Magpie::RecoveryScene::ParseKind(o.base.scene);
+        const auto kind=o.base.scene=="translate"?GMagpie::RecoveryScene::Kind::Static:GMagpie::RecoveryScene::ParseKind(o.base.scene);
         const uint32_t data[8]{f.width,f.height,uint32_t(frame),uint32_t(kind),uint32_t(o.base.warmup),uint32_t(o.period),uint32_t(o.base.scene=="translate"),0};
         auto* dc=r.GetD3DDC();auto* cb=constants.get();auto* output=f.inputUav.get();
         dc->UpdateSubresource(cb,0,nullptr,data,0,0);dc->CSSetConstantBuffers(0,1,&cb);dc->CSSetShader(shader.get(),nullptr,0);

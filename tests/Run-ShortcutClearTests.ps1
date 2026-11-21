@@ -3,7 +3,7 @@ param([string]$OutputDirectory)
 $ErrorActionPreference = 'Stop'
 $repo = Split-Path $PSScriptRoot -Parent
 if (!$OutputDirectory) {
-    $OutputDirectory = Join-Path ([IO.Path]::GetTempPath()) ('Magpie-shortcut-clear-' + [guid]::NewGuid())
+    $OutputDirectory = Join-Path ([IO.Path]::GetTempPath()) ('GMagpie-shortcut-clear-' + [guid]::NewGuid())
 }
 New-Item -ItemType Directory -Path $OutputDirectory -Force | Out-Null
 $vswhere = Join-Path ${env:ProgramFiles(x86)} 'Microsoft Visual Studio/Installer/vswhere.exe'
@@ -17,7 +17,7 @@ if (!$rapid) { throw 'Restore rapidjson before running shortcut tests.' }
 & python (Join-Path $PSScriptRoot 'prepare_shortcut_clear_test.py') $OutputDirectory
 if ($LASTEXITCODE) { throw 'Shortcut fixture extraction/static checks failed.' }
 & cl.exe /nologo /std:c++20 /EHsc /utf-8 /MT /O2 /DNOMINMAX /DUNICODE /D_UNICODE `
-    "/I$repo/src/Magpie" "/I$OutputDirectory" "/I$($rapid.FullName)/p/include" `
+    "/I$repo/src/GMagpie" "/I$OutputDirectory" "/I$($rapid.FullName)/p/include" `
     (Join-Path $PSScriptRoot 'ShortcutClearTests.cpp') "/Fe:$OutputDirectory/ShortcutClearTests.exe" "/Fo:$OutputDirectory/ShortcutClearTests.obj"
 if ($LASTEXITCODE) { throw 'Shortcut test compilation failed.' }
 & (Join-Path $OutputDirectory 'ShortcutClearTests.exe') $OutputDirectory

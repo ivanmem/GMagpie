@@ -3,7 +3,7 @@ from pathlib import Path
 import sys
 
 repo = Path(__file__).resolve().parents[1]
-source = (repo / 'src/Magpie.Core/Renderer.cpp').read_text(encoding='utf-8-sig')
+source = (repo / 'src/GMagpie.Core/Renderer.cpp').read_text(encoding='utf-8-sig')
 begin = source.index('\t\t\tif (stepTimerStatus != StepTimerStatus::ForceNewFrame && !_forceNextRender &&')
 end = source.index('\t\t\t[[fallthrough]];', begin)
 waiting = source[begin:end].replace('break;', 'return {};')
@@ -17,7 +17,7 @@ prefix = r'''
 #include <chrono>
 #include <iostream>
 #include <optional>
-using namespace Magpie;
+using namespace GMagpie;
 enum class StepTimerStatus { WaitForNewFrame, WaitForFPSLimiter, ForceNewFrame };
 enum class FrameSourceState { Waiting, NewFrame };
 struct ScalingWindow { static ScalingWindow Get() { return {}; } int Handle() const { return 0; } };
@@ -73,7 +73,7 @@ reflex_prefix = r'''
 #include "ReflexController.h"
 #include <cassert>
 #include <iostream>
-using namespace Magpie;
+using namespace GMagpie;
 namespace wil {
 template<class F> struct ScopeExit { F callback; ~ScopeExit() { callback(); } };
 template<class F> auto scope_exit(F callback) { return ScopeExit<F>{callback}; }

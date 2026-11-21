@@ -2,9 +2,9 @@
 #include <cassert>
 #include <iostream>
 
-using namespace Magpie;
+using namespace GMagpie;
 
-// Run against an isolated test directory, never a user's Magpie configuration.
+// Run against an isolated test directory, never a user's GMagpie configuration.
 int wmain(int argc, wchar_t** argv) {
 	assert(argc == 2);
 	const auto root = std::filesystem::absolute(argv[1]) /

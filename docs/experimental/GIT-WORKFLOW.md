@@ -56,9 +56,9 @@ git diff --cached
 ## 提交前最低检查
 
 1. Release x64 构建为 0 error。
-2. 正常 Release 输出中的 `Magpie.exe` 被运行中进程占用时，先关闭 Magpie 再继续构建；不要另建替代输出目录绕过占用。
+2. 正常 Release 输出中的 `GMagpie.exe` 被运行中进程占用时，先关闭 GMagpie 再继续构建；不要另建替代输出目录绕过占用。
 3. `git diff --check` 无空白错误。
 4. `git status --short` 中没有构建产物、日志、第三方二进制或本机绝对路径。
 5. 涉及 DLSS/Frame Guidance 时，更新对应短期 TODO，并保留仍需 GPU 验收的项目为未完成状态。
 
-0.6.7 本地构建统一使用 `scripts/Deploy-Local067.ps1`，提交前使用 `-BuildOnly`；EXE／PRI／运行时直接生成到 `release/v0.6.7-local/Magpie-Experimental-x64`，中间文件统一位于该版本 `obj/`。验证和部署使用相同输出，不新增 `.build` 或 r1 构建副本。最终部署要求已提交源码，并逐项生成、核对发布清单；用户负责实际 UI／GPU 验收。
+0.6.7 本地构建统一使用 `scripts/Deploy-Local067.ps1`，提交前使用 `-BuildOnly`；EXE／PRI／运行时直接生成到 `release/v0.6.7-local/GMagpie-Experimental-x64`，中间文件统一位于该版本 `obj/`。验证和部署使用相同输出，不新增 `.build` 或 r1 构建副本。最终部署要求已提交源码，并逐项生成、核对发布清单；用户负责实际 UI／GPU 验收。

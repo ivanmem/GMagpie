@@ -9,7 +9,7 @@
 #include <iostream>
 #include <stdexcept>
 using namespace winrt;
-namespace Test = winrt::Magpie::implementation;
+namespace Test = winrt::GMagpie::implementation;
 struct BindingTestApp : ApplicationT<BindingTestApp, Markup::IXamlMetadataProvider> {
     winrt::Microsoft::UI::Xaml::XamlTypeInfo::XamlControlsXamlMetaDataProvider provider{nullptr};
     auto& Provider(){if(!provider)provider=winrt::Microsoft::UI::Xaml::XamlTypeInfo::XamlControlsXamlMetaDataProvider();return provider;}
@@ -93,6 +93,6 @@ int main() try {
         island.Content(nullptr);Pump();
     }
     island.Close();DestroyWindow(host);
-    std::cout<<"PASS "<<cases<<" compiled-template effect/section cases, 3 languages, actual 6 production list getters and native selectable labels; no Magpie config or process used.\n";
+    std::cout<<"PASS "<<cases<<" compiled-template effect/section cases, 3 languages, actual 6 production list getters and native selectable labels; no GMagpie config or process used.\n";
 }catch(hresult_error const&e){std::cerr<<std::hex<<e.code().value<<' '<<to_string(e.message())<<'\n';return 1;}
 catch(std::exception const&e){std::cerr<<e.what()<<'\n';return 1;}

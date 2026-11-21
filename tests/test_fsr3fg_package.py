@@ -37,7 +37,7 @@ with tempfile.TemporaryDirectory(prefix='magpie-fsr3fg-payload-') as temporary:
 
     run(False, 'no compiled AMDOF capability marker')
     # Data-only fixture for the capability scanner; never execute this file.
-    (output / 'Magpie.exe').write_bytes(b'Synthetic AMDOF capability v1: FSR3-FG required input')
+    (output / 'GMagpie.exe').write_bytes(b'Synthetic AMDOF capability v1: FSR3-FG required input')
     run(True, 'FSR3FG payload matches')
     provider = output / 'amd_fidelityfx_framegeneration_dx12.dll'
     provider.unlink()

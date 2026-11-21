@@ -24,7 +24,7 @@ if ($LASTEXITCODE) { throw 'Manual editing extraction failed' }
 if ($LASTEXITCODE) { throw 'Cleanup extraction failed' }
 & python (Join-Path $PSScriptRoot 'prepare_hdr_export_tests.py') $OutputDirectory
 if ($LASTEXITCODE) { throw 'Export extraction failed' }
-$common = @('/nologo', '/std:c++20', '/EHsc', '/utf-8', '/MT', '/DNOMINMAX', "/I$repo/src/Magpie.Core/include", "/I$repo/src/Magpie.Core", "/I$repo/src/Magpie", "/I$repo/src/Shared", "/I$RapidJsonIncludeDirectory")
+$common = @('/nologo', '/std:c++20', '/EHsc', '/utf-8', '/MT', '/DNOMINMAX', "/I$repo/src/GMagpie.Core/include", "/I$repo/src/GMagpie.Core", "/I$repo/src/GMagpie", "/I$repo/src/Shared", "/I$RapidJsonIncludeDirectory")
 foreach ($test in @('HdrCompatibilityUpdateTests', 'HdrComponentsTests', 'HdrManualMigrationTests', 'HdrManualEditingTests', 'HdrCleanupTests')) {
     $source = if ($test -in @('HdrCleanupTests','HdrManualMigrationTests','HdrManualEditingTests')) { Join-Path $OutputDirectory "$test.cpp" } else { Join-Path $PSScriptRoot "$test.cpp" }
     & cl.exe @common $source "/Fe:$OutputDirectory/$test.exe" "/Fo:$OutputDirectory/$test.obj"

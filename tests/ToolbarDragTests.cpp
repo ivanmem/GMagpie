@@ -13,7 +13,7 @@
 #include <rapidjson/prettywriter.h>
 #include <rapidjson/stringbuffer.h>
 #include "ToolbarPlacement.h"
-#include "../src/Magpie.Core/PresentationFrameRate.h"
+#include "../src/GMagpie.Core/PresentationFrameRate.h"
 #include <cassert>
 #include <chrono>
 #include <functional>
@@ -26,7 +26,7 @@
 #include <utility>
 #include <vector>
 
-namespace Magpie {
+namespace GMagpie {
 using namespace std::chrono;
 template<class T> constexpr T FLOAT_EPSILON = T(0.00001);
 constexpr float CORNER_ROUNDING = 6;
@@ -150,7 +150,7 @@ struct OverlayDrawer {
 	std::string _FormatFrameRate(uint32_t) const { return frameRateText; }
 	void _ShowComparisonStatus(bool) {}
 	ToolbarState ToolbarState() const { return ToolbarState::AlwaysShow; }
-	void ToolbarState(Magpie::ToolbarState) {}
+	void ToolbarState(GMagpie::ToolbarState) {}
 };
 struct Profile {
 	ToolbarDockSettings toolbarDocks;
@@ -199,7 +199,7 @@ void TrackedToolbarText(const char* text) {
 }
 #include "ToolbarDragProduction.inc"
 }
-using namespace Magpie;
+using namespace GMagpie;
 
 void Near(float a, float b) { assert(std::abs(a-b) < 1.1f); }
 

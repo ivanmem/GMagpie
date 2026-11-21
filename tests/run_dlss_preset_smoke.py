@@ -9,11 +9,11 @@ a.source=a.source.resolve();a.build_root=a.build_root.resolve();a.output=a.outpu
 runtime=a.output/'runtime';objs=a.output/'objects';tlogs=a.output/'tlogs'
 if not runtime.exists():
  runtime.mkdir();objs.mkdir()
- for t in ['Magpie.Core','Magpie']:
+ for t in ['GMagpie.Core','GMagpie']:
   (tlogs/t).mkdir(parents=True)
   for f in (a.build_root/'obj/x64/Release'/t/(t+'.tlog')).glob('*.command.1.tlog'):shutil.copy2(f,tlogs/t/f.name)
- for f in (a.build_root/'obj/x64/Release/Magpie.Core').glob('*.obj'):shutil.copy2(f,objs/f.name)
- package=a.build_root/'Magpie-Experimental-x64'
+ for f in (a.build_root/'obj/x64/Release/GMagpie.Core').glob('*.obj'):shutil.copy2(f,objs/f.name)
+ package=a.build_root/'GMagpie-Experimental-x64'
  for name in ['nvngx_dlss.dll','nvngx_dlssnr.dll','nvngxruntime.dll','libxell.dll','libxess_fg.dll','libxess.dll','ffx_fsr2_api_dx11_x64.dll','ffx_fsr2_api_x64.dll','build-manifest.json']:shutil.copy2(package/name,runtime/name)
  shutil.copytree(package/'runtimes/dlssg_sm86',runtime/'runtimes/dlssg_sm86')
 shell=ctypes.windll.shell32;shell.CommandLineToArgvW.argtypes=[ctypes.c_wchar_p,ctypes.POINTER(ctypes.c_int)];shell.CommandLineToArgvW.restype=ctypes.POINTER(ctypes.c_wchar_p);ctypes.windll.kernel32.LocalFree.argtypes=[ctypes.c_void_p]
@@ -23,17 +23,17 @@ def args(path):
 exe=runtime/'DLSSPresetSmoke.exe'
 if not a.skip_build:
  if not (objs/'pch.obj').is_file(): raise SystemExit('Candidate object snapshot is incomplete: pch.obj missing; wait for build completion and use a fresh output directory.')
- archive=a.output/'Magpie.Core.lib'
+ archive=a.output/'GMagpie.Core.lib'
  rsp=a.output/'objects.rsp';rsp.write_text('\n'.join('"'+str(f)+'"' for f in objs.glob('*.obj')),encoding='utf-8')
  subprocess.run(['lib.exe','/NOLOGO','/OUT:'+str(archive),'@'+str(rsp)],check=True)
- cl=args(tlogs/'Magpie.Core/CL.command.1.tlog');link=args(tlogs/'Magpie/link.command.1.tlog')
+ cl=args(tlogs/'GMagpie.Core/CL.command.1.tlog');link=args(tlogs/'GMagpie/link.command.1.tlog')
  includes=list(dict.fromkeys(x for x in cl if x.lower().startswith('/i')))
  defs=list(dict.fromkeys(cl[i+1] for i,x in enumerate(cl) if x=='/D' and cl[i+1]!='NDEBUG'))
  libs=list(dict.fromkeys(x for x in link if x.lower().endswith('.lib') or x.lower().startswith('/libpath:')))
  libs=[x for x in libs if Path(x).name.lower() not in ('magpie.lib','magpie.core.lib')]
- cmd=['cl.exe','/nologo','/std:c++20','/EHsc','/utf-8','/MT','/O2','/bigobj','/I'+str(a.source/'src/Magpie.Core'),'/I'+str(a.source/'src/Magpie.Core/include')]+includes+[y for x in defs for y in ['/D',x]]+[str(Path(__file__).with_name('DLSSPresetSmoke.cpp')),'/Fe:'+str(exe),'/Fo:'+str(a.output/'smoke.obj'),'/link','/LTCG','/MANIFEST:EMBED','/MANIFESTINPUT:'+str(Path(__file__).with_name('DLSSPresetSmoke.manifest')),str(archive)]+libs+['d3d11.lib','d3dcompiler.lib','dxgi.lib','d3d12.lib','WindowsApp.lib']
+ cmd=['cl.exe','/nologo','/std:c++20','/EHsc','/utf-8','/MT','/O2','/bigobj','/I'+str(a.source/'src/GMagpie.Core'),'/I'+str(a.source/'src/GMagpie.Core/include')]+includes+[y for x in defs for y in ['/D',x]]+[str(Path(__file__).with_name('DLSSPresetSmoke.cpp')),'/Fe:'+str(exe),'/Fo:'+str(a.output/'smoke.obj'),'/link','/LTCG','/MANIFEST:EMBED','/MANIFESTINPUT:'+str(Path(__file__).with_name('DLSSPresetSmoke.manifest')),str(archive)]+libs+['d3d11.lib','d3dcompiler.lib','dxgi.lib','d3d12.lib','WindowsApp.lib']
  (a.output/'compile-command.json').write_text(json.dumps(cmd,indent=2),encoding='utf-8')
- compiled=subprocess.run(cmd,cwd=a.source/'src/Magpie.Core')
+ compiled=subprocess.run(cmd,cwd=a.source/'src/GMagpie.Core')
  if compiled.returncode: raise SystemExit(compiled.returncode)
 name='-'.join(a.case);case=a.output/name;index=1
 while case.exists():

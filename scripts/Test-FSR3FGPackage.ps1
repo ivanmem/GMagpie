@@ -29,7 +29,7 @@ if (!$amd.Success -or $amd.Groups[1].Value -notmatch '(?m)^//!DEFAULT 1\r?$') {
     throw 'FSR3FG marker AMDOF default is not Quality.'
 }
 $hasAmdCapability = $false
-foreach ($binary in @('Magpie.exe', 'Magpie.Core.dll')) {
+foreach ($binary in @('GMagpie.exe', 'GMagpie.Core.dll')) {
     $path = Join-Path $PackageDirectory $binary
     if (Test-Path -LiteralPath $path -PathType Leaf) {
         $bytes = [System.IO.File]::ReadAllBytes($path)

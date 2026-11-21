@@ -1,4 +1,4 @@
-# Magpie Experimental 0.6.10 Beta3
+# GMagpie Experimental 0.6.10 Beta3
 
 本地测试版本，继承完整 Beta2（`6e50812a`），新增截至 2026-10-05 已提交的 RTSS 目标应用限帧开发。公开更新入口仍为 0.6.9。
 
@@ -20,7 +20,7 @@
 - 管理在缩放开始时生效。页面修改供下次开始使用；切换为不管理会释放当前管理。默认在真正结束时有界尝试一次恢复原限帧表达，也可选择保留修改。
 - 保存后核对接口和磁盘读回；已有目标保留其他字段，新建目标使用 Low 检测级别；外部修改发生冲突时停止覆盖。崩溃或强制结束不能保证恢复。
 - UWP 根据实际窗口和进程身份查找目标；身份不能可靠确认时跳过写入。状态“已写入”只表示配置核验，不表示 RTSS 已建立 Hook 或游戏实际限帧成功。
-- 修复打开配置文件页面时 RTSS 动态状态、同步和两项启动文字读取错误资源表的问题；四处读取显式选择应用的 `Magpie/Resources`，避免“未找到 ResourceMap”异常。
+- 修复打开配置文件页面时 RTSS 动态状态、同步和两项启动文字读取错误资源表的问题；四处读取显式选择应用的 `GMagpie/Resources`，避免“未找到 ResourceMap”异常。
 
 ### 继承 Beta2
 
@@ -40,7 +40,7 @@ This local test version retains the complete Beta2 (`6e50812a`) and integrates t
 - **Tools and status:** offer explicit RTSS/Afterburner launch and recheck commands without automatic installation or launch. RTSS failures do not prevent normal scaling.
 - **Session lifecycle:** apply on scaling start, retain the session's original preference, and either keep changes or make one bounded restoration attempt when the session ends. Leaving management releases the active session. API and disk readback verify writes; conflicting external edits stop further overwrites. Forced termination or a crash may leave the last written value.
 - **Target identity:** resolve the actual process, including supported UWP hosts, and skip unreliable targets. A verified configuration write does not establish hook injection or an effective in-game frame-rate limit.
-- **Profile page resource fix:** explicitly select the application's `Magpie/Resources` map for the four dynamic RTSS text getters, preventing the missing-resource-map exception when a profile page opens.
+- **Profile page resource fix:** explicitly select the application's `GMagpie/Resources` map for the four dynamic RTSS text getters, preventing the missing-resource-map exception when a profile page opens.
 - **Beta2 retained:** keep UWP/parameter input coordination, unified VRR/FG foreground compatibility, the aligned compact VRR switch, persistent rendering GPU selection and all previously integrated effects and controls.
 
 ## 来源与验收 / Source and acceptance

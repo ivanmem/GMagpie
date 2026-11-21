@@ -16,7 +16,7 @@ foreach ($cycleCase in @('reflex-capture-cycle', 'legacy-capture-hook', 'broaden
         $cycleLabel = $cycleCase + $(if ($cycleTrace) { '-trace' } else { '-untraced' })
         [string[]]$cycleDefines = @(if ($cycleTrace) { '/DMP_ENABLE_FRAME_TRACE' })
         & cl.exe /nologo /std:c++20 /EHsc /utf-8 /MT /O2 /W4 /WX @cycleDefines `
-            "/I$cycleRepo/src/Magpie.Core" "/I$cycleRepo/src/Magpie.Core/include" `
+            "/I$cycleRepo/src/GMagpie.Core" "/I$cycleRepo/src/GMagpie.Core/include" `
             "$cycleOutput/$cycleCase.cpp" "/Fe:$cycleOutput/$cycleLabel.exe" "/Fo:$cycleOutput/$cycleLabel.obj"
         if ($LASTEXITCODE) { throw "Reflex capture test compilation failed: $cycleLabel" }
         & "$cycleOutput/$cycleLabel.exe"

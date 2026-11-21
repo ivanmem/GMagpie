@@ -225,7 +225,7 @@
     "effectFamily": "无信息（CRT 效果族未能在公开资料中唯一映射）",
     "upstreamVendor": "无信息",
     "mappingConfidence": "无信息",
-    "mappingNotes": "仅按通用名称“CRT”搜索；公开资料无法唯一对应某个上游算法/SDK，且不能借助 Magpie 源码确认。",
+    "mappingNotes": "仅按通用名称“CRT”搜索；公开资料无法唯一对应某个上游算法/SDK，且不能借助 GMagpie 源码确认。",
     "documentedInputFormats": [
       {
         "format": "unspecified",
@@ -289,7 +289,7 @@
     "effectFamily": "CuNNy",
     "upstreamVendor": "Blinue / CuNNy contributors",
     "mappingConfidence": "明确映射",
-    "mappingNotes": "上游仓库 Blinue/CuNNy 名称与效果组一致，README 自述“supports exporting to an mpv shader”和“Magpie effect”。",
+    "mappingNotes": "上游仓库 Blinue/CuNNy 名称与效果组一致，README 自述“supports exporting to an mpv shader”和“GMagpie effect”。",
     "documentedInputFormats": [
       {
         "format": "unspecified",
@@ -298,7 +298,7 @@
         "numericRepresentation": "unspecified",
         "acceptanceStatus": "not_enumerated",
         "evidenceRef": "https://raw.githubusercontent.com/Blinue/CuNNy/master/README.md",
-        "notes": "上游仓库只描述 mpv shader/Magpie effect，未给出纹理格式。"
+        "notes": "上游仓库只描述 mpv shader/GMagpie effect，未给出纹理格式。"
       }
     ],
     "documentedOutputFormats": [
@@ -345,7 +345,7 @@
         "url": "https://raw.githubusercontent.com/Blinue/CuNNy/master/README.md",
         "title": "CuNNy README",
         "evidenceLevel": "OfficialRepository",
-        "claim": "上游仓库描述 CuNNy 可导出 mpv shader/Magpie effect，未给出 I/O 格式",
+        "claim": "上游仓库描述 CuNNy 可导出 mpv shader/GMagpie effect，未给出 I/O 格式",
         "quoteOrSymbol": "Supports exporting to an mpv meme shader!",
         "searchRound": 1
       }
@@ -364,7 +364,7 @@
     "effectFamily": "无信息（未能定位独立 CuNNy2 上游仓库/SDK）",
     "upstreamVendor": "无信息",
     "mappingConfidence": "无信息",
-    "mappingNotes": "公开搜索未找到与“CuNNy2”唯一对应的上游算法/模型/SDK 文档；现有结果多为 Magpie 版本页等，不可用于协议推断。",
+    "mappingNotes": "公开搜索未找到与“CuNNy2”唯一对应的上游算法/模型/SDK 文档；现有结果多为 GMagpie 版本页等，不可用于协议推断。",
     "documentedInputFormats": [
       {
         "format": "unspecified",
@@ -428,7 +428,7 @@
     "effectFamily": "无信息（Diagnostics 是通用诊断效果名）",
     "upstreamVendor": "无信息",
     "mappingConfidence": "无信息",
-    "mappingNotes": "公开资料中不存在可作为上游协议的“Diagnostics”图像算法/SDK；不依据 Magpie 实现推断。",
+    "mappingNotes": "公开资料中不存在可作为上游协议的“Diagnostics”图像算法/SDK；不依据 GMagpie 实现推断。",
     "documentedInputFormats": [
       {
         "format": "unspecified",
@@ -636,7 +636,7 @@
     "effectFamily": "AMD FidelityFX Super Resolution 1 (FSR1 spatial upscaler)",
     "upstreamVendor": "AMD",
     "mappingConfidence": "明确映射",
-    "mappingNotes": "Magpie 效果组“FSR”按公开产品命名对应 FSR1 的空间超分；FSR2/3/4 已单列。",
+    "mappingNotes": "GMagpie 效果组“FSR”按公开产品命名对应 FSR1 的空间超分；FSR2/3/4 已单列。",
     "documentedInputFormats": [
       {
         "format": "unspecified",
@@ -1307,7 +1307,7 @@
     "effectFamily": "NNEDI3",
     "upstreamVendor": "Kevin Stone / community (mpv prescaler by bjin)",
     "mappingConfidence": "明确映射",
-    "mappingNotes": "NNEDI3 为公开神经网络倍线算法；Magpie 效果组对应实现可能是 bjin mpv-prescalers 中的 luma prescaler，但未依据 Magpie 源码确认。",
+    "mappingNotes": "NNEDI3 为公开神经网络倍线算法；GMagpie 效果组对应实现可能是 bjin mpv-prescalers 中的 luma prescaler，但未依据 GMagpie 源码确认。",
     "documentedInputFormats": [
       {
         "format": "unspecified",
@@ -1391,14 +1391,14 @@
       "独立 NNEDI3 原生后端的格式契约",
       "HDR 颜色空间"
     ],
-    "conclusion": "NNEDI3 的 mpv 用户着色器资料显示内部使用 rgba16f/rgba16hf 并只处理 luma；没有可作为 Magpie 外置后端协议的官方格式列表。"
+    "conclusion": "NNEDI3 的 mpv 用户着色器资料显示内部使用 rgba16f/rgba16hf 并只处理 luma；没有可作为 GMagpie 外置后端协议的官方格式列表。"
   },
   {
     "effectGroup": "Pixel Art",
     "effectFamily": "无信息（Pixel Art 泛指像素画放大算法族）",
     "upstreamVendor": "无信息",
     "mappingConfidence": "无信息",
-    "mappingNotes": "公开搜索出现 libretro pixel-art enhancement systems、xBRZ、Kopf-Lischinski 等多种算法，无法唯一确定 Magpie 对应后端。",
+    "mappingNotes": "公开搜索出现 libretro pixel-art enhancement systems、xBRZ、Kopf-Lischinski 等多种算法，无法唯一确定 GMagpie 对应后端。",
     "documentedInputFormats": [
       {
         "format": "unspecified",
@@ -1860,7 +1860,7 @@
     ],
     "searchRoundsUsed": 3,
     "unresolvedQuestions": [
-      "Magpie 原生后端是否使用该接口",
+      "GMagpie 原生后端是否使用该接口",
       "原 C++ xBRZ 的格式契约",
       "HDR"
     ],

@@ -1,5 +1,5 @@
 #Requires -Version 7.0
-param([string]$OutputDirectory = (Join-Path $env:TEMP ('Magpie-FrameSyncCaptureAhead-' + [guid]::NewGuid())))
+param([string]$OutputDirectory = (Join-Path $env:TEMP ('GMagpie-FrameSyncCaptureAhead-' + [guid]::NewGuid())))
 $ErrorActionPreference = 'Stop'
 $aheadRepo = Split-Path $PSScriptRoot -Parent
 $aheadOutput = [IO.Path]::GetFullPath($OutputDirectory)
@@ -13,7 +13,7 @@ Enter-VsDevShell -VsInstallPath $aheadVs -SkipAutomaticLocation -DevCmdArguments
 foreach ($aheadVariant in @('production', 'negative')) {
     $aheadInclude = if ($aheadVariant -eq 'negative') { Join-Path $aheadOutput 'negative' } else { $aheadOutput }
     & cl.exe /nologo /std:c++20 /EHsc /utf-8 /MT /O2 /W4 /WX /DNOMINMAX "/I$aheadInclude" `
-        "/I$aheadRepo/src/Magpie.Core/include" "/I$aheadRepo/src/Magpie.Core" `
+        "/I$aheadRepo/src/GMagpie.Core/include" "/I$aheadRepo/src/GMagpie.Core" `
         (Join-Path $PSScriptRoot 'FrameSyncCaptureAheadTests.cpp') "/Fe:$aheadOutput/$aheadVariant.exe" "/Fo:$aheadOutput/$aheadVariant.obj" d3d11.lib dxgi.lib user32.lib
     if ($LASTEXITCODE) { throw "Capture-ahead WARP compilation failed: $aheadVariant" }
     & (Join-Path $aheadOutput "$aheadVariant.exe")

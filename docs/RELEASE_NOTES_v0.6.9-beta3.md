@@ -1,4 +1,4 @@
-# Magpie Experimental v0.6.9 Beta3
+# GMagpie Experimental v0.6.9 Beta3
 
 2026-10-02 本地测试版，继承 Beta2 的功能与修正。本轮更新如下：
 

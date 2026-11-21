@@ -30,7 +30,7 @@ static void Hr(HRESULT result) {
 	Check(SUCCEEDED(result), "D3D operation");
 }
 
-namespace Magpie {
+namespace GMagpie {
 struct TextureRef {
 	ComPtr<ID3D11Texture2D> texture;
 	void copy_from(ID3D11Texture2D* value) { texture = value; }
@@ -213,7 +213,7 @@ void Renderer::VerifyShared(uint32_t id) {
 }
 
 int main() {
-	using namespace Magpie;
+	using namespace GMagpie;
 	for (int fps : {60, 90, 120}) {
 		Renderer render;
 		Check(render._frameSyncCaptureAheadEnabled, "ordinary NR FrontEdge enables bounded preparation");

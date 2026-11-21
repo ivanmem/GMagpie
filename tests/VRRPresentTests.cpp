@@ -7,7 +7,7 @@
 #include <stdexcept>
 #include <vector>
 
-using namespace Magpie;
+using namespace GMagpie;
 struct FakeSwapChain {
 	std::vector<HRESULT> results;
 	std::vector<UINT> flags;

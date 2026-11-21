@@ -1,8 +1,8 @@
-"""Pinned upstream loader integration probe, not a Magpie/NGX/GPU acceptance test.
+"""Pinned upstream loader integration probe, not a GMagpie/NGX/GPU acceptance test.
 
 Windows x64, Python 3. Each DLL load runs in a fresh bounded subprocess;
 private copies/config/package trees/logs are retained in --output for inspection. No
-product directories, default caches or running Magpie processes are changed.
+product directories, default caches or running GMagpie processes are changed.
 """
 import argparse
 import ctypes as c

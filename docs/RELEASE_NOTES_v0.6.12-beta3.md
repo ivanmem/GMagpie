@@ -1,4 +1,4 @@
-# Magpie Experimental 0.6.12 Beta 3
+# GMagpie Experimental 0.6.12 Beta 3
 
 本地内测版本，2026-10-31。开发分支：`feature/0612-beta3-async-composition-ab`。
 

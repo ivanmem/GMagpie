@@ -15,11 +15,11 @@ def block(text, marker):
  while depth:
   depth+=(text[end]=='{')-(text[end]=='}');end+=1
  return text[start:end]
-service=read('src/Magpie/ScalingModesService.cpp')
-item=read('src/Magpie/ScalingModeItem.cpp')
-view=read('src/Magpie/ScalingModesViewModel.cpp')
-effect=read('src/Magpie/ScalingModeEffectItem.cpp')
-event=read('src/Magpie.Core/include/Event.h')
+service=read('src/GMagpie/ScalingModesService.cpp')
+item=read('src/GMagpie/ScalingModeItem.cpp')
+view=read('src/GMagpie/ScalingModesViewModel.cpp')
+effect=read('src/GMagpie/ScalingModeEffectItem.cpp')
+event=read('src/GMagpie.Core/include/Event.h')
 (out/'event.inc').write_text(event[:event.index('// 对 Event 的每个操作加锁')]+'\n}\n',encoding='utf-8')
 parts=[]
 for marker in ['ScalingMode& ScalingModesService::GetScalingMode(', 'uint32_t ScalingModesService::GetScalingModeCount(',
@@ -29,11 +29,11 @@ for marker in ['ScalingMode& ScalingModesService::GetScalingMode(', 'uint32_t Sc
  parts.append(block(service,marker))
 # Use checked access in the storage fixture so a stale index produces a diagnostic instead of undefined behavior.
 parts[0]=parts[0].replace('ScalingModes()[idx]', 'ScalingModes().at(idx)')
-parts.append(block(read('src/Magpie/ScalingModesService.cpp',old=True),'void ScalingModesService::RemoveScalingMode('))
+parts.append(block(read('src/GMagpie/ScalingModesService.cpp',old=True),'void ScalingModesService::RemoveScalingMode('))
 for marker in ['void ScalingModeItem::_Index(', 'bool ScalingModeItem::_IsRemoved()', 'hstring ScalingModeItem::Name() const',
  'void ScalingModeItem::Detach()', 'void ScalingModeItem::PrepareForRemoval(']:
  parts.append(block(item,marker))
-parts.append(block(read('src/Magpie/ScalingModeItem.cpp',old=True),'void ScalingModeItem::Remove()'))
+parts.append(block(read('src/GMagpie/ScalingModeItem.cpp',old=True),'void ScalingModeItem::Remove()'))
 for marker in ['void ScalingModeEffectItem::ScalingModeIdx(', 'bool ScalingModeEffectItem::_IsRemoved()']:
  parts.append(block(effect,marker))
 for marker in ['void ScalingModesViewModel::_ScalingModesService_Removing(', 'void ScalingModesViewModel::_ScalingModesService_Removed(']:
@@ -42,7 +42,7 @@ start=service.index('\tstd::vector<ScalingMode>& settings =',service.index('bool
 end=service.index('\n\tsettings.insert(',start)
 parts.append('void ImportGroups(std::vector<ScalingMode> scalingModes, bool loadingSettings, uint32_t* renamedCount) {\n'
  '*renamedCount=0;\n'+service[start:end]+'\nsettings.insert(settings.end(), scalingModes.begin(), scalingModes.end());\n}')
-publish=block(read('src/Magpie/AppSettings.cpp'),'void AppSettings::PublishStartupNotice()')
+publish=block(read('src/GMagpie/AppSettings.cpp'),'void AppSettings::PublishStartupNotice()')
 parts.append(publish)
 code=r'''
 #include <windows.h>
@@ -66,7 +66,7 @@ namespace winrt { struct auto_revoke_t{}; inline constexpr auto_revoke_t auto_re
 #include "event.inc"
 using hstring=std::wstring;
 static void Require(bool value,const char* message) { if (!value) throw std::runtime_error(message); }
-namespace Magpie {
+namespace GMagpie {
 struct FixtureEffect {
  int value;
  std::wstring name;
@@ -119,9 +119,9 @@ struct ScalingModesService {
  Event<> ScalingModeNamesChanged;
 };
 }
-using namespace Magpie;
+using namespace GMagpie;
 struct ScalingModeItem;
-namespace winrt::Magpie { using ScalingModeItem=std::shared_ptr<::ScalingModeItem>; }
+namespace winrt::GMagpie { using ScalingModeItem=std::shared_ptr<::ScalingModeItem>; }
 struct IInspectable {
  std::shared_ptr<void> value;
  template<class T> IInspectable(std::shared_ptr<T> x):value(std::move(x)){}
@@ -211,7 +211,7 @@ struct ScalingModesViewModel {
  void _ScalingModesService_Removing(uint32_t);
  void _ScalingModesService_Removed(uint32_t);
  void RaisePropertyChanged(const wchar_t*) {}
- void VerifyRendered() { for(auto& x:_scalingModes) x.as<winrt::Magpie::ScalingModeItem>()->VerifyRendered(); }
+ void VerifyRendered() { for(auto& x:_scalingModes) x.as<winrt::GMagpie::ScalingModeItem>()->VerifyRendered(); }
 };
 PRODUCTION
 static void DeleteCase(uint32_t removed,bool throughItem,uint32_t loaded=3) {
@@ -221,10 +221,10 @@ static void DeleteCase(uint32_t removed,bool throughItem,uint32_t loaded=3) {
  ScalingModesViewModel view(loaded);
  auto& rows=view._scalingModes;
  std::weak_ptr<ScalingModeItem> weak;
- if(removed<loaded) weak=rows.values[removed].as<winrt::Magpie::ScalingModeItem>();
+ if(removed<loaded) weak=rows.values[removed].as<winrt::GMagpie::ScalingModeItem>();
  rows.changed=[&](uint32_t index,bool after) {
   if(!after) {
-   auto target=rows.values[index].as<winrt::Magpie::ScalingModeItem>();
+   auto target=rows.values[index].as<winrt::GMagpie::ScalingModeItem>();
    Require(target->_IsRemoved(),"binding callback queried removed group before its index was invalidated");
    target->VerifyRendered();
   } else {
@@ -233,7 +233,7 @@ static void DeleteCase(uint32_t removed,bool throughItem,uint32_t loaded=3) {
   }
  };
  if(throughItem) {
-  auto* target=rows.values.at(removed).as<winrt::Magpie::ScalingModeItem>().get();
+  auto* target=rows.values.at(removed).as<winrt::GMagpie::ScalingModeItem>().get();
   target->Remove();
   Require(weak.expired(),"removed row was retained after synchronous deletion completed");
  } else ScalingModesService::Get().RemoveScalingMode(removed);
@@ -257,13 +257,13 @@ int main() {
    ScalingModesViewModel view(3);
    view._scalingModes.changed=[&](uint32_t index,bool after) {
     if (!after) {
-     auto target=view._scalingModes.values[index].as<winrt::Magpie::ScalingModeItem>();
+     auto target=view._scalingModes.values[index].as<winrt::GMagpie::ScalingModeItem>();
      Require(target->_IsRemoved(),"sequential deletion exposed stale binding");
      target->VerifyRendered();
     } else view.VerifyRendered();
    };
    while(!settings.modes.empty()) {
-    auto stale=view._scalingModes.values.front().as<winrt::Magpie::ScalingModeItem>();
+    auto stale=view._scalingModes.values.front().as<winrt::GMagpie::ScalingModeItem>();
     auto oldCount=settings.modes.size();
     stale->Remove();stale->Remove();
     Require(settings.modes.size()+1==oldCount,"stale delete removed another group");
@@ -303,11 +303,11 @@ int main() {
 code=code.replace('PRODUCTION','\n\n'.join(parts))
 (out/'group_identity.cpp').write_text(code,encoding='utf-8')
 if not baseline:
- page=read('src/Magpie/ScalingModesPage.xaml');ET.fromstring(page)
+ page=read('src/GMagpie/ScalingModesPage.xaml');ET.fromstring(page)
  for text in ['ViewModel.HasDuplicateNames','HasNameConflict, Mode=OneWay','RenameProblem, Mode=OneWay']:
   assert text in page
  for language in ('en-US','zh-Hans','zh-Hant'):
-  entries=ET.fromstring(read(f'src/Magpie/Resources.language-{language}.resw')).findall('data')
+  entries=ET.fromstring(read(f'src/GMagpie/Resources.language-{language}.resw')).findall('data')
   keys=[entry.attrib['name'] for entry in entries]; assert len(keys)==len(set(keys))
   assert 'Message_DuplicateScalingModeNames' in keys and 'ScalingModes_NameAlreadyExists' in keys
  assert 'ScalingModeRemoving.Invoke(index)' in service

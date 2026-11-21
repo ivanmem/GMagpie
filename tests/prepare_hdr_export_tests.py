@@ -4,7 +4,7 @@ import sys
 
 repo = Path(__file__).resolve().parents[1]
 out = Path(sys.argv[1])
-source = (repo / 'src/Magpie.Core/TextureHelper.cpp').read_text(encoding='utf-8-sig')
+source = (repo / 'src/GMagpie.Core/TextureHelper.cpp').read_text(encoding='utf-8-sig')
 functions = source[source.index('static void RecordTextureSaveError('):source.rfind('\n}')]
 # Exclusive screenshot commits are exercised by the screenshot disk fixture;
 # this existing test isolates the ordinary encoder/format dispatcher.
@@ -26,7 +26,7 @@ preamble = r'''
 #include <wincodec.h>
 #include "TextureHelper.h"
 #include "TextureExportPixels.h"
-namespace Magpie {
+namespace GMagpie {
 struct Logger {
     static Logger& Get(){ static Logger instance; return instance; }
     void ComError(const char*, HRESULT){}
@@ -42,7 +42,7 @@ main = r'''
 int wmain(int argc, wchar_t** argv) {
     assert(argc == 2);
     winrt::init_apartment(winrt::apartment_type::multi_threaded);
-    using namespace Magpie;
+    using namespace GMagpie;
     const std::wstring filename = std::wstring(argv[1]) + L"/HdrEncoded.png";
     std::array<uint16_t, 4> half{0x3c00, 0x3c00, 0x3c00, 0x3800};
     const auto bytes = std::span(reinterpret_cast<uint8_t*>(half.data()), sizeof(half));

@@ -1,6 +1,6 @@
-#include "../src/Magpie.Core/FrontendMotionTexture.h"
-#include "../src/Magpie.Core/FSR3FGMotion.h"
-#include "../src/Magpie.Core/PresenterFailure.h"
+#include "../src/GMagpie.Core/FrontendMotionTexture.h"
+#include "../src/GMagpie.Core/FSR3FGMotion.h"
+#include "../src/GMagpie.Core/PresenterFailure.h"
 #include <d3d11_4.h>
 #include <d3d11sdklayers.h>
 #include <d3dcompiler.h>
@@ -13,7 +13,7 @@
 #include <stdexcept>
 #include <vector>
 
-using namespace Magpie;
+using namespace GMagpie;
 using winrt::com_ptr;
 using namespace DirectX::PackedVector;
 using Pixel = std::array<uint16_t, 2>;

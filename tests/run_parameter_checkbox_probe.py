@@ -31,7 +31,7 @@ for effect, section, label in cases:
     startup = subprocess.STARTUPINFO()
     startup.dwFlags |= subprocess.STARTF_USESHOWWINDOW
     startup.wShowWindow = 0
-    child = subprocess.Popen([str(probe / 'Magpie.exe')], cwd=probe, env=env, startupinfo=startup)
+    child = subprocess.Popen([str(probe / 'GMagpie.exe')], cwd=probe, env=env, startupinfo=startup)
     try:
         exit_code = child.wait(timeout=35)
     except subprocess.TimeoutExpired:

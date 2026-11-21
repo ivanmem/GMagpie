@@ -3,7 +3,7 @@
 #include <cassert>
 #include <iostream>
 #include <memory>
-using namespace Magpie;
+using namespace GMagpie;
 namespace VRRPerformance { enum class Event { StableCopy }; void Record(Event) {} }
 struct Window {
 	const Window& Options() const { return *this; }

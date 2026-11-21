@@ -133,7 +133,7 @@ int main(int argc,char** argv) {
             {L"residualChromaProtection",.6f},{L"residualNeutralProtection",50.f},{L"residualSkinProtection",75.f},
             {L"residualShowColorZones",1.f},{L"residualShadowChroma",0.f},{L"residualMidtoneChroma",.5f},
             {L"residualHighlightChroma",2.f},{L"residualMaxAgeFrames",3.f},{L"residualHueProtection",.35f},{L"pass2_intensity",.7f},{L"multiPass",3.f}};
-        assert(Magpie::NormalizeDLSSNRDetailParameters(old));
+        assert(GMagpie::NormalizeDLSSNRDetailParameters(old));
         assert(!old.contains(L"residualChromaTemporalStrength") && !old.contains(L"residualColorMode") && !old.contains(L"residualShowProtection"));
         for (const auto key : {L"residualNeutralProtection",L"residualSkinProtection",L"residualShowColorZones",
             L"residualShadowChroma",L"residualMidtoneChroma",L"residualHighlightChroma"}) assert(!old.contains(key));
@@ -142,26 +142,26 @@ int main(int argc,char** argv) {
         assert(old.at(L"residualShowAdvanced")==1 && old.at(L"residualSaturation")==.65f);
         assert(old.at(L"residualMultiplier")==1.8f && old.at(L"residualHueProtection")==.35f);
         assert(old.at(L"pass2_intensity")==.7f && old.at(L"multiPass")==3);
-        auto copy=old; assert(!Magpie::NormalizeDLSSNRDetailParameters(copy) && copy==old);
+        auto copy=old; assert(!GMagpie::NormalizeDLSSNRDetailParameters(copy) && copy==old);
     }
     std::map<std::wstring,float> empty;
-    assert(Magpie::NormalizeDLSSNRDetailParameters(empty));
+    assert(GMagpie::NormalizeDLSSNRDetailParameters(empty));
     assert(empty.at(L"enableInputResolutionScaling")==1 && empty.at(L"inputResolutionPercent")==100);
     std::map<std::string,float> values{{"enableInputResolutionScaling",1.f}};
     auto get=[&](std::string_view name,float fallback) { auto i=values.find(std::string(name)); return i==values.end() ? fallback : i->second; };
-    for (auto name : Magpie::DLSSNR_RESIDUAL_PARAMETERS) {
-        assert(Magpie::IsEffectParameterVisible("DLSSNR\\DLSSNR_AI_Filter",name,get) == !Magpie::IsDLSSNRAdvancedParameter(name));
+    for (auto name : GMagpie::DLSSNR_RESIDUAL_PARAMETERS) {
+        assert(GMagpie::IsEffectParameterVisible("DLSSNR\\DLSSNR_AI_Filter",name,get) == !GMagpie::IsDLSSNRAdvancedParameter(name));
     }
     values["residualShowAdvanced"]=1;
-    for (auto name : Magpie::DLSSNR_RESIDUAL_PARAMETERS)
-        assert(Magpie::IsEffectParameterVisible("DLSSNR\\DLSSNR_AI_Filter",name,get));
+    for (auto name : GMagpie::DLSSNR_RESIDUAL_PARAMETERS)
+        assert(GMagpie::IsEffectParameterVisible("DLSSNR\\DLSSNR_AI_Filter",name,get));
     values["residualColorMode"]=0; // Obsolete selectors cannot hide advanced controls.
-    assert(Magpie::IsEffectParameterVisible("DLSSNR\\DLSSNR_AI_Filter","residualHueProtection",get));
+    assert(GMagpie::IsEffectParameterVisible("DLSSNR\\DLSSNR_AI_Filter","residualHueProtection",get));
     values["residualShowAdvanced"]=0;
-    assert(!Magpie::IsEffectParameterVisible("DLSSNR\\DLSSNR_AI_Filter","residualDebugView",get));
-    assert(!Magpie::IsEffectParameterVisible("DLSSNR\\DLSSNR_AI_Filter","residualChromaTemporalStrength",get));
+    assert(!GMagpie::IsEffectParameterVisible("DLSSNR\\DLSSNR_AI_Filter","residualDebugView",get));
+    assert(!GMagpie::IsEffectParameterVisible("DLSSNR\\DLSSNR_AI_Filter","residualChromaTemporalStrength",get));
     values["antiFlicker"]=2;
-    assert(!Magpie::IsEffectParameterVisible("DLSSNR\\DLSSNR_AI_Filter","residualChromaTemporalStrength",get));
+    assert(!GMagpie::IsEffectParameterVisible("DLSSNR\\DLSSNR_AI_Filter","residualChromaTemporalStrength",get));
     Compile(COLOR_CONVERT_HLSL,"ConvertToRgba");
     Compile(COLOR_DOWNSAMPLE_HLSL,"DownsampleColorVertical");
     Compile(COLOR_DOWNSAMPLE_HLSL,"DownsampleColorHorizontal");

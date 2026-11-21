@@ -1,6 +1,6 @@
 """Check changed production translation units without product build/output.
 
-Pass an existing Release object directory containing Magpie.Core and Magpie
+Pass an existing Release object directory containing GMagpie.Core and GMagpie
 CL.command.1.tlog files. These supply dependency paths and feature defines;
 current checkout headers take precedence over the old build's source paths.
 """
@@ -16,8 +16,8 @@ shell.CommandLineToArgvW.argtypes = [ctypes.c_wchar_p, ctypes.POINTER(ctypes.c_i
 shell.CommandLineToArgvW.restype = ctypes.POINTER(ctypes.c_wchar_p)
 ctypes.windll.kernel32.LocalFree.argtypes = [ctypes.c_void_p]
 for project, sources in {
-    "Magpie.Core": ["DirectXHelper.cpp", "DeviceResources.cpp"],
-    "Magpie": ["AdaptersService.cpp"],
+    "GMagpie.Core": ["DirectXHelper.cpp", "DeviceResources.cpp"],
+    "GMagpie": ["AdaptersService.cpp"],
 }.items():
     raw = " ".join(line for line in
                    (build / project / f"{project}.tlog/CL.command.1.tlog").read_text(encoding="utf-16").splitlines()
@@ -30,7 +30,7 @@ for project, sources in {
         ctypes.windll.kernel32.LocalFree(pointer)
     includes = list(dict.fromkeys(arg for arg in args if arg.lower().startswith("/i")))
     definitions = list(dict.fromkeys(args[i+1] for i, arg in enumerate(args) if arg.lower() == "/d"))
-    current = [repo / "src/Magpie.Core/include", repo / "src/Magpie.Core", repo / "src/Shared",
+    current = [repo / "src/GMagpie.Core/include", repo / "src/GMagpie.Core", repo / "src/Shared",
                build / project / "Generated Files", build / project]
     for source in sources:
         command = ["cl.exe", "/nologo", "/Zs", "/std:c++20", "/EHsc", "/utf-8",

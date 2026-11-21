@@ -10,7 +10,7 @@
 #include <optional>
 #include <string>
 
-using namespace Magpie;
+using namespace GMagpie;
 using namespace std::chrono_literals;
 static unsigned checks = 0;
 static void Check(bool value, const char* message) {

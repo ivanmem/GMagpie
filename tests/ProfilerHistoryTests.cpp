@@ -1,9 +1,9 @@
-#include "../src/Magpie.Core/ProfilerHistory.h"
+#include "../src/GMagpie.Core/ProfilerHistory.h"
 #include <cassert>
 #include <cstdio>
 #include <limits>
 
-using namespace Magpie;
+using namespace GMagpie;
 using namespace std::chrono;
 static const ProfilerHistory::Time base(100s);
 static bool Near(double value, double expected, double tolerance = 0.001) {

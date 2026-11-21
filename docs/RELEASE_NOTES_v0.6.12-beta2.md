@@ -1,4 +1,4 @@
-# Magpie Experimental 0.6.12 Beta 2
+# GMagpie Experimental 0.6.12 Beta 2
 
 本地内测版本，包含 2026-10-31 后续修订。开发分支：`feature/0612-beta2-dlssnr-performance`。
 

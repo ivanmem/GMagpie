@@ -1,7 +1,7 @@
-#include "../src/Magpie/ProfileFrameRefresh.h"
-#include "../src/Magpie/ProfileRtss.h"
+#include "../src/GMagpie/ProfileFrameRefresh.h"
+#include "../src/GMagpie/ProfileRtss.h"
 #include <string>
-#include "../src/Magpie/JsonHelper.h"
+#include "../src/GMagpie/JsonHelper.h"
 #include <rapidjson/prettywriter.h>
 #include <cstdint>
 #include <filesystem>
@@ -23,7 +23,7 @@
 #pragma warning(pop)
 #undef DEFINE_FLAG_ACCESSOR
 
-namespace Magpie {
+namespace GMagpie {
 template<class T> constexpr T FLOAT_EPSILON = std::numeric_limits<T>::epsilon();
 // Encoding and OS version are unrelated to the cursor fields under test.
 struct StrHelper {
@@ -58,7 +58,7 @@ struct AppSettings {
 #include "CursorConfigProduction.inc"
 }
 
-using namespace Magpie;
+using namespace GMagpie;
 static int checks = 0;
 static void Check(bool value, const char* message) {
 	++checks;

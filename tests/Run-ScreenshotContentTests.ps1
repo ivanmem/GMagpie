@@ -10,7 +10,7 @@ if (!(Get-Command cl.exe -ErrorAction SilentlyContinue)) {
     Import-Module (Join-Path $vs 'Common7/Tools/Microsoft.VisualStudio.DevShell.dll')
     Enter-VsDevShell -VsInstallPath $vs -SkipAutomaticLocation -DevCmdArguments '-arch=x64 -host_arch=x64' | Out-Null
 }
-$includes = @("$repo/src/Magpie.Core", "$repo/src/Magpie.Core/include", "$repo/src/Magpie", "$repo/src/Shared")
+$includes = @("$repo/src/GMagpie.Core", "$repo/src/GMagpie.Core/include", "$repo/src/GMagpie", "$repo/src/Shared")
 $headers = & rg --files --no-ignore (Join-Path $env:USERPROFILE '.conan2/p') -g document.h -g phmap.h -g format.h -g imgui.h
 foreach ($tail in @('[\\/]rapidjson[\\/]document.h$', '[\\/]parallel_hashmap[\\/]phmap.h$', '[\\/]fmt[\\/]format.h$')) {
     $path = $headers | Where-Object { $_ -match $tail -and $_ -match '[\\/]p[\\/]include[\\/]' } | Select-Object -First 1
@@ -61,9 +61,9 @@ foreach ($test in @('ScreenshotContentTests', 'ScreenshotHandoffTests', 'Screens
 }
 }
 if (!$SkipSyntaxCheck) {
-    # Syntax only: no Magpie object, executable, package or release is built.
+    # Syntax only: no GMagpie object, executable, package or release is built.
     foreach ($file in @('RendererScreenshot.cpp','Renderer.cpp','ScalingRuntime.cpp','ScreenshotHelper.cpp','TextureHelper.cpp')) {
-        & cl.exe @common /Zs (Join-Path $repo "src/Magpie.Core/$file")
+        & cl.exe @common /Zs (Join-Path $repo "src/GMagpie.Core/$file")
         if ($LASTEXITCODE) { throw "Syntax validation failed: $file" }
     }
     Write-Output 'PASS: syntax-only validation of five production Core translation units'

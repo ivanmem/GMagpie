@@ -14,7 +14,7 @@
 #include <cmath>
 #include <stdexcept>
 
-using namespace Magpie;
+using namespace GMagpie;
 static winrt::com_ptr<ID3D11InfoQueue> messages11;
 static winrt::com_ptr<ID3D12InfoQueue> messages12;
 static bool debugFailure = false;

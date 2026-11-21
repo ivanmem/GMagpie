@@ -30,8 +30,8 @@ def read(name):
 
 
 ID = r"FSR3FG\FSR3_FrameGeneration"
-cpp = read("src/Magpie.Core/FSR3FGPresenter.cpp")
-policy = read("src/Magpie.Core/FSR3FGPolicy.h")
+cpp = read("src/GMagpie.Core/FSR3FGPresenter.cpp")
+policy = read("src/GMagpie.Core/FSR3FGPolicy.h")
 marker = read("src/Effects/FSR3FG/FSR3_FrameGeneration.hlsl")
 review = json.loads(read("docs/experimental/reviews/20261011-fsr3fg-effect-description-review.json"))["effects"][0]
 check(review["id"] == ID, "review identity")
@@ -45,15 +45,15 @@ check("int multiplier;" not in marker, "fixed 2x has no adjustable multiplier")
 check("MP_ENABLE_FSR3_FRAME_GENERATION" in cpp and "#else" in cpp, "no-SDK implementation exists")
 
 ns = {"m": "http://schemas.microsoft.com/developer/msbuild/2003"}
-for project in ("src/BuildOptions.props", "src/Common.Post.props", "src/Magpie.Core/Magpie.Core.vcxproj",
-                "src/Magpie/Magpie.vcxproj", "src/Effects/Effects.vcxproj"):
+for project in ("src/BuildOptions.props", "src/Common.Post.props", "src/GMagpie.Core/GMagpie.Core.vcxproj",
+                "src/GMagpie/GMagpie.vcxproj", "src/Effects/Effects.vcxproj"):
     tree = ET.fromstring(read(project))
     check(tree.tag.endswith("Project"), f"valid XML {project}")
-core = ET.fromstring(read("src/Magpie.Core/Magpie.Core.vcxproj"))
+core = ET.fromstring(read("src/GMagpie.Core/GMagpie.Core.vcxproj"))
 check(any(n.get("Include") == "FSR3FGPresenter.cpp" for n in core.findall(".//m:ClCompile", ns)), "presenter compilation unit registered")
 effects = ET.fromstring(read("src/Effects/Effects.vcxproj"))
 check(any(n.get("Include") == ID + ".hlsl" for n in effects.findall(".//m:CopyFileToFolders", ns)), "marker distribution registered")
-app = ET.fromstring(read("src/Magpie/Magpie.vcxproj"))
+app = ET.fromstring(read("src/GMagpie/GMagpie.vcxproj"))
 copy_target = next(n for n in app.findall("m:Target", ns) if n.get("Name") == "CopyFSR3FrameGenerationRuntime")
 check("EnableFSR3FrameGeneration" in copy_target.get("Condition") and "EnableFSR3ZeroMV" not in copy_target.get("Condition"), "FG runtime independent of SR flag")
 copied = " ".join(n.get("SourceFiles", "") for n in copy_target)
@@ -65,24 +65,24 @@ check((ROOT / "docs/experimental/effects/FSR3FG.md").is_file(), "distributed ins
 source_ids = {str(p.relative_to(ROOT / 'src/Effects').with_suffix('')).replace('/', '\\')
               for p in (ROOT / 'src/Effects').rglob('*.hlsl') if '//!MAGPIE EFFECT' in p.read_text(encoding='utf-8-sig')}
 for language in ("zh-Hans", "en-US"):
-    catalog = json.loads(read(f"src/Magpie/EffectCatalog/{language}.json"))
+    catalog = json.loads(read(f"src/GMagpie/EffectCatalog/{language}.json"))
     entries = [e for e in catalog["effects"] if e["id"] == ID]
     check(len(entries) == 1, f"unique {language} FSR entry")
     check({e['id'] for e in catalog['effects']} == source_ids, f"{language} catalog covers installed effects")
     check(entries[0]["level"] == "advanced" and "SDR" in entries[0]["summary"], f"{language} experimental SDR scope")
-    resource = ET.fromstring(read(f"src/Magpie/Resources.language-{language}.resw"))
+    resource = ET.fromstring(read(f"src/GMagpie/Resources.language-{language}.resw"))
     keys = [n.get("name") for n in resource.findall("data")]
     check(len(keys) == len(set(keys)), f"{language} resource keys unique")
     for name in ("opticalFlowMethod", "amdOpticalFlowMode", "nvidiaOpticalFlowQuality"):
         check(f"EffectParam_FSR3FG_FSR3_FrameGeneration_{name}_Label" in keys, f"localized {name}")
 
-scaling = read("src/Magpie.Core/include/ScalingOptions.h")
+scaling = read("src/GMagpie.Core/include/ScalingOptions.h")
 check(scaling.count('FSR3FG\\\\FSR3_FrameGeneration') == 2, "narrow/wide classifiers agree")
-renderer = read("src/Magpie.Core/Renderer.cpp")
+renderer = read("src/GMagpie.Core/Renderer.cpp")
 check("_proxyMotionRequest" in renderer and "_xessMotionRequest" not in renderer, "shared guidance collection/publication routing")
 check("_HasSoftwareFrameGenerator() || _HasProxyFrameGenerator()" in renderer, "stale capture guard covers proxy FG")
 check("_ReportPresenterFailure();" in renderer and "HasFatalError()" in renderer, "fatal presenter errors stop scaling")
-stable = read("src/Magpie.Core/FrontendMotionTexture.h")
+stable = read("src/GMagpie.Core/FrontendMotionTexture.h")
 # Wiring only; the native resource test exercises these production helpers on
 # real D3D resources. Passing this audit is NOT evidence that the SRV runs.
 check("EnsureFrontendMotionTexture(_frontendResources.GetD3DDevice(),\n\t\t\t\tmotionSource, _isFSR3FrameGenerationActive" in renderer,

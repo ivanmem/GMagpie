@@ -17,8 +17,8 @@ def block(source, marker):
     return source[start:end]
 
 
-renderer = (repo / "src/Magpie.Core/Renderer.cpp").read_text(encoding="utf-8-sig")
-clock_source = (repo / "src/Magpie.Core/FramePresentationTiming.h").read_text(encoding="utf-8-sig")
+renderer = (repo / "src/GMagpie.Core/Renderer.cpp").read_text(encoding="utf-8-sig")
+clock_source = (repo / "src/GMagpie.Core/FramePresentationTiming.h").read_text(encoding="utf-8-sig")
 clock = (block(clock_source, "class OverlayPresentationClock {") + ";").replace("std::chrono::steady_clock", "TestClock")
 admission = block(renderer, "bool Renderer::_CanRenderOverlay()").replace("std::chrono::steady_clock", "TestClock")
 prefix = r'''
@@ -42,7 +42,7 @@ struct TestClock {
     static inline time_point current{};
     static time_point now() { return current; }
 };
-namespace Magpie {
+namespace GMagpie {
 namespace FrameTrace {
 enum class Event { OverlayDeferred, OverlayContentionWait, WgcNotification, WgcNotificationOverflow };
 struct Sample { Event event; int64_t tick; uint64_t frame; int64_t a,b; };
@@ -87,12 +87,12 @@ namespace wil { struct unique_event_nothrow {}; }
 /* SIGNAL */
 }
 '''
-signal = block((repo / "src/Magpie.Core/GraphicsCaptureFrameSource.cpp").read_text(encoding="utf-8-sig"),
+signal = block((repo / "src/GMagpie.Core/GraphicsCaptureFrameSource.cpp").read_text(encoding="utf-8-sig"),
                "struct GraphicsCaptureFrameSource::FrameReadySignal {") + ";"
 signal = signal.replace("struct GraphicsCaptureFrameSource::FrameReadySignal", "struct FrameReadySignal")
 suffix = r'''
 int main() {
-    using namespace Magpie;
+    using namespace GMagpie;
     unsigned cells=0;
     // The common admission policy has no NR-mode or limiter side effects.
     // Exercise every requested synchronization/NR/rate cell with real code.

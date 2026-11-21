@@ -7,7 +7,7 @@
 #include <iostream>
 
 int main() {
-    using namespace Magpie;
+    using namespace GMagpie;
     Logger::Get().Initialize(spdlog::level::info,L"compiler.log",10000000,1);
     const char* formats[]{"fp32","fp16","r8"};
     for(unsigned format=0;format<3;++format) {

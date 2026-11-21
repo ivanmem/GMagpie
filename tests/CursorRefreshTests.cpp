@@ -1,9 +1,9 @@
-#include "../src/Magpie.Core/CursorRefreshPolicy.h"
+#include "../src/GMagpie.Core/CursorRefreshPolicy.h"
 #include <cstdlib>
 #include <iostream>
 #include <limits>
 
-using namespace Magpie;
+using namespace GMagpie;
 using namespace std::chrono_literals;
 using Clock = CursorRefreshPolicy::Clock;
 static int checks = 0;

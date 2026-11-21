@@ -15,7 +15,7 @@ static HANDLE destroyReady;
 static HANDLE destroyRelease;
 static LRESULT CALLBACK WindowProc(HWND hwnd, UINT message, WPARAM wp, LPARAM lp) {
     if (message == WM_DESTROY && blockInDestroy) {
-        assert(Magpie::SetScalingWindowOwner(hwnd, nullptr));
+        assert(GMagpie::SetScalingWindowOwner(hwnd, nullptr));
         assert(GetWindow(hwnd, GW_OWNER) == nullptr);
         SetEvent(destroyReady);
         WaitForSingleObject(destroyRelease, 8000);
@@ -61,7 +61,7 @@ int wmain(int argc, wchar_t** argv) {
         if (mode == 2) {
             // The production helper establishes ownership after initialization,
             // then removes it before a simulated blocking SDK teardown.
-            assert(Magpie::SetScalingWindowOwner(popup, owner));
+            assert(GMagpie::SetScalingWindowOwner(popup, owner));
             assert(GetWindow(popup, GW_OWNER) == owner);
             blockInDestroy = true;
             destroyReady = ready;

@@ -1,7 +1,7 @@
 #pragma once
 #include "PinnedFile.h"
 
-namespace Magpie::DlssgSm86Package {
+namespace GMagpie::DlssgSm86Package {
 
 inline constexpr wchar_t Directory[] = L"runtimes/dlssg_sm86";
 inline constexpr char Revision[] = "6f047bdc885e861575e8b049413ca31dc171a924";

@@ -10,7 +10,7 @@ import sys
 repo = Path(__file__).resolve().parents[1]
 output = Path(sys.argv[1]).resolve()
 output.mkdir(parents=True, exist_ok=True)
-source = (repo / "src/Magpie.Core/CursorManager.cpp").read_text(encoding="utf-8-sig")
+source = (repo / "src/GMagpie.Core/CursorManager.cpp").read_text(encoding="utf-8-sig")
 
 
 def block(text, signature):
@@ -54,17 +54,17 @@ for signature in ("void CursorManager::_ReliableSetCursorPos(",
 relocate = block(source, "void CursorManager::_ReliableSetCursorPos(")
 assert relocate.index("_CreateCursorRepositionTimer(id)") < relocate.index("ClipCursor(&pointClip)")
 assert relocate.index("ClipCursor(&pointClip)") < relocate.index("_cursorReposition.emplace(")
-header = (repo / "src/Magpie.Core/CursorManager.h").read_text(encoding="utf-8-sig")
+header = (repo / "src/GMagpie.Core/CursorManager.h").read_text(encoding="utf-8-sig")
 assert "_lifetime->RequestStop();" in block(header, "void BeginShutdown(")
-window = (repo / "src/Magpie.Core/ScalingWindow.cpp").read_text(encoding="utf-8-sig")
+window = (repo / "src/GMagpie.Core/ScalingWindow.cpp").read_text(encoding="utf-8-sig")
 shutdown = block(window, "void ScalingWindow::_BeginDestroy(")
 assert shutdown.index("BeginShutdown();") < shutdown.index("TrySetScalingWindowOwner(")
 assert shutdown.index("if (result.IsApplied())") < shutdown.index("ReleasePendingCursorReposition();")
 complete = block(window, "bool ScalingWindow::CompletePendingDestroy(")
 assert complete.index("_retirement.Ready(") < complete.index("ReleasePendingCursorReposition()") < complete.index("_FinishDestroy();")
 (output / "CursorRetirementProduction.inc").write_text(complete, encoding="utf-8")
-runtime = (repo / "src/Magpie.Core/ScalingRuntime.cpp").read_text(encoding="utf-8-sig")
-runtime_header = (repo / "src/Magpie.Core/include/ScalingRuntime.h").read_text(encoding="utf-8-sig")
+runtime = (repo / "src/GMagpie.Core/ScalingRuntime.cpp").read_text(encoding="utf-8-sig")
+runtime_header = (repo / "src/GMagpie.Core/include/ScalingRuntime.h").read_text(encoding="utf-8-sig")
 (output / "RuntimeQuitTypes.inc").write_text(block(runtime_header, "enum class ScalingState") + ";", encoding="utf-8")
 quit_request = block(runtime, "auto requestQuit =") + ";"
 retirement_gate = runtime[runtime.index("// Parameter callbacks only queue changes."):runtime.index("scalingWindow.PollSourceState();")]
@@ -88,9 +88,9 @@ loop_prefix = loop_prefix.replace("continue;", "return false;").replace("return;
 start = block(window, "void ScalingWindow::Start(")
 (output / "RuntimeWindowStartAdmission.inc").write_text(start[start.index("{") + 1:start.index("\tassert(!Handle());")], encoding="utf-8")
 
-events = block((repo / "src/Magpie.Core/FrameTrace.h").read_text(encoding="utf-8-sig"), "enum class Event")
+events = block((repo / "src/GMagpie.Core/FrameTrace.h").read_text(encoding="utf-8-sig"), "enum class Event")
 events = [e.strip() for e in events[events.index("{") + 1:-1].split(",") if e.strip() != "Count"]
-trace = (repo / "src/Magpie.Core/FrameTrace.cpp").read_text(encoding="utf-8-sig")
+trace = (repo / "src/GMagpie.Core/FrameTrace.cpp").read_text(encoding="utf-8-sig")
 names = re.findall(r'"([A-Za-z]+)"', trace[trace.index("NAMES{"):trace.index("};", trace.index("NAMES{"))])
 assert names == events, "FrameTrace event/name correspondence broken"
 print(f"Extracted {len(signatures)} production cursor methods; lifecycle and {len(events)} trace bindings checked.")

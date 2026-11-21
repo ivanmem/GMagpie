@@ -10,7 +10,7 @@ import xml.etree.ElementTree as ET
 from pathlib import Path
 
 repo = Path(__file__).resolve().parents[1]
-resw = repo / "src/Magpie"
+resw = repo / "src/GMagpie"
 BASE = "language-en-US"
 # Локали, которые ведёт эта задача; остальные наследуют en-US
 MAINTAINED = [BASE, "language-ru", "language-zh-Hans", "language-zh-Hant"]

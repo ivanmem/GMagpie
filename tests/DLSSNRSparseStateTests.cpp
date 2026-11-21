@@ -1,12 +1,12 @@
-#include "../src/Magpie.Core/include/DLSSNRSparseState.h"
-#include "../src/Magpie.Core/DLSSNRColorShader.h"
-#include "../src/Magpie.Core/DLSSNRSparseShader.h"
+#include "../src/GMagpie.Core/include/DLSSNRSparseState.h"
+#include "../src/GMagpie.Core/DLSSNRColorShader.h"
+#include "../src/GMagpie.Core/DLSSNRSparseShader.h"
 #include <d3dcompiler.h>
 #include <cassert>
 #include <iostream>
 #include <string>
 
-using namespace Magpie;
+using namespace GMagpie;
 
 int main() {
 	assert(DLSSNRSparseBudget{}.interval==2);

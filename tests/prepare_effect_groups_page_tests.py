@@ -9,12 +9,12 @@ repo = Path(__file__).resolve().parents[1]
 output = Path(sys.argv[1])
 output.mkdir(parents=True, exist_ok=True)
 ns = {'p': 'http://schemas.microsoft.com/winfx/2006/xaml/presentation',
-      'x': 'http://schemas.microsoft.com/winfx/2006/xaml', 'local': 'using:Magpie'}
+      'x': 'http://schemas.microsoft.com/winfx/2006/xaml', 'local': 'using:GMagpie'}
 for prefix, uri in ns.items():
     ET.register_namespace('' if prefix == 'p' else prefix, uri)
 uid = '{' + ns['x'] + '}Uid'
 name = '{' + ns['x'] + '}Name'
-page = ET.parse(repo / 'src/Magpie/ScalingModesPage.xaml').getroot()
+page = ET.parse(repo / 'src/GMagpie/ScalingModesPage.xaml').getroot()
 frame = page.find('local:PageFrame', ns)
 actions = frame.find('local:PageFrame.HeaderAction/local:SimpleStackPanel', ns)
 expected = ['Import', 'Export', 'ConfigFolder', 'Reset']
@@ -36,7 +36,7 @@ for item in menu_fixture.findall('p:MenuFlyoutItem', ns):
     item.set('Text', key.removeprefix('ScalingModes_General_'))
 menu_xaml = ET.tostring(menu_fixture, encoding='unicode')
 style = page.find("p:Page.Resources/p:Style[@x:Key='ScalingModesHeaderButtonStyle']", ns)
-frame_doc = ET.parse(repo / 'src/Magpie/PageFrame.xaml').getroot()
+frame_doc = ET.parse(repo / 'src/GMagpie/PageFrame.xaml').getroot()
 frame_resources = ''.join(ET.tostring(node, encoding='unicode')
                           for node in frame_doc.find('p:UserControl.Resources', ns))
 style_xaml = ('<ResourceDictionary xmlns="' + ns['p'] + '" xmlns:x="' + ns['x'] + '">' +
@@ -50,18 +50,18 @@ header = deepcopy(frame_doc.find(
 header.remove(header.find("p:ContentControl[@x:Name='IconContainer']", ns))
 for node in header.iter():
     for key, value in list(node.attrib.items()):
-        if value.startswith('{x:Bind') or key.startswith('{using:Magpie}'):
+        if value.startswith('{x:Bind') or key.startswith('{using:GMagpie}'):
             del node.attrib[key]
 header_xaml = ET.tostring(header, encoding='unicode')
 main = frame.find('local:SimpleStackPanel', ns)
 view = main.find('p:ListView', ns)
 footer = main[-1]
-assert footer.tag == '{using:Magpie}SimpleStackPanel'
+assert footer.tag == '{using:GMagpie}SimpleStackPanel'
 button = deepcopy(footer.find('p:Button', ns))
 assert button.get('Click') == 'NewScalingModeButton_Click'
 del button.attrib['Click']
 for node in button.iter():
-    if node.tag == '{using:Magpie}SimpleStackPanel':
+    if node.tag == '{using:GMagpie}SimpleStackPanel':
         node.tag = '{' + ns['p'] + '}StackPanel'
     if uid in node.attrib:
         del node.attrib[uid]
@@ -70,10 +70,10 @@ button_xaml = ET.tostring(button, encoding='unicode')
 padding = [float(v) for v in view.get('Padding').split(',')]
 margin = [float(v) for v in footer.get('Margin', '0,0,0,0').split(',')]
 assert margin[1] >= 0, 'The footer must have a positive normal layout extent.'
-localization = (repo / 'src/Magpie/LocalizationService.cpp').read_text(encoding='utf-8-sig')
+localization = (repo / 'src/GMagpie/LocalizationService.cpp').read_text(encoding='utf-8-sig')
 supported = re.findall(r'L"([a-z-]+)"', localization.split('SUPPORTED_LANGUAGES{')[1].split('};')[0])
 resources = {path.stem.removeprefix('Resources.language-').lower(): path
-             for path in (repo / 'src/Magpie').glob('Resources.language-*.resw')}
+             for path in (repo / 'src/GMagpie').glob('Resources.language-*.resw')}
 cases = []
 for language in supported:
     nodes = ET.parse(resources[language]).getroot().findall('data')
@@ -103,7 +103,7 @@ fixture = '\n'.join([
     'constexpr LanguageCase LanguageCases[]{' + ',\n'.join(cases) + '};',
 ])
 (output / 'EffectGroupsPageFixture.h').write_text(fixture, encoding='utf-8')
-source = (repo / 'src/Magpie/ScalingModesPage.cpp').read_text(encoding='utf-8-sig')
+source = (repo / 'src/GMagpie/ScalingModesPage.cpp').read_text(encoding='utf-8-sig')
 start = source.index('void ScalingModesPage::OpenConfigFolderButton_Click(')
 end = source.index('{', start) + 1
 depth = 1

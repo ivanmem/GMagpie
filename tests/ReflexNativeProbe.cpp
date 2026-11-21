@@ -149,14 +149,14 @@ struct NvApi {
 // production proxy -> private missing runtime request without changing its INI.
 // All file handles/modules intentionally stay alive until this process exits.
 fs::path LoadCommunity(const fs::path& root) {
-    namespace Package = Magpie::DlssgSm86Package;
+    namespace Package = GMagpie::DlssgSm86Package;
     for (const auto& file : Package::Files) {
-        const HANDLE handle = Magpie::PinnedFile::Open(root / file.name);
-        Require(Magpie::PinnedFile::Verify(handle, file.size, file.sha256), "Managed package identity");
+        const HANDLE handle = GMagpie::PinnedFile::Open(root / file.name);
+        Require(GMagpie::PinnedFile::Verify(handle, file.size, file.sha256), "Managed package identity");
     }
     const auto config = root / L"dlssg_sm86.ini";
-    Require(Magpie::PinnedFile::Verify(config, Package::Files[1].size, Package::Files[1].sha256) ||
-        Magpie::PinnedFile::Verify(config, Package::Files[2].size, Package::Files[2].sha256), "Managed config identity");
+    Require(GMagpie::PinnedFile::Verify(config, Package::Files[1].size, Package::Files[1].sha256) ||
+        GMagpie::PinnedFile::Verify(config, Package::Files[2].size, Package::Files[2].sha256), "Managed config identity");
     const auto proxy = LoadLibraryExW((root / L"version.dll").c_str(), nullptr,
         LOAD_LIBRARY_SEARCH_DLL_LOAD_DIR | LOAD_LIBRARY_SEARCH_SYSTEM32);
     Require(proxy && GetProcAddress(proxy, "DlssgProxy_Name"), "Managed proxy load");
@@ -203,7 +203,7 @@ struct Device {
         cls.lpszClassName = L"MagpieReflexNativeProbe";
         Require(RegisterClassW(&cls), "RegisterClassW");
         window = CreateWindowExW(WS_EX_NOACTIVATE | WS_EX_TOOLWINDOW, cls.lpszClassName,
-            L"Magpie Reflex diagnostic", WS_OVERLAPPEDWINDOW, 32, 32, 256, 160,
+            L"GMagpie Reflex diagnostic", WS_OVERLAPPEDWINDOW, 32, 32, 256, 160,
             nullptr, nullptr, cls.hInstance, nullptr);
         Require(window != nullptr, "CreateWindowExW");
         DXGI_SWAP_CHAIN_DESC1 desc{}; desc.Width = 128; desc.Height = 72;
@@ -236,7 +236,7 @@ struct Ngx {
         NVSDK_NGX_FeatureCommonInfo info{};
         info.PathListInfo = { paths, feature.empty() ? 1u : 2u };
         const auto result = NVSDK_NGX_D3D12_Init_with_ProjectID("7c134ab9-9677-4af5-a2b2-bca943350861",
-            NVSDK_NGX_ENGINE_TYPE_CUSTOM, "Magpie-Experimental-0.5.7", data.c_str(), device.Get(),
+            NVSDK_NGX_ENGINE_TYPE_CUSTOM, "GMagpie-Experimental-0.5.7", data.c_str(), device.Get(),
             &info, NVSDK_NGX_Version_API);
         std::printf("NGX initialize=0x%x community=%u\n", result, !feature.empty());
         initialized = NVSDK_NGX_SUCCEED(result);

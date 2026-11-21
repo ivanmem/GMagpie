@@ -1,15 +1,15 @@
-# Magpie 外置 HDR 效果层协议证据调研
+# GMagpie 外置 HDR 效果层协议证据调研
 
-> 本文件只基于公开网络资料，不读取、引用或推断任何本地 Magpie 源码、效果描述、HLSL、配置、日志、二进制或历史实验文件。
+> 本文件只基于公开网络资料，不读取、引用或推断任何本地 GMagpie 源码、效果描述、HLSL、配置、日志、二进制或历史实验文件。
 
 ## 研究范围
 
-研究 25 个 Magpie 效果组和 2 个附加依赖项的公开图像输入/输出协议；未来架构外部交付面预设为 `DXGI_FORMAT_R16G16B16A16_FLOAT`，但本次不设计代码、不修改工程。
+研究 25 个 GMagpie 效果组和 2 个附加依赖项的公开图像输入/输出协议；未来架构外部交付面预设为 `DXGI_FORMAT_R16G16B16A16_FLOAT`，但本次不设计代码、不修改工程。
 
 ## 排除项
 
-- 不读取/搜索/引用/分析本地 Magpie 源码、效果描述、HLSL、配置、日志、二进制、历史实验文件或本地仓库内容。
-- 不依据 Magpie 当前实现反推任何效果是否支持 FP16/HDR/R8/R10/NV12 等格式。
+- 不读取/搜索/引用/分析本地 GMagpie 源码、效果描述、HLSL、配置、日志、二进制、历史实验文件或本地仓库内容。
+- 不依据 GMagpie 当前实现反推任何效果是否支持 FP16/HDR/R8/R10/NV12 等格式。
 - 排除已由本地实验单独验证的独立效果：不搜索、不写入矩阵、不计入效果数。
 - 不下载 SDK 压缩包、驱动安装包、完整仓库镜像、网页缓存、截图、网页转储或原始爬虫数据。
 
@@ -199,7 +199,7 @@
 ### 3. CRT — 无信息（CRT 效果族未能在公开资料中唯一映射）
 
 - **mappingConfidence**：无信息
-- **mappingNotes**：仅按通用名称“CRT”搜索；公开资料无法唯一对应某个上游算法/SDK，且不能借助 Magpie 源码确认。
+- **mappingNotes**：仅按通用名称“CRT”搜索；公开资料无法唯一对应某个上游算法/SDK，且不能借助 GMagpie 源码确认。
 - **documentedInputFormats**：
   - **format**：unspecified
     **apiOrContext**：公开资料未枚举
@@ -249,7 +249,7 @@
 ### 4. CuNNy — CuNNy
 
 - **mappingConfidence**：明确映射
-- **mappingNotes**：上游仓库 Blinue/CuNNy 名称与效果组一致，README 自述“supports exporting to an mpv shader”和“Magpie effect”。
+- **mappingNotes**：上游仓库 Blinue/CuNNy 名称与效果组一致，README 自述“supports exporting to an mpv shader”和“GMagpie effect”。
 - **documentedInputFormats**：
   - **format**：unspecified
     **apiOrContext**：公开资料未枚举
@@ -257,7 +257,7 @@
     **numericRepresentation**：unspecified
     **acceptanceStatus**：not_enumerated
     **evidenceRef**：https://raw.githubusercontent.com/Blinue/CuNNy/master/README.md
-    **notes**：上游仓库只描述 mpv shader/Magpie effect，未给出纹理格式。
+    **notes**：上游仓库只描述 mpv shader/GMagpie effect，未给出纹理格式。
 - **documentedOutputFormats**：
   - **format**：unspecified
     **apiOrContext**：公开资料未枚举
@@ -291,7 +291,7 @@
 - **documentedPerformanceNotes**：无信息
 - **qualityPerformanceEvidence**：未找到可核实的格式路径性能结论
 - **sources**：
-  - URL: https://raw.githubusercontent.com/Blinue/CuNNy/master/README.md | 标题: CuNNy README | 等级: OfficialRepository | claim: 上游仓库描述 CuNNy 可导出 mpv shader/Magpie effect，未给出 I/O 格式 | quoteOrSymbol: Supports exporting to an mpv meme shader! | searchRound: 1
+  - URL: https://raw.githubusercontent.com/Blinue/CuNNy/master/README.md | 标题: CuNNy README | 等级: OfficialRepository | claim: 上游仓库描述 CuNNy 可导出 mpv shader/GMagpie effect，未给出 I/O 格式 | quoteOrSymbol: Supports exporting to an mpv meme shader! | searchRound: 1
 - **searchRoundsUsed**：2
 - **unresolvedQuestions**：输入输出纹理格式；HDR/FP16；alpha；数值范围
 - **conclusion**：CuNNy 上游可明确映射，但公开仓库没有图像协议细节，无法确定格式边界。
@@ -299,7 +299,7 @@
 ### 5. CuNNy2 — 无信息（未能定位独立 CuNNy2 上游仓库/SDK）
 
 - **mappingConfidence**：无信息
-- **mappingNotes**：公开搜索未找到与“CuNNy2”唯一对应的上游算法/模型/SDK 文档；现有结果多为 Magpie 版本页等，不可用于协议推断。
+- **mappingNotes**：公开搜索未找到与“CuNNy2”唯一对应的上游算法/模型/SDK 文档；现有结果多为 GMagpie 版本页等，不可用于协议推断。
 - **documentedInputFormats**：
   - **format**：unspecified
     **apiOrContext**：公开资料未枚举
@@ -349,7 +349,7 @@
 ### 6. Diagnostics — 无信息（Diagnostics 是通用诊断效果名）
 
 - **mappingConfidence**：无信息
-- **mappingNotes**：公开资料中不存在可作为上游协议的“Diagnostics”图像算法/SDK；不依据 Magpie 实现推断。
+- **mappingNotes**：公开资料中不存在可作为上游协议的“Diagnostics”图像算法/SDK；不依据 GMagpie 实现推断。
 - **documentedInputFormats**：
   - **format**：unspecified
     **apiOrContext**：公开资料未枚举
@@ -469,7 +469,7 @@ OutputInterpolated/OutputReal: same texture format as Backbuffer
 ### 9. FSR — AMD FidelityFX Super Resolution 1 (FSR1 spatial upscaler)
 
 - **mappingConfidence**：明确映射
-- **mappingNotes**：Magpie 效果组“FSR”按公开产品命名对应 FSR1 的空间超分；FSR2/3/4 已单列。
+- **mappingNotes**：GMagpie 效果组“FSR”按公开产品命名对应 FSR1 的空间超分；FSR2/3/4 已单列。
 - **documentedInputFormats**：
   - **format**：unspecified
     **apiOrContext**：algorithmic reference implementation (shader callback)
@@ -879,7 +879,7 @@ Output UAV: non-integer formats, same docs examples (R8G8B8A8_UNORM/NV12); shade
 ### 18. NNEDI3 — NNEDI3
 
 - **mappingConfidence**：明确映射
-- **mappingNotes**：NNEDI3 为公开神经网络倍线算法；Magpie 效果组对应实现可能是 bjin mpv-prescalers 中的 luma prescaler，但未依据 Magpie 源码确认。
+- **mappingNotes**：NNEDI3 为公开神经网络倍线算法；GMagpie 效果组对应实现可能是 bjin mpv-prescalers 中的 luma prescaler，但未依据 GMagpie 源码确认。
 - **documentedInputFormats**：
   - **format**：unspecified
     **apiOrContext**：mpv user shader hook (luma plane)
@@ -938,12 +938,12 @@ Output UAV: non-integer formats, same docs examples (R8G8B8A8_UNORM/NV12); shade
   - URL: https://raw.githubusercontent.com/bjin/mpv-prescalers/master/README.md | 标题: bjin/mpv-prescalers README | 等级: OfficialRepository | claim: Shaders use rgba16f internal format; nnedi3/ravu are luma prescalers | quoteOrSymbol: Unrecognized/unavailable FORMAT name: rgba16f | searchRound: 1
 - **searchRoundsUsed**：2
 - **unresolvedQuestions**：独立 NNEDI3 原生后端的格式契约；HDR 颜色空间
-- **conclusion**：NNEDI3 的 mpv 用户着色器资料显示内部使用 rgba16f/rgba16hf 并只处理 luma；没有可作为 Magpie 外置后端协议的官方格式列表。
+- **conclusion**：NNEDI3 的 mpv 用户着色器资料显示内部使用 rgba16f/rgba16hf 并只处理 luma；没有可作为 GMagpie 外置后端协议的官方格式列表。
 
 ### 19. Pixel Art — 无信息（Pixel Art 泛指像素画放大算法族）
 
 - **mappingConfidence**：无信息
-- **mappingNotes**：公开搜索出现 libretro pixel-art enhancement systems、xBRZ、Kopf-Lischinski 等多种算法，无法唯一确定 Magpie 对应后端。
+- **mappingNotes**：公开搜索出现 libretro pixel-art enhancement systems、xBRZ、Kopf-Lischinski 等多种算法，无法唯一确定 GMagpie 对应后端。
 - **documentedInputFormats**：
   - **format**：unspecified
     **apiOrContext**：公开资料未枚举
@@ -1247,7 +1247,7 @@ TypeScript 移植接口为源/目标 RGBA 像素缓冲；缩放因子 2-6；支�
 - **sources**：
   - URL: https://raw.githubusercontent.com/kayahr/xbrz/master/README.md | 标题: kayahr/xbrz TypeScript/WASM port | 等级: GitHubExperiment | claim: Port uses RGBA Uint8ClampedArray and supports alpha | quoteOrSymbol: Source and target are RGBA pixel data in a Uint8ClampedArray | searchRound: 1
 - **searchRoundsUsed**：3
-- **unresolvedQuestions**：Magpie 原生后端是否使用该接口；原 C++ xBRZ 的格式契约；HDR
+- **unresolvedQuestions**：GMagpie 原生后端是否使用该接口；原 C++ xBRZ 的格式契约；HDR
 - **conclusion**：xBRZ 映射明确，但可靠公开协议只有社区移植的 RGBA 8-bit 接口，原生后端协议未确认。
 
 ### 27. XeSS — Intel XeSS Super Resolution (XeSS-SR)

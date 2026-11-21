@@ -27,7 +27,7 @@ template<typename... Args>
 std::string format(std::string_view message, const Args&...) { return std::string(message); }
 }
 
-namespace Magpie {
+namespace GMagpie {
 struct Logger {
 	static Logger& Get() { static Logger instance; return instance; }
 	void Info(std::string_view) {}
@@ -65,7 +65,7 @@ struct GraphicsCaptureFrameSource {
 }
 
 int main() {
-	using namespace Magpie;
+	using namespace GMagpie;
 	for (bool vrr : {false, true}) for (bool is25H2OrNewer : {false, true}) {
 		WgcMinUpdateIntervalPolicy policy;
 		policy.Configure(vrr, is25H2OrNewer);

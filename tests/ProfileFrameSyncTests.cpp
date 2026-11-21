@@ -13,7 +13,7 @@
 #include "ProfileFrameSync.h"
 #include "ProfileIdentity.h"
 #include "ConfigRecovery.h"
-using namespace Magpie;
+using namespace GMagpie;
 
 struct TestProfile {
 	std::string name;

@@ -1,4 +1,4 @@
-#include "../src/Magpie.Core/include/OverlayProfilerOptions.h"
+#include "../src/GMagpie.Core/include/OverlayProfilerOptions.h"
 #include <rapidjson/document.h>
 #include <rapidjson/writer.h>
 #include <rapidjson/stringbuffer.h>
@@ -7,7 +7,7 @@
 #include <cstdio>
 #include <string>
 
-using namespace Magpie;
+using namespace GMagpie;
 
 static std::array<bool, 6> Values(const OverlayProfilerOptions& options) {
 	return { options.windowCollapsed, options.timingsExpanded, options.graphsExpanded,

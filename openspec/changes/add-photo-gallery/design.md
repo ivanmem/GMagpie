@@ -32,7 +32,7 @@
   stage-окно на UI-потоке качаются. CLI-точка — `App::Initialize(arguments)`.
   Single-instance: обычный запуск по-прежнему единственный (SHOWME/QUIT). `--gallery` - отдельная
   группа (мьютекс `...-Gallery`, «лёгкий режим»: без хоткеев, обновлений, elevation-рестарта,
-  старт в трей): живёт рядом с обычным Magpie, повторный `--gallery` блокируется только в своей группе.
+  старт в трей): живёт рядом с обычным GMagpie, повторный `--gallery` блокируется только в своей группе.
 - Декод: `Windows.Graphics.Imaging.BitmapDecoder.GetSoftwareBitmapAsync(Bgra8, Premultiplied,
   {}, RespectExifOrientation, ColorManageToSRgb)` → EXIF-поворот и sRGB бесплатно →
   `B8G8R8A8_UNORM` (тот же формат, что у всех захватов). Ограничение 16384px.

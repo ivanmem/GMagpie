@@ -1,5 +1,5 @@
 #Requires -Version 7.0
-param([string]$OutputDirectory = (Join-Path $env:TEMP ('Magpie-DuplicateFrameTests-' + [guid]::NewGuid())))
+param([string]$OutputDirectory = (Join-Path $env:TEMP ('GMagpie-DuplicateFrameTests-' + [guid]::NewGuid())))
 $ErrorActionPreference = 'Stop'
 $duplicateRepo = Split-Path $PSScriptRoot -Parent
 $duplicateOutput = [IO.Path]::GetFullPath($OutputDirectory)
@@ -19,11 +19,11 @@ foreach ($duplicateTest in @(
     @{ Source = "$duplicateOutput/duplicate_capture_pipeline.cpp"; Name = 'capture-pipeline'; Libs = @() },
     @{ Source = "$PSScriptRoot/DuplicateFrameShaderTests.cpp"; Name = 'duplicate-shader'; Libs = @('d3d11.lib','d3dcompiler.lib') }
 )) {
-    & cl.exe /nologo /std:c++20 /EHsc /utf-8 /MT /O2 /W4 /WX /DNOMINMAX "/I$duplicateRepo/src/Magpie.Core/include" `
+    & cl.exe /nologo /std:c++20 /EHsc /utf-8 /MT /O2 /W4 /WX /DNOMINMAX "/I$duplicateRepo/src/GMagpie.Core/include" `
         $duplicateTest.Source "/Fe:$duplicateOutput/$($duplicateTest.Name).exe" "/Fo:$duplicateOutput/$($duplicateTest.Name).obj" @($duplicateTest.Libs)
     if ($LASTEXITCODE) { throw "Isolated test compilation failed: $($duplicateTest.Name)" }
     if ($duplicateTest.Name -eq 'duplicate-shader') {
-        & "$duplicateOutput/$($duplicateTest.Name).exe" "$duplicateRepo/src/Magpie.Core/shaders/DuplicateFrameCS.hlsl"
+        & "$duplicateOutput/$($duplicateTest.Name).exe" "$duplicateRepo/src/GMagpie.Core/shaders/DuplicateFrameCS.hlsl"
     } else {
         & "$duplicateOutput/$($duplicateTest.Name).exe"
     }

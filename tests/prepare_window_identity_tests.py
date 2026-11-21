@@ -21,10 +21,10 @@ def block(text, marker):
     return text[start:end]
 
 
-helper = read("src/Magpie.Core/Win32Helper.cpp")
-tracker = read("src/Magpie.Core/SrcTracker.cpp")
-service = read("src/Magpie/ScalingService.cpp")
-rtss = read("src/Magpie/RtssService.cpp")
+helper = read("src/GMagpie.Core/Win32Helper.cpp")
+tracker = read("src/GMagpie.Core/SrcTracker.cpp")
+service = read("src/GMagpie/ScalingService.cpp")
+rtss = read("src/GMagpie/RtssService.cpp")
 functions = [block(helper, marker) for marker in (
     "wil::unique_process_handle Win32Helper::GetWindowProcessHandle(",
     "bool Win32Helper::GetProcessIntegrityLevel(",

@@ -1,6 +1,6 @@
 """Run actual presenter/renderer methods against deterministic OS/GPU doubles.
 
-This does not build Magpie or establish driver/Smooth Motion compatibility.
+This does not build GMagpie or establish driver/Smooth Motion compatibility.
 """
 from pathlib import Path
 import sys
@@ -24,9 +24,9 @@ def block(source, marker):
     return source[start:end]
 
 
-presenter = read("src/Magpie.Core/AdaptivePresenter.cpp")
-header = read("src/Magpie.Core/AdaptivePresenter.h")
-renderer = read("src/Magpie.Core/Renderer.cpp")
+presenter = read("src/GMagpie.Core/AdaptivePresenter.cpp")
+header = read("src/GMagpie.Core/AdaptivePresenter.h")
+renderer = read("src/GMagpie.Core/Renderer.cpp")
 methods = "\n".join(block(presenter, marker) for marker in (
     "static bool ShouldLogPresentationDiagnostic(",
     "void AdaptivePresenter::SetReflexController(",
@@ -51,7 +51,7 @@ frontend = "\n".join(block(renderer, marker) for marker in (
     "bool Renderer::Render(", "bool Renderer::RenderOverlay(",
     "bool Renderer::_CanRenderOverlay(",
 ))
-gate = block(read("src/Magpie.Core/FramePacingWait.h"), "class FrameLatencyGate {") + ";"
+gate = block(read("src/GMagpie.Core/FramePacingWait.h"), "class FrameLatencyGate {") + ";"
 definition = block(header, "class AdaptivePresenter final") + ";"
 definition = definition.replace("protected:", "public:").replace("private:", "public:").replace(" override", "")
 fixture = read("tests/AdaptivePresenterRecoveryTests.cpp")
@@ -75,9 +75,9 @@ for name, before, after in (
 admission = block(renderer, "bool Renderer::_FrontendRender(")
 assert admission.index("_presenter->PrepareFrame()") < admission.index("_UpdateFrontendBase(")
 assert "_ReportPresenterFailure();" in block(admission, "if (!_presenter->PrepareFrame())")
-runtime = read("src/Magpie.Core/ScalingRuntime.cpp")
+runtime = read("src/GMagpie.Core/ScalingRuntime.cpp")
 assert "else if (rest.count() <= 0)" in runtime and "scalingWindow.Render();" in runtime
-assert "return false;" in block(read("src/Magpie.Core/PresenterBase.h"), "virtual bool NeedsRedraw()")
+assert "return false;" in block(read("src/GMagpie.Core/PresenterBase.h"), "virtual bool NeedsRedraw()")
 init = block(presenter, "bool AdaptivePresenter::_Initialize(")
 assert "return true;" in block(init, "if (ScalingWindow::Get().Options().IsDirectFlipDisabled())")
 assert "DXGI_FORMAT_R16G16B16A16_FLOAT" in init and "DXGI_FORMAT_R8G8B8A8_UNORM" in init

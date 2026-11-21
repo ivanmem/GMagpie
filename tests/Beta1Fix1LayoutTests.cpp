@@ -4,7 +4,7 @@
 #include "EffectParameterPopupLayout.h"
 
 int main() {
-	using namespace Magpie;
+	using namespace GMagpie;
 	for (double root : {1.0, 1.25, 1.5, 2.0}) for (double monitor : {1.0, 1.25, 1.5, 2.0}) {
 		for (auto work : {EffectParameterPopupSize{1920,1040}, {1280,720}, {800,560}}) {
 			const auto size = GetEffectParameterPopupSize(work.width, work.height, monitor, root);

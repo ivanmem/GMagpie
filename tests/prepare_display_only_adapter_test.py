@@ -26,11 +26,11 @@ def block(source, signature):
     return source[start:end]
 
 
-helper = block(read("src/Magpie.Core/DirectXHelper.cpp"),
+helper = block(read("src/GMagpie.Core/DirectXHelper.cpp"),
                "bool DirectXHelper::IsDisplayOnlyAdapter(")
-device = block(read("src/Magpie.Core/DeviceResources.cpp"),
+device = block(read("src/GMagpie.Core/DeviceResources.cpp"),
                "bool DeviceResources::_ObtainAdapterAndDevice(")
-service = read("src/Magpie/AdaptersService.cpp")
+service = read("src/GMagpie/AdaptersService.cpp")
 methods = "\n\n".join(block(service, signature) for signature in (
     "bool AdaptersService::Initialize(",
     "bool AdaptersService::_GatherAdapterInfos(",
@@ -40,20 +40,20 @@ methods = "\n\n".join(block(service, signature) for signature in (
     helper + "\n\n" + device + "\n\n" + methods, encoding="utf-8")
 (out / "AdapterNativeProduction.inc").write_text(helper, encoding="utf-8")
 (out / "AdapterWarpProduction.inc").write_text(
-    block(read("src/Magpie.Core/include/DirectXHelper.h"), "static bool IsWARP("),
+    block(read("src/GMagpie.Core/include/DirectXHelper.h"), "static bool IsWARP("),
     encoding="utf-8")
 (out / "GraphicsCardIdProduction.inc").write_text(
-    block(read("src/Magpie.Core/include/ScalingOptions.h"), "struct GraphicsCardId") + ";",
+    block(read("src/GMagpie.Core/include/ScalingOptions.h"), "struct GraphicsCardId") + ";",
     encoding="utf-8")
 
-settings = read("src/Magpie/AppSettings.cpp")
+settings = read("src/GMagpie/AppSettings.cpp")
 write_start = settings.index('\twriter.Key("graphicsCardId");')
 # Stop at this object's closing write, independently of the next profile field.
 # Refresh settings no longer serialize the legacy limiter field that followed it.
 write_end = settings.index('\twriter.EndObject();', write_start) + len('\twriter.EndObject();')
 write = settings[write_start:write_end]
 load = block(settings, "\t{\n\t\tauto graphicsCardIdNode =")
-json_helpers = "\n\n".join(block(read("src/Magpie/JsonHelper.cpp"), signature)
+json_helpers = "\n\n".join(block(read("src/GMagpie/JsonHelper.cpp"), signature)
                              for signature in ("bool JsonHelper::ReadInt(",
                                                "bool JsonHelper::ReadUInt("))
 (out / "AdapterConfigProduction.inc").write_text(

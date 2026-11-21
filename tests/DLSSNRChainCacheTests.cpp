@@ -3,7 +3,7 @@
 #include "DLSSNRChainCache.h"
 
 int main() {
-	using Magpie::DLSSNRChainCache;
+	using GMagpie::DLSSNRChainCache;
 	for (size_t count : {1u, 2u, 3u}) {
 		DLSSNRChainCache cache;
 		std::array<uint64_t, 3> revisions{};

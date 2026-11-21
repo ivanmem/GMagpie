@@ -4,7 +4,7 @@
 
 **2026-10-09 update:** Current configuration follows the [manual-chain requirements](todos/20261009-hdr-manual-chain-adjustment-TODO.md) and [implementation handoff](design/20261009-hdr-manual-chain-implementation.md). Users manually assemble the independent HDR→SDR, SDR→HDR and RTX HDR components. The group UI, automatic planning, generated ownership and method-switching API have been removed. Each node retains its explicit color domain and pair source. Only migrated trial chains may retain internal capture intent when inference alone would change their execution contract. The profile switch below is retired and cannot enable HDR; the remaining sections preserve protocol research rather than describe the current UI.
 
-This document is the design and implementation baseline for a self-maintained HDR-compatible Magpie fork. It records decisions reached from capture experiments and protocol research, together with the currently implemented generic work surface. Existing SDR behavior remains the compatibility baseline and remains semantically unchanged while HDR compatibility is disabled.
+This document is the design and implementation baseline for a self-maintained HDR-compatible GMagpie fork. It records decisions reached from capture experiments and protocol research, together with the currently implemented generic work surface. Existing SDR behavior remains the compatibility baseline and remains semantically unchanged while HDR compatibility is disabled.
 
 The evidence record is [HDR_PROTOCOL_EVIDENCE.md](HDR_PROTOCOL_EVIDENCE.md) and its machine-readable companion [HDR_PROTOCOL_EVIDENCE.json](HDR_PROTOCOL_EVIDENCE.json).
 
@@ -184,7 +184,7 @@ RGBA16F canonical frame
   -> RGBA16F canonical frame
 ```
 
-No SDR tone mapping or U8 quantization belongs in this path. Typical candidates are DLSS SR, FSR2, FSR3 SR, FSR4, NIS, and XeSS SR. CAS has a reference FP16 path and remains conditional until local validation confirms the exact Magpie backend path.
+No SDR tone mapping or U8 quantization belongs in this path. Typical candidates are DLSS SR, FSR2, FSR3 SR, FSR4, NIS, and XeSS SR. CAS has a reference FP16 path and remains conditional until local validation confirms the exact GMagpie backend path.
 
 ### BoundedHDR
 

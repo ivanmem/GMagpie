@@ -16,7 +16,7 @@ $fmt=Get-ChildItem -LiteralPath (Join-Path $env:USERPROFILE '.conan2/p/b') -Dire
 if(!$fmt) { throw 'Existing fmt dependency not found.' }
 & python "$repo/tests/prepare_single_page_overlay_test.py" $output
 if($LASTEXITCODE) { throw 'Production layout extraction failed.' }
-& cl.exe /nologo /std:c++20 /EHsc /utf-8 /MT /O2 /W4 /WX /DNOMINMAX "/I$output" "/I$($fmt.FullName)/p/include" "/I$($imgui.FullName)/p/include" "/I$repo/src/Magpie.Core/include" "/I$repo/src/Magpie.Core" `
+& cl.exe /nologo /std:c++20 /EHsc /utf-8 /MT /O2 /W4 /WX /DNOMINMAX "/I$output" "/I$($fmt.FullName)/p/include" "/I$($imgui.FullName)/p/include" "/I$repo/src/GMagpie.Core/include" "/I$repo/src/GMagpie.Core" `
     "$repo/tests/SinglePageOverlayTests.cpp" "$($imgui.FullName)/p/lib/imgui.lib" user32.lib imm32.lib "/Fe:$output/SinglePageOverlayTests.exe" "/Fo:$output/SinglePageOverlayTests.obj"
 if($LASTEXITCODE) { throw 'Single-page overlay test compilation failed.' }
 & "$output/SinglePageOverlayTests.exe"

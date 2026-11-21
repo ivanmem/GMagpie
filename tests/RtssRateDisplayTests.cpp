@@ -10,7 +10,7 @@
 #include "RtssSettings.h"
 #include "FrameRefreshSettings.h"
 
-using namespace Magpie;
+using namespace GMagpie;
 using HWND = uintptr_t;
 
 // Fixtures replace process discovery, dispatch, persistence and external I/O.

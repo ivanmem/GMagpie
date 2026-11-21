@@ -7,14 +7,14 @@ $sourceRoot = [IO.Path]::GetFullPath((Join-Path $PSScriptRoot '..'))
 $workspaceRoot = Split-Path $sourceRoot -Parent
 $releaseRoot = Join-Path $workspaceRoot 'release'
 $container = Join-Path $releaseRoot 'v0.6.8-local'
-$destination = Join-Path $container 'Magpie-Experimental-x64'
+$destination = Join-Path $container 'GMagpie-Experimental-x64'
 $buildOutput = [IO.Path]::GetFullPath($destination)
 $intermediateRoot = Join-Path $container 'obj'
 $version = '0.6.8-local'
 
 function Assert-MagpieClosed {
-    if (Get-CimInstance Win32_Process -Filter "Name='Magpie.exe'" | Where-Object { $_.ExecutablePath -eq (Join-Path $destination 'Magpie.exe') }) {
-        throw 'Exit Magpie from its tray menu, then rerun this deployment.'
+    if (Get-CimInstance Win32_Process -Filter "Name='GMagpie.exe'" | Where-Object { $_.ExecutablePath -eq (Join-Path $destination 'GMagpie.exe') }) {
+        throw 'Exit GMagpie from its tray menu, then rerun this deployment.'
     }
 }
 
@@ -43,7 +43,7 @@ $statePath = Join-Path $container 'deployment-state.json'
 $outputArg = $buildOutput.Replace('\', '/') + '/'
 $logPath = Join-Path $container 'build.log'
 $buildArgs = @(
-    'Magpie.slnx', '/m:2', '/nr:false', '/v:minimal', '/t:Build',
+    'GMagpie.slnx', '/m:2', '/nr:false', '/v:minimal', '/t:Build',
     '/p:Configuration=Release', '/p:Platform=x64',
     '/p:MajorVersion=0', '/p:MinorVersion=6', '/p:PatchVersion=8',
     "/p:VersionString=$version", "/p:CommitId=$shortCommit",
@@ -64,10 +64,10 @@ try {
     throw
 } finally { Pop-Location }
 
-foreach ($required in @('Magpie.exe', 'Magpie.pdb', 'resources.pri', 'Microsoft.UI.Xaml.dll', 'TouchHelper.exe', 'Updater.exe', 'effects')) {
+foreach ($required in @('GMagpie.exe', 'GMagpie.pdb', 'resources.pri', 'Microsoft.UI.Xaml.dll', 'TouchHelper.exe', 'Updater.exe', 'effects')) {
     if (!(Test-Path -LiteralPath (Join-Path $buildOutput $required))) { throw "Incomplete build: $required" }
 }
-if ((Get-Item -LiteralPath (Join-Path $buildOutput 'Magpie.exe')).VersionInfo.FileVersion -ne $version) {
+if ((Get-Item -LiteralPath (Join-Path $buildOutput 'GMagpie.exe')).VersionInfo.FileVersion -ne $version) {
     throw 'The executable version does not match this deployment.'
 }
 if (!$BuildOnly -and ((& git -C $sourceRoot rev-parse HEAD).Trim() -ne $commit -or
@@ -75,7 +75,7 @@ if (!$BuildOnly -and ((& git -C $sourceRoot rev-parse HEAD).Trim() -ne $commit -
     throw 'Source changed during the build; rerun against the reviewed commit.'
 }
 
-Copy-Item -LiteralPath (Join-Path $sourceRoot 'LICENSE') -Destination (Join-Path $buildOutput 'LICENSE-Magpie.txt')
+Copy-Item -LiteralPath (Join-Path $sourceRoot 'LICENSE') -Destination (Join-Path $buildOutput 'LICENSE-GMagpie.txt')
 Copy-Item -LiteralPath (Join-Path $sourceRoot 'docs/experimental/testing/SCALING-PREFLIGHT.md') -Destination (Join-Path $buildOutput 'LOCAL-NOTES.md')
 Copy-Item -LiteralPath (Join-Path $sourceRoot 'docs/experimental/testing/EFFECT-PICKER.md') -Destination (Join-Path $buildOutput 'EFFECT-PICKER.md')
 Copy-Item -LiteralPath (Join-Path $sourceRoot 'docs/experimental/testing/PARAMETER-INPUT.md') -Destination (Join-Path $buildOutput 'PARAMETER-INPUT.md')
@@ -92,7 +92,7 @@ if ($BuildOnly) {
 # effect assets. User config/logs/custom effect files are never package inputs.
 $files = @(Get-ChildItem -LiteralPath $buildOutput -File | Where-Object {
     $_.Extension -in @('.exe', '.dll', '.pri', '.pdb', '.map') -or
-    $_.Name -in @('LICENSE-Magpie.txt', 'LOCAL-NOTES.md', 'EFFECT-PICKER.md', 'DLSSNR-MULTIPASS.md', 'PARAMETER-INPUT.md', 'XESSFG.md', 'XESSFG-COMPATIBILITY-NOTICE.md',
+    $_.Name -in @('LICENSE-GMagpie.txt', 'LOCAL-NOTES.md', 'EFFECT-PICKER.md', 'DLSSNR-MULTIPASS.md', 'PARAMETER-INPUT.md', 'XESSFG.md', 'XESSFG-COMPATIBILITY-NOTICE.md',
         'AMD-FSR-SDK-THIRD-PARTY.md', 'AMD-FSR2-DX11-LICENSE.txt', 'INTEL-XESS-LICENSE.txt',
         'INTEL-XESS-THIRD-PARTY.txt', 'NVIDIA-DLSS-LICENSE.txt', 'NVIDIA-NVAPI-LICENSE.txt', 'NVIDIA-RTX-VIDEO-LICENSE.pdf')
 })

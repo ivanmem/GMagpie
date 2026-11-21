@@ -1,8 +1,8 @@
-Magpie Experimental v0.6.12 x64
+GMagpie Experimental v0.6.12 x64
 
 安装或升级
-备份设置并从托盘完全退出旧版 Magpie，将完整 Magpie-Experimental-x64.zip 解压到新目录，再运行 Magpie.exe。
-普通配置：%LOCALAPPDATA%\Magpie\config\v4e\config.json。
+备份设置并从托盘完全退出旧版 GMagpie，将完整 GMagpie-Experimental-x64.zip 解压到新目录，再运行 GMagpie.exe。
+普通配置：%LOCALAPPDATA%\GMagpie\config\v4e\config.json。
 便携配置：程序目录内的 config\v4e\config.json。
 保留旧程序目录与升级前的设置备份。回退前完全退出当前版本，恢复原设置后从旧版目录运行。
 
@@ -14,16 +14,16 @@ DLSSNR 提供自动／HT／CC Small FP8 模型、自适应／手动分辨率，�
 支持的 WGC＋DLSSNR＋Front Edge＋VRR、无补帧路径可在短暂空档中补交已完成画面；复用完成画面，不重跑 DLSSNR。
 
 完整更新、适用条件与限制见 RELEASE-NOTES.md；刷新设置见 FRAME_SYNC_GUIDE.md。
-主包已包含社区兼容 DLSSNR。DLSSNR-DLL-Options.zip 为原版 RTX 50／社区 RTX 20、30、40 两选项包；替换前退出 Magpie 并备份 DLL。NGX_OTA_Switch.bat 为可选管理员工具，常规安装无需运行。
-保留 LICENSE-Magpie.txt、THIRD-PARTY-NOTICES.md、组件许可证及 build-manifest.json。
+主包已包含社区兼容 DLSSNR。DLSSNR-DLL-Options.zip 为原版 RTX 50／社区 RTX 20、30、40 两选项包；替换前退出 GMagpie 并备份 DLL。NGX_OTA_Switch.bat 为可选管理员工具，常规安装无需运行。
+保留 LICENSE-GMagpie.txt、THIRD-PARTY-NOTICES.md、组件许可证及 build-manifest.json。
 
 English
 
 Install or upgrade
-Back up settings and fully exit the previous Magpie version from the tray. Extract the complete Magpie-Experimental-x64.zip into a new folder, then run Magpie.exe.
-Normal settings: %LOCALAPPDATA%\Magpie\config\v4e\config.json.
+Back up settings and fully exit the previous GMagpie version from the tray. Extract the complete GMagpie-Experimental-x64.zip into a new folder, then run GMagpie.exe.
+Normal settings: %LOCALAPPDATA%\GMagpie\config\v4e\config.json.
 Portable settings: config\v4e\config.json under the program folder.
-Keep the previous program folder and a pre-upgrade settings backup. Before rolling back, fully exit the current version, restore the previous settings and run Magpie from the older folder.
+Keep the previous program folder and a pre-upgrade settings backup. Before rolling back, fully exit the current version, restore the previous settings and run GMagpie from the older folder.
 
 Essentials
 Search for OKLab in the effect list to add the color-adjustment effect. Ordinary numeric changes apply live; restart scaling after importing or clearing a LUT.
@@ -33,5 +33,5 @@ While editing running parameters, hold Ctrl and scroll the mouse wheel inside th
 Supported WGC + DLSSNR + Front Edge + VRR paths without frame generation can refresh completed pictures across short gaps. These refreshes reuse a completed picture without rerunning DLSSNR.
 
 See RELEASE-NOTES.md for complete changes, requirements and limitations, and FRAME_SYNC_GUIDE.md for refresh controls.
-The main package includes the community compatibility DLSSNR. DLSSNR-DLL-Options.zip retains the original RTX 50 / community RTX 20, 30, 40 choices; exit Magpie and back up the DLL before switching. NGX_OTA_Switch.bat is an optional administrator tool, unnecessary for normal installation.
-Retain LICENSE-Magpie.txt, THIRD-PARTY-NOTICES.md, component licenses and build-manifest.json.
+The main package includes the community compatibility DLSSNR. DLSSNR-DLL-Options.zip retains the original RTX 50 / community RTX 20, 30, 40 choices; exit GMagpie and back up the DLL before switching. NGX_OTA_Switch.bat is an optional administrator tool, unnecessary for normal installation.
+Retain LICENSE-GMagpie.txt, THIRD-PARTY-NOTICES.md, component licenses and build-manifest.json.

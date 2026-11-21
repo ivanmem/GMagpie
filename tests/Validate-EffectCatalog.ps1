@@ -35,8 +35,8 @@ foreach ($entry in $review.effects) {
         if ($entry.$language.summary.Contains("`n") -or $entry.$language.summary.Length -gt 90) { throw "Summary is too long: $language $($entry.id)" }
     }
 }
-$catalog = Get-Content -LiteralPath (Join-Path $repoRoot 'src/Magpie/EffectCatalog/zh-Hans.json') -Raw | ConvertFrom-Json
-$englishCatalogText = Get-Content -LiteralPath (Join-Path $repoRoot 'src/Magpie/EffectCatalog/en-US.json') -Raw
+$catalog = Get-Content -LiteralPath (Join-Path $repoRoot 'src/GMagpie/EffectCatalog/zh-Hans.json') -Raw | ConvertFrom-Json
+$englishCatalogText = Get-Content -LiteralPath (Join-Path $repoRoot 'src/GMagpie/EffectCatalog/en-US.json') -Raw
 if ($englishCatalogText -match '[\u3400-\u9fff]') { throw 'Chinese text remains in the English catalog.' }
 $englishCatalog = $englishCatalogText | ConvertFrom-Json
 $effectRoot = Join-Path $repoRoot 'src/Effects'
@@ -114,7 +114,7 @@ $fgNames = @{
     'XeSSFG\XeSS_FrameGeneration' = 'XeSS FrameGeneration'
     'FSR3FG\FSR3_FrameGeneration' = 'FSR3 FrameGeneration'
 }
-$helper = Get-Content -LiteralPath (Join-Path $repoRoot 'src/Magpie/EffectHelper.h') -Raw
+$helper = Get-Content -LiteralPath (Join-Path $repoRoot 'src/GMagpie/EffectHelper.h') -Raw
 foreach ($id in $fgNames.Keys) {
     $mapping = 'if (fullName == L"' + $id.Replace('\', '\\') + '") return L"' + $fgNames[$id] + '";'
     if (!$helper.Contains($mapping)) { throw "FG helper/catalog name mismatch: $id" }

@@ -41,7 +41,7 @@ struct Harness {
     ComPtr<ID3D11Texture2D> staging;
     ComPtr<ID3D11Buffer> constants;
     std::array<ComPtr<ID3D11SamplerState>,2> samplers;
-    Magpie::OKLabRuntime runtime;
+    GMagpie::OKLabRuntime runtime;
     unsigned runs=0;
     bool half=false;
     bool unorm8=false;
@@ -61,14 +61,14 @@ struct Harness {
             Check(D3DReadFileToBlob(path.c_str(),&code));
             Check(device->CreateComputeShader(code->GetBufferPointer(),code->GetBufferSize(),nullptr,&shaders[i]));
             ComPtr<ID3D11ShaderReflection> reflection;Check(D3DReflect(code->GetBufferPointer(),code->GetBufferSize(),IID_PPV_ARGS(&reflection)));
-            if(i==2)for(size_t p=0;p<std::size(Magpie::OKLab::Parameters);++p) {
+            if(i==2)for(size_t p=0;p<std::size(GMagpie::OKLab::Parameters);++p) {
                 D3D11_SHADER_VARIABLE_DESC d{};
-                Check(reflection->GetConstantBufferByName("__CB1")->GetVariableByName(std::string(Magpie::OKLab::Parameters[p].name).c_str())->GetDesc(&d));
+                Check(reflection->GetConstantBufferByName("__CB1")->GetVariableByName(std::string(GMagpie::OKLab::Parameters[p].name).c_str())->GetDesc(&d));
                 Require(d.StartOffset==(18+p)*4,"Parameter packing differs from EffectDrawer contract");
             }
             std::cout<<"Loaded EffectCompiler pass "<<i+1<<std::endl;
         }
-        const unsigned widths[]{W,W,16,1,1,Magpie::OKLab::LutAtlasWidth},heights[]{H,H,9,1,1,Magpie::OKLab::LutAtlasEdge};
+        const unsigned widths[]{W,W,16,1,1,GMagpie::OKLab::LutAtlasWidth},heights[]{H,H,9,1,1,GMagpie::OKLab::LutAtlasEdge};
         for(unsigned i=0;i<6;++i) {
             D3D11_TEXTURE2D_DESC d{};d.Width=widths[i];d.Height=heights[i];d.MipLevels=d.ArraySize=d.SampleDesc.Count=1;
             d.Format=unorm8&&i<2?DXGI_FORMAT_R8G8B8A8_UNORM:half&&i<2?DXGI_FORMAT_R16G16B16A16_FLOAT:DXGI_FORMAT_R32G32B32A32_FLOAT;d.BindFlags=D3D11_BIND_SHADER_RESOURCE|D3D11_BIND_UNORDERED_ACCESS;
@@ -79,7 +79,7 @@ struct Harness {
         }
         D3D11_TEXTURE2D_DESC sd{};textures[1]->GetDesc(&sd);sd.BindFlags=0;sd.Usage=D3D11_USAGE_STAGING;sd.CPUAccessFlags=D3D11_CPU_ACCESS_READ;
         Check(device->CreateTexture2D(&sd,nullptr,&staging));
-        D3D11_BUFFER_DESC bd{};bd.ByteWidth=unsigned((18+std::size(Magpie::OKLab::Parameters)+3)/4*16);bd.BindFlags=D3D11_BIND_CONSTANT_BUFFER;
+        D3D11_BUFFER_DESC bd{};bd.ByteWidth=unsigned((18+std::size(GMagpie::OKLab::Parameters)+3)/4*16);bd.BindFlags=D3D11_BIND_CONSTANT_BUFFER;
         Check(device->CreateBuffer(&bd,nullptr,&constants));
         for(unsigned i=0;i<2;++i){D3D11_SAMPLER_DESC d{};d.Filter=i?D3D11_FILTER_MIN_MAG_MIP_POINT:D3D11_FILTER_MIN_MAG_MIP_LINEAR;d.AddressU=d.AddressV=d.AddressW=D3D11_TEXTURE_ADDRESS_CLAMP;d.MaxLOD=D3D11_FLOAT32_MAX;Check(device->CreateSamplerState(&d,&samplers[i]));}
         std::string error;Require(runtime.SetLut(dc.Get(),textures[5].Get(),{},error),"Identity LUT failed");
@@ -88,14 +88,14 @@ struct Harness {
         auto get=[&](std::string_view name,float fallback){auto it=values.find(std::string(name));return it==values.end()?fallback:it->second;};
         Require(runtime.Configure(device.Get(),get,hdr),"Runtime configuration failed");
         if(reset)runtime.Reset();
-        std::vector<float> data((18+std::size(Magpie::OKLab::Parameters)+3)/4*4);
+        std::vector<float> data((18+std::size(GMagpie::OKLab::Parameters)+3)/4*4);
         auto integer=[&](size_t index,unsigned value){std::memcpy(&data[index],&value,4);};
         integer(0,W);integer(1,H);integer(2,W);integer(3,H);
         data[4]=data[6]=1.f/W;data[5]=data[7]=1.f/H;data[8]=data[9]=1;
         integer(10,16);integer(11,9);data[12]=1.f/16;data[13]=1.f/9;
         integer(14,1);integer(15,1);data[16]=data[17]=1;
-        for(size_t i=0;i<std::size(Magpie::OKLab::Parameters);++i) {
-            const auto&p=Magpie::OKLab::Parameters[i];float v=Magpie::OKLab::Normalize(p,get(p.name,p.value));
+        for(size_t i=0;i<std::size(GMagpie::OKLab::Parameters);++i) {
+            const auto&p=GMagpie::OKLab::Parameters[i];float v=GMagpie::OKLab::Normalize(p,get(p.name,p.value));
             if(p.integer)integer(18+i,static_cast<unsigned>(static_cast<int>(v)));else data[18+i]=v;
         }
         if(unorm8){std::vector<uint8_t> encoded(input.size()*4);for(size_t i=0;i<input.size();++i)for(size_t c=0;c<4;++c)encoded[i*4+c]=uint8_t(std::lround(std::clamp(input[i][c],0.f,1.f)*255));dc->UpdateSubresource(textures[0].Get(),0,nullptr,encoded.data(),W*4,0);}
@@ -135,7 +135,7 @@ struct Harness {
 #ifndef OKLAB_NO_MAIN
 int wmain(int argc,wchar_t**argv){
     Require(argc==2,"Expected output folder");
-    using namespace Magpie::OKLab;
+    using namespace GMagpie::OKLab;
     const auto red=ToLab({1,0,0});Require(std::abs(red[0]-.62795536f)<1e-7&&std::abs(red[1]-.22486306f)<1e-7&&std::abs(red[2]-.12584630f)<1e-7,"Independent red reference");
     const auto white=ToLab({1,1,1});Require(std::abs(white[0]-1)<1e-7&&std::abs(white[1])<1e-7&&std::abs(white[2])<1e-7,"D65 white reference");
     Require(Visible("mix3Hue",3,3,0,0)&&!Visible("mix4Hue",3,3,0,0),"Mixer editor lost scope");

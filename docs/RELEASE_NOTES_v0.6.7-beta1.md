@@ -1,4 +1,4 @@
-# Magpie Experimental v0.6.7 Beta 1
+# GMagpie Experimental v0.6.7 Beta 1
 
 相较 0.6.6 的更新：
 
@@ -25,7 +25,7 @@ Contributor: [TurnX-alt](https://github.com/TurnX-alt) 提供界面与预设修�
 
 ---
 
-# Magpie Experimental v0.6.7 Beta 1
+# GMagpie Experimental v0.6.7 Beta 1
 
 Changes since 0.6.6:
 
@@ -40,7 +40,7 @@ Changes since 0.6.6:
 - Added Reflex low-latency support to DLSS FG, enabled by default with Boost off.
 - Frame synchronization adds Async mode and NVIDIA Reflex for groups without frame generation.
 - Added HDR to SDR, SDR to HDR and RTX Video HDR effects under HDR Components for custom conversion groups, with HDR off by default.
-- Enhanced settings are saved separately from the original Magpie, with automatic import of existing settings during upgrade.
+- Enhanced settings are saved separately from the original GMagpie, with automatic import of existing settings during upgrade.
 - Added automatic recovery of damaged settings, retaining groups where possible and identifying effects that need replacement.
 - Error messages now provide recovery steps, with issue details and logs accessible from Home.
 - Windowed mode asks users to switch fullscreen or maximized source applications to a normal window before scaling.

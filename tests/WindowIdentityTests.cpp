@@ -65,7 +65,7 @@ BOOL WINAPI CloseForTest(HANDLE handle) {
 #include "WindowIdentity.h"
 
 int main() {
-	using Magpie::QueryWindowThreadProcessId;
+	using GMagpie::QueryWindowThreadProcessId;
 	Reset();
 	DWORD pid = 999;
 	bool recovered = true;

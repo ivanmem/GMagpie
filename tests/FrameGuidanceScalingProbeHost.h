@@ -5,7 +5,7 @@
 // The standalone process has no XAML resource host. Only the immutable SDR
 // session-options lookup is substituted; service/provider GPU code is compiled
 // directly from production sources below. No window or user config is opened.
-namespace Magpie {
+namespace GMagpie {
 class FrameGuidanceScalingProbeHost {
 public:
 	static FrameGuidanceScalingProbeHost& Get() noexcept { static FrameGuidanceScalingProbeHost host; return host; }

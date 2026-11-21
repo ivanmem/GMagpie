@@ -5,9 +5,9 @@ import sys
 
 root=Path(__file__).resolve().parents[2]
 def read(path): return (root/path).read_text(encoding='utf-8-sig')
-settings=read('src/Magpie/AppSettings.cpp')
-profile=read('src/Magpie/Profile.h')
-helper=read('src/Magpie/JsonHelper.cpp')
+settings=read('src/GMagpie/AppSettings.cpp')
+profile=read('src/GMagpie/Profile.h')
+helper=read('src/GMagpie/JsonHelper.cpp')
 reader=helper[helper.index('bool JsonHelper::ReadBool('):helper.index('bool JsonHelper::ReadBoolFlag(')]
 field=re.search(r'bool isParameterFocusSwitchingEnabled = [^;]+;',profile).group()
 copy=profile.split('void Copy(const Profile& other) noexcept {',1)[1].split('scalingMode =',1)[0]
@@ -22,10 +22,10 @@ load=load.replace(', legacyFrameSync, legacyIdle, migrateLegacyRefresh', '')
 assert 'legacyFrameSync' not in load and 'migrateLegacyRefresh' not in load
 per_profile=re.search(r'profile.isParameterFocusSwitchingEnabled = legacyParameterFocusSwitching;\s+JsonHelper::ReadBool\(profileObj, "parameterFocusSwitching", profile.isParameterFocusSwitchingEnabled\);',settings).group()
 save=re.search(r'writer.Key\("parameterFocusSwitching"\);\s+writer.Bool\(profile.isParameterFocusSwitchingEnabled\);',settings).group()
-select=re.search(r'options.isParameterFocusSwitchingEnabled = profile.isParameterFocusSwitchingEnabled;',read('src/Magpie/ScalingService.cpp')).group()
+select=re.search(r'options.isParameterFocusSwitchingEnabled = profile.isParameterFocusSwitchingEnabled;',read('src/GMagpie/ScalingService.cpp')).group()
 assert 'writer.Bool(data._isParameterFocusSwitchingEnabled)' not in settings
-assert 'Home_ParameterFocusSwitching' not in read('src/Magpie/HomePage.xaml')
-assert 'Profile_Advanced_ParameterFocusSwitching' in read('src/Magpie/ProfilePage.xaml')
+assert 'Home_ParameterFocusSwitching' not in read('src/GMagpie/HomePage.xaml')
+assert 'Profile_Advanced_ParameterFocusSwitching' in read('src/GMagpie/ProfilePage.xaml')
 
 harness=r'''
 #include <rapidjson/document.h>

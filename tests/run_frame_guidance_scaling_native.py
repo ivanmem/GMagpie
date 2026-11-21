@@ -15,7 +15,7 @@ parser.add_argument("--output", type=Path, required=True)
 args = parser.parse_args()
 repo = Path(__file__).resolve().parents[1]
 root, output = args.build_root.resolve(), args.output.resolve()
-runtime = root / "Magpie-Experimental-x64"
+runtime = root / "GMagpie-Experimental-x64"
 if output == runtime or runtime in output.parents:
     parser.error("Probe output must remain outside the deployed runtime")
 output.mkdir(parents=True, exist_ok=True)
@@ -36,25 +36,25 @@ def log(project, name):
     return arguments("\n".join(line for line in path.read_text(encoding="utf-16").splitlines()
                                if not line.startswith("^")))
 
-cl = log("Magpie.Core", "CL.command.1.tlog")
+cl = log("GMagpie.Core", "CL.command.1.tlog")
 includes = list(dict.fromkeys(arg for arg in cl if arg.lower().startswith("/i")))
 definitions = list(dict.fromkeys(cl[i + 1] for i, arg in enumerate(cl)
                                  if arg == "/D" and cl[i + 1] != "NDEBUG"))
-link = log("Magpie", "link.command.1.tlog")
+link = log("GMagpie", "link.command.1.tlog")
 libs = list(dict.fromkeys(arg for arg in link if arg.lower().endswith(".lib") or arg.lower().startswith("/libpath:")))
 libs = [arg for arg in libs if Path(arg).name.lower() not in ("magpie.lib", "magpie.core.lib")]
 exe = output / "FrameGuidanceScalingNativeTests.exe"
 command = ["cl.exe", "/nologo", "/std:c++20", "/EHsc", "/utf-8", "/MT", "/O2", "/bigobj",
-           "/I" + str(repo / "src/Magpie.Core"), "/I" + str(repo / "src/Magpie.Core/include")]
+           "/I" + str(repo / "src/GMagpie.Core"), "/I" + str(repo / "src/GMagpie.Core/include")]
 command += includes + [item for value in definitions for item in ("/D", value)]
 command += ["/FI" + str(repo / "tests/FrameGuidanceScalingProbeHost.h"),
             str(repo / "tests/FrameGuidanceScalingNativeTests.cpp")]
-command += [str(repo / "src/Magpie.Core" / name) for name in
+command += [str(repo / "src/GMagpie.Core" / name) for name in
             ("ZeroFrameGuidanceProvider.cpp", "AmdOpticalFlowProvider.cpp", "NvidiaOpticalFlowProvider.cpp")]
 command += ["/Fe:" + str(exe), "/Fo:" + str(output) + os.sep, "/link", "/LTCG"]
 command += libs + [str(args.core_library.resolve()), "d3d11.lib", "d3dcompiler.lib", "dxgi.lib", "d3d12.lib", "WindowsApp.lib"]
 print("Compiling actual FrameGuidanceService/provider probe", flush=True)
-result = subprocess.run(command, cwd=repo / "src/Magpie.Core")
+result = subprocess.run(command, cwd=repo / "src/GMagpie.Core")
 if result.returncode:
     sys.exit(result.returncode)
 env = dict(os.environ)
@@ -79,7 +79,7 @@ with (output / "FrameGuidanceScalingNativeTests.stdout.log").open("w", encoding=
         if native_log.exists():
             (output / ("provider-" + "-".join(map(str, case)) + ".log")).write_bytes(native_log.read_bytes())
 result = int(any(case["exitCode"] for case in results))
-paths = ["src/Magpie.Core/" + name for name in ("FrameGuidanceService.cpp", "FrameGuidanceService.h",
+paths = ["src/GMagpie.Core/" + name for name in ("FrameGuidanceService.cpp", "FrameGuidanceService.h",
          "MotionVectorRequest.h", "AmdOpticalFlowProvider.cpp", "NvidiaOpticalFlowProvider.cpp")]
 report = {"exitCode": result, "coreLibrary": str(args.core_library.resolve()), "runtimeSearchPath": str(runtime),
           "cases": results,

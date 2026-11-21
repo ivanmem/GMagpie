@@ -8,7 +8,7 @@ import sys
 repo = Path(__file__).resolve().parents[1]
 output = Path(sys.argv[1])
 output.mkdir(parents=True, exist_ok=True)
-source = (repo / "src/Magpie.Core/PresenterBase.cpp").read_text(encoding="utf-8-sig")
+source = (repo / "src/GMagpie.Core/PresenterBase.cpp").read_text(encoding="utf-8-sig")
 blocks = []
 for marker in ("void PresenterBase::_UpdateForegroundCompatibility(", "void PresenterBase::_BindVRRSwapChain(",
                "HRESULT PresenterBase::_PresentWithVRR("):

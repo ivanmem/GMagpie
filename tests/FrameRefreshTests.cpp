@@ -1,13 +1,13 @@
-#include "../src/Magpie/ProfileFrameRefresh.h"
-#include "../src/Magpie.Core/CursorRefreshPolicy.h"
-#include "../src/Magpie.Core/FramePresentationTiming.h"
-#include "../src/Magpie/ConfigRecovery.h"
+#include "../src/GMagpie/ProfileFrameRefresh.h"
+#include "../src/GMagpie.Core/CursorRefreshPolicy.h"
+#include "../src/GMagpie.Core/FramePresentationTiming.h"
+#include "../src/GMagpie/ConfigRecovery.h"
 #include <rapidjson/writer.h>
 #include <iostream>
 #include <limits>
 #include <stdexcept>
 
-using namespace Magpie;
+using namespace GMagpie;
 using namespace std::chrono_literals;
 static int checks = 0;
 static void Check(bool value, const char* message) {

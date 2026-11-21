@@ -1,4 +1,4 @@
-# Magpie 0.6.5 r10 local
+# GMagpie 0.6.5 r10 local
 
 主页提供 Front Edge Sync 和目标帧率设置。Front Edge Sync 默认开启、目标默认 60 FPS；VRR 暂时隐藏并停用。设置自动保存，重新启用效果组生效。中英文与繁体中文说明同步提供。
 
@@ -15,4 +15,4 @@
 
 目标设为 80 FPS，配合 2 倍 FG 时控制 80 FPS 基础输入，名义输出 160 FPS。手动设置 0 时按显示器刷新率自动设置，FG 按倍率折算；应用配置与捕获后端已有的更低上限继续生效。已保存的主页设置保留。
 
-完整说明见 [Front Edge Sync](FRAME_SYNC_GUIDE.md)，包含 RTSS 配合、延迟代价、VRR 暂缓说明和测试建议。编译与 CPU 检查通过；没有运行 Magpie 或进行 GUI／GPU 测试，实机效果由用户确认。
+完整说明见 [Front Edge Sync](FRAME_SYNC_GUIDE.md)，包含 RTSS 配合、延迟代价、VRR 暂缓说明和测试建议。编译与 CPU 检查通过；没有运行 GMagpie 或进行 GUI／GPU 测试，实机效果由用户确认。

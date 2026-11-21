@@ -18,30 +18,30 @@ static std::string Read(const std::filesystem::path& path) {
 
 int main() {
 	const auto fixture = std::filesystem::temp_directory_path() /
-		(L"Magpie UpdateTransaction " + std::to_wstring(GetCurrentProcessId()) + L"-" + std::to_wstring(GetTickCount64()));
+		(L"GMagpie UpdateTransaction " + std::to_wstring(GetCurrentProcessId()) + L"-" + std::to_wstring(GetTickCount64()));
 	try {
 		const auto root = fixture / L"success", source = root / L"update";
-		Write(root / L"Magpie.exe", "old-exe");
+		Write(root / L"GMagpie.exe", "old-exe");
 		Write(root / L"nvngx_dlssg.dll", "old-fg");
 		Write(root / L"config.json", "user-settings");
-		Write(source / L"Magpie.exe", "new-exe");
+		Write(source / L"GMagpie.exe", "new-exe");
 		Write(source / L"runtimes/community.dll", "new-provider");
 		UpdateTransaction success;
 		Check(success.Prepare(source, root, { L"nvngx_dlssg.dll", L"missing/old.dll" }));
 		Check(success.Install());
-		Check(Read(root / L"Magpie.exe") == "new-exe");
+		Check(Read(root / L"GMagpie.exe") == "new-exe");
 		Check(!std::filesystem::exists(root / L"nvngx_dlssg.dll"));
 		Check(Read(root / L"config.json") == "user-settings");
-		Check(Read(source / L"Magpie.exe") == "new-exe");
+		Check(Read(source / L"GMagpie.exe") == "new-exe");
 		Check(success.Rollback());
-		Check(Read(root / L"Magpie.exe") == "old-exe");
+		Check(Read(root / L"GMagpie.exe") == "old-exe");
 		Check(Read(root / L"nvngx_dlssg.dll") == "old-fg");
 		Check(!std::filesystem::exists(root / L"runtimes/community.dll"));
 
 		const auto lockedRoot = fixture / L"locked", lockedSource = lockedRoot / L"update";
-		Write(lockedRoot / L"Magpie.exe", "old-exe");
+		Write(lockedRoot / L"GMagpie.exe", "old-exe");
 		Write(lockedRoot / L"provider.dll", "old-provider");
-		Write(lockedSource / L"Magpie.exe", "new-exe");
+		Write(lockedSource / L"GMagpie.exe", "new-exe");
 		Write(lockedSource / L"provider.dll", "new-provider");
 		UpdateTransaction failed;
 		Check(failed.Prepare(lockedSource, lockedRoot, {}));
@@ -51,15 +51,15 @@ int main() {
 		const bool installed = failed.Install();
 		CloseHandle(lock);
 		Check(!installed && failed.Rollback());
-		Check(Read(lockedRoot / L"Magpie.exe") == "old-exe");
+		Check(Read(lockedRoot / L"GMagpie.exe") == "old-exe");
 		Check(Read(lockedRoot / L"provider.dll") == "old-provider");
 		Check(Read(lockedSource / L"provider.dll") == "new-provider");
 
 		const auto traversal = fixture / L"traversal";
-		Write(traversal / L"update/Magpie.exe", "new-exe");
+		Write(traversal / L"update/GMagpie.exe", "new-exe");
 		UpdateTransaction invalid;
 		Check(!invalid.Prepare(traversal / L"update", traversal, { L"../outside.txt" }));
-		Check(!std::filesystem::exists(traversal / L"Magpie.exe"));
+		Check(!std::filesystem::exists(traversal / L"GMagpie.exe"));
 		std::filesystem::remove_all(fixture);
 		std::cout << "Update transaction fixtures passed\n";
 	} catch (...) {

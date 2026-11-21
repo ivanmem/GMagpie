@@ -25,7 +25,7 @@ Enter-VsDevShell -VsInstallPath $vs -SkipAutomaticLocation -DevCmdArguments '-ar
 $cmakeDirectory=Join-Path $vs 'Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\bin'
 if(Test-Path -LiteralPath (Join-Path $cmakeDirectory 'cmake.exe')) { $env:Path=$cmakeDirectory+';'+$env:Path }
 $msbuild=Join-Path $vs 'MSBuild\Current\Bin\amd64\MSBuild.exe'
-$project=if($DependenciesOnly) {'src\_ConanDeps\_ConanDeps.vcxproj'} elseif($CoreOnly) {'src\Magpie.Core\Magpie.Core.vcxproj'} else {'Magpie.slnx'}
+$project=if($DependenciesOnly) {'src\_ConanDeps\_ConanDeps.vcxproj'} elseif($CoreOnly) {'src\GMagpie.Core\GMagpie.Core.vcxproj'} else {'GMagpie.slnx'}
 $label=if($DependenciesOnly){'dependencies'}elseif($CoreOnly){'core'}else{'solution'}
 $buildArguments=@($project,'/t:Build','/m:2','/nr:false','/v:minimal',
     '/p:Configuration=Release','/p:Platform=x64','/p:PreferredToolArchitecture=x64',

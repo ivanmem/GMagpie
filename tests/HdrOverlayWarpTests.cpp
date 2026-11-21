@@ -12,7 +12,7 @@
 #include "shaders/ImGuiImplPS.h"
 #include "shaders/ImGuiImplVS.h"
 
-namespace Magpie {
+namespace GMagpie {
 struct Logger {
 	static Logger& Get() { static Logger logger; return logger; }
 	void ComError(const char* text, HRESULT hr) { std::cerr << text << ": " << std::hex << hr << '\n'; std::abort(); }
@@ -39,7 +39,7 @@ struct DirectXHelper {
 };
 }
 #include "OverlayBackendProduction.inc"
-using namespace Magpie;
+using namespace GMagpie;
 
 static void Near(float actual, float expected) {
 	if (std::abs(actual-expected) > .003f + std::abs(expected)*.001f) {

@@ -5,7 +5,7 @@ import sys
 repo = Path(__file__).resolve().parents[1]
 out = Path(sys.argv[1])
 out.mkdir(parents=True, exist_ok=True)
-source = (repo / "src/Magpie.Core/PassThroughFrames.cpp").read_text(encoding="utf-8-sig")
+source = (repo / "src/GMagpie.Core/PassThroughFrames.cpp").read_text(encoding="utf-8-sig")
 start = source.index("bool PassThroughFrames::SelectBackendFrame(")
 end = source.index("bool PassThroughFrames::Consume(", start)
 metadata_start = source.index("HdrFrameMetadata PassThroughFrames::_ReferenceMetadata(")

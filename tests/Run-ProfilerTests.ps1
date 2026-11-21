@@ -1,5 +1,5 @@
 #Requires -Version 7.0
-param([string]$OutputDirectory=(Join-Path $env:TEMP ('Magpie-profiler-'+[guid]::NewGuid())))
+param([string]$OutputDirectory=(Join-Path $env:TEMP ('GMagpie-profiler-'+[guid]::NewGuid())))
 $ErrorActionPreference='Stop'
 $repo=Split-Path $PSScriptRoot -Parent
 New-Item -ItemType Directory -Path $OutputDirectory -Force | Out-Null

@@ -1,7 +1,7 @@
 """Run the production Temporal host/HLSL on WARP using an existing Core build.
 
 The build root supplies obj/ tlogs and a Core static library only. This runner
-does not initialize NGX, select a hardware adapter, build or deploy Magpie.
+does not initialize NGX, select a hardware adapter, build or deploy GMagpie.
 Run from a VS x64 developer shell, supplying an isolated output directory.
 """
 from pathlib import Path
@@ -20,7 +20,7 @@ parser.add_argument("--output", type=Path, required=True)
 args = parser.parse_args()
 repo = Path(__file__).resolve().parents[1]
 root = args.build_root.resolve()
-core = args.core_library.resolve() if args.core_library else root / "runtime/Magpie.Core.lib"
+core = args.core_library.resolve() if args.core_library else root / "runtime/GMagpie.Core.lib"
 output = args.output.resolve()
 if not core.is_file():
     parser.error("Missing Core static library; supply --core-library.")
@@ -47,26 +47,26 @@ def tlog(project, filename):
     return split_command("\n".join(line for line in path.read_text(encoding="utf-16").splitlines()
                                    if not line.startswith("^")))
 
-compiler = tlog("Magpie.Core", "CL.command.1.tlog")
+compiler = tlog("GMagpie.Core", "CL.command.1.tlog")
 includes = list(dict.fromkeys(arg for arg in compiler if arg.lower().startswith("/i")))
 definitions = list(dict.fromkeys(compiler[i+1] for i, arg in enumerate(compiler)
                                 if arg == "/D" and compiler[i+1] != "NDEBUG"))
-linker = tlog("Magpie", "link.command.1.tlog")
+linker = tlog("GMagpie", "link.command.1.tlog")
 libraries = list(dict.fromkeys(arg for arg in linker
                               if arg.lower().endswith(".lib") or arg.lower().startswith("/libpath:")))
 libraries = [arg for arg in libraries if Path(arg).name.lower() not in ("magpie.lib", "magpie.core.lib")]
 exe = output / "DLSSNRTemporalHostTests.exe"
 command = ["cl.exe", "/nologo", "/std:c++20", "/EHsc", "/utf-8", "/MT", "/O2", "/W4", "/bigobj",
-           "/I"+str(repo / "src/Magpie.Core"), "/I"+str(repo / "src/Magpie.Core/include")]
+           "/I"+str(repo / "src/GMagpie.Core"), "/I"+str(repo / "src/GMagpie.Core/include")]
 command += includes + [arg for definition in definitions for arg in ("/D", definition)]
 command += [str(repo / "tests/DLSSNRTemporalHostTests.cpp"), "/Fe:"+str(exe), "/Fo:"+str(exe.with_suffix(".obj")),
             "/link", "/LTCG", str(core)] + libraries + ["d3d11.lib", "d3dcompiler.lib", "dxgi.lib", "WindowsApp.lib"]
-build = subprocess.run(command, cwd=repo / "src/Magpie.Core", stdout=subprocess.PIPE,
+build = subprocess.run(command, cwd=repo / "src/GMagpie.Core", stdout=subprocess.PIPE,
                        stderr=subprocess.STDOUT, text=True, encoding="utf-8", errors="replace")
 print(build.stdout, end="", flush=True)
 (output / "compile.log").write_text(build.stdout, encoding="utf-8")
-files = ["src/Magpie.Core/DLSSNRTemporal.cpp", "src/Magpie.Core/DLSSNRTemporalShader.h",
-         "src/Magpie.Core/include/DLSSNRTemporalState.h", "tests/DLSSNRTemporalHostTests.cpp",
+files = ["src/GMagpie.Core/DLSSNRTemporal.cpp", "src/GMagpie.Core/DLSSNRTemporalShader.h",
+         "src/GMagpie.Core/include/DLSSNRTemporalState.h", "tests/DLSSNRTemporalHostTests.cpp",
          "tests/run_dlssnr_temporal_host.py"]
 report = {"device": "D3D_DRIVER_TYPE_WARP", "productionHost": True, "compileExitCode": build.returncode,
           "coreLibrary": str(core), "coreLibrarySha256": hashlib.sha256(core.read_bytes()).hexdigest(),

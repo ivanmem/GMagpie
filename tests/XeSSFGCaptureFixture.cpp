@@ -1,4 +1,4 @@
-// Animated source for the real Magpie WGC + AMD optical-flow smoke test.
+// Animated source for the real GMagpie WGC + AMD optical-flow smoke test.
 #include <windows.h>
 #include <cassert>
 #include <iostream>
@@ -57,7 +57,7 @@ int main(int argc, char** argv) {
         wc.lpszClassName = className.c_str();
         const auto registered = RegisterClassW(&wc);
         assert(registered || GetLastError() == ERROR_CLASS_ALREADY_EXISTS);
-        HWND window = CreateWindowExW(0, className.c_str(), L"Magpie XeSS capture regression (automatic)",
+        HWND window = CreateWindowExW(0, className.c_str(), L"GMagpie XeSS capture regression (automatic)",
             WS_OVERLAPPEDWINDOW, 100, 100, 960, 580, nullptr, nullptr, wc.hInstance, nullptr);
         assert(window);
         ShowWindow(window, SW_SHOWNORMAL);
@@ -94,5 +94,5 @@ int main(int argc, char** argv) {
             std::cerr << "Scaling did not stop" << std::endl; return 1;
         }
     }
-    std::cout << "Capture fixture completed; inspect SDK counts and pacing in Magpie logs." << std::endl;
+    std::cout << "Capture fixture completed; inspect SDK counts and pacing in GMagpie logs." << std::endl;
 }

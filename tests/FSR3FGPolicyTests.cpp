@@ -5,7 +5,7 @@
 #include <cstdlib>
 #include <initializer_list>
 
-using namespace Magpie;
+using namespace GMagpie;
 static unsigned checks = 0;
 static void Check(bool condition, const char* message) {
 	++checks;

@@ -10,7 +10,7 @@ import sys
 repo = Path(__file__).resolve().parents[1]
 output = Path(sys.argv[1]).resolve()
 output.mkdir(parents=True, exist_ok=True)
-renderer = (repo / "src/Magpie.Core/Renderer.cpp").read_text(encoding="utf-8-sig")
+renderer = (repo / "src/GMagpie.Core/Renderer.cpp").read_text(encoding="utf-8-sig")
 
 def function(signature):
     begin = renderer.index(signature)
@@ -32,7 +32,7 @@ prefix = r'''
 #include <memory>
 #include <optional>
 #include <vector>
-using namespace Magpie;
+using namespace GMagpie;
 struct MockTexture : ID3D11Texture2D {
     D3D11_TEXTURE2D_DESC desc{};
     MockTexture(UINT size, DXGI_FORMAT format) { desc.Width=desc.Height=size; desc.Format=format; }

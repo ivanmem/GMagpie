@@ -4,14 +4,14 @@ import sys
 
 repo = Path(__file__).resolve().parents[1]
 out = Path(sys.argv[1])
-source = (repo / 'src/Magpie/ScalingModesService.cpp').read_text(encoding='utf-8-sig')
+source = (repo / 'src/GMagpie/ScalingModesService.cpp').read_text(encoding='utf-8-sig')
 writer = source[source.index('static void WriteScalingMode('):source.index('\nvoid ScalingModesService::Export(')]
 loader = source[source.index('static bool LoadScalingMode('):source.index('\nstruct V065NormalizationStats')]
 normalizer = source[source.index('struct V065NormalizationStats'):source.index('\nbool ScalingModesService::Import(')]
 importer = source[source.index('bool ScalingModesService::Import('):source.rfind('\n}')]
-helper = (repo / 'src/Magpie/JsonHelper.cpp').read_text(encoding='utf-8-sig')
+helper = (repo / 'src/GMagpie/JsonHelper.cpp').read_text(encoding='utf-8-sig')
 helper = helper[helper.index('bool JsonHelper::ReadBool('):helper.rfind('\n}')]
-settings = (repo / 'src/Magpie/AppSettings.cpp').read_text(encoding='utf-8-sig')
+settings = (repo / 'src/GMagpie/AppSettings.cpp').read_text(encoding='utf-8-sig')
 rules_start = settings.index('const ConfigRecovery::ParameterRules rules = []')
 rules_end = settings.index('\n\t\t};', rules_start) + len('\n\t\t};')
 recovery_rules = '\nConfigRecovery::ParameterRules ProductionRecoveryRules() {\n' + settings[rules_start:rules_end] + '\nreturn rules;\n}\n'
@@ -51,7 +51,7 @@ struct StrHelper {
   WideCharToMultiByte(CP_UTF8,0,text.data(),int(text.size()),output.data(),int(output.size()),nullptr,nullptr); return output;
  }
 };
-namespace Magpie {
+namespace GMagpie {
 template<class T> struct EffectConstant { T defaultValue,minValue,maxValue,step; };
 struct EffectParameterDesc {
  std::string name;
@@ -331,6 +331,6 @@ int main(int argc,char** argv) {
  return 0;
 }
 }
-int main(int argc,char** argv) { return Magpie::main(argc,argv); }
+int main(int argc,char** argv) { return GMagpie::main(argc,argv); }
 '''
 (out / 'HdrManualMigrationTests.cpp').write_text(prefix + recovery_rules + helper + writer + loader + normalizer + importer + tests,encoding='utf-8')

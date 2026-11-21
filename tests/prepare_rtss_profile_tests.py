@@ -11,8 +11,8 @@ parser = argparse.ArgumentParser()
 parser.add_argument("output", type=Path)
 args = parser.parse_args()
 repo = Path(__file__).resolve().parents[1]
-source = (repo / "src/Magpie/RtssProfileAccess.cpp").read_text(encoding="utf-8-sig")
-header = (repo / "src/Magpie/RtssProfileAccess.h").read_text(encoding="utf-8-sig")
+source = (repo / "src/GMagpie/RtssProfileAccess.cpp").read_text(encoding="utf-8-sig")
+header = (repo / "src/GMagpie/RtssProfileAccess.h").read_text(encoding="utf-8-sig")
 source = source.replace('#include "pch.h"\n', "")
 source = source.replace('#include "Win32Helper.h"\n', "")
 source = source.replace('#include "RtssProfileAccess.h"', '#include "RtssProfileAccess.g.h"')
@@ -23,20 +23,20 @@ name_start = source.index("std::string RtssProfileAccess::ProfileName(")
 name_end = source.index("\n}\n", name_start) + 2
 name_method = source[name_start:name_end]
 source = source[:start] + "}\n\n" + name_method + "\n\n" + source[end:]
-source = '#include <windows.h>\n#include <filesystem>\nnamespace Magpie::Win32Helper { std::filesystem::path GetExePath() {\n' + \
+source = '#include <windows.h>\n#include <filesystem>\nnamespace GMagpie::Win32Helper { std::filesystem::path GetExePath() {\n' + \
     'wchar_t path[32768]{}; GetModuleFileNameW(nullptr, path, 32768); return path; } }\n' + source
-service = (repo / "src/Magpie/RtssService.cpp").read_text(encoding="utf-8-sig")
+service = (repo / "src/GMagpie/RtssService.cpp").read_text(encoding="utf-8-sig")
 start = service.index("const wchar_t* ProfileFailureText(")
 end = service.index("\n}\n", start) + 2
 args.output.mkdir(parents=True, exist_ok=True)
 (args.output / "RtssProfileAccess.g.h").write_text(header.replace("private:", "public:"), encoding="utf-8")
 (args.output / "RtssProfileAccess.g.cpp").write_text(source, encoding="utf-8")
-(args.output / "RtssProfileExpression.h").write_text((repo / "src/Magpie/RtssProfileExpression.h").read_text(encoding="utf-8-sig"), encoding="utf-8")
+(args.output / "RtssProfileExpression.h").write_text((repo / "src/GMagpie/RtssProfileExpression.h").read_text(encoding="utf-8-sig"), encoding="utf-8")
 (args.output / "RtssFileCommitHooks.g.h").write_text(
     '#include <windows.h>\nBOOL RtssTestReplaceFileW(LPCWSTR, LPCWSTR, LPCWSTR, DWORD, LPVOID, LPVOID);\n'
     '#define ReplaceFileW RtssTestReplaceFileW\n', encoding="utf-8")
 (args.output / "RtssFailureText.g.h").write_text(service[start:end], encoding="utf-8")
-enum_source = (repo / "src/Magpie/RtssService.h").read_text(encoding="utf-8-sig")
+enum_source = (repo / "src/GMagpie/RtssService.h").read_text(encoding="utf-8-sig")
 enum_start = enum_source.index("enum class RtssState {")
 status_end = enum_source.index("\n};", enum_source.index("struct RtssStatus {")) + 3
 session_start = service.index("struct RtssService::Session {")

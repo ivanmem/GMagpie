@@ -1,4 +1,4 @@
-# Magpie Experimental v0.6.9 Beta 1
+# GMagpie Experimental v0.6.9 Beta 1
 
 本地测试版，基于 `experimental` 主线整合全部七个 0.6.9 功能分支。
 
@@ -28,7 +28,7 @@
 
 ---
 
-# Magpie Experimental v0.6.9 Beta 1
+# GMagpie Experimental v0.6.9 Beta 1
 
 Local test release integrating all seven 0.6.9 feature branches into `experimental`.
 

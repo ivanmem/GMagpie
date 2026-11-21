@@ -13,7 +13,7 @@
 #include <map>
 #include <set>
 using namespace winrt;
-using namespace ::Magpie;
+using namespace ::GMagpie;
 struct LayoutTestApp : ApplicationT<LayoutTestApp, Markup::IXamlMetadataProvider> {
     winrt::Microsoft::UI::Xaml::XamlTypeInfo::XamlControlsXamlMetaDataProvider provider{nullptr};
     auto& Provider() { if(!provider)provider=winrt::Microsoft::UI::Xaml::XamlTypeInfo::XamlControlsXamlMetaDataProvider();return provider; }
@@ -23,7 +23,7 @@ struct LayoutTestApp : ApplicationT<LayoutTestApp, Markup::IXamlMetadataProvider
 };
 #include "ParameterSinglePageProduction.inc"
 auto Stack(Orientation orientation=Orientation::Vertical,double spacing=0) {
-    auto panel=make_self<winrt::Magpie::implementation::SimpleStackPanel>();
+    auto panel=make_self<winrt::GMagpie::implementation::SimpleStackPanel>();
     panel->Orientation(orientation);panel->Spacing(spacing);return panel;
 }
 // XamlReader has no application metadata provider for local classes. Replace
@@ -140,7 +140,7 @@ int main() try {
         }
         for(const auto& [label,parameters]:groups) {
             auto column=Load(GroupShell).as<Grid>();column.FindName(L"Title").as<TextBlock>().Text(label);
-            auto wrap=make_self<winrt::Magpie::implementation::WrapPanel>();wrap->Orientation(Orientation::Vertical);wrap->HorizontalSpacing(24);wrap->VerticalSpacing(8);
+            auto wrap=make_self<winrt::GMagpie::implementation::WrapPanel>();wrap->Orientation(Orientation::Vertical);wrap->HorizontalSpacing(24);wrap->VerticalSpacing(8);
             column.FindName(L"Rows").as<Grid>().Children().Append(wrap.as<UIElement>());
             for(const auto* fixture:parameters) {
                 auto row=Load(fixture->xml).as<Grid>();rows.push_back(row);assert(seen.insert(fixture->name).second);

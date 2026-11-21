@@ -11,8 +11,8 @@ import os
 root = Path(__file__).resolve().parents[2]
 source = root / 'source'
 container = root / 'release/v0.6.8-local'
-runtime = container / 'Magpie-Experimental-x64'
-target = container / 'Magpie-Experimental-x64.zip'
+runtime = container / 'GMagpie-Experimental-x64'
+target = container / 'GMagpie-Experimental-x64.zip'
 pending = target.with_suffix('.zip.building')
 assert not pending.exists(), f'Pending archive already exists: {pending}'
 if target.exists():
@@ -42,17 +42,17 @@ for item in deployed['files']:
     path = runtime / name
     assert path.stat().st_size == item['bytes'], name
     assert hashlib.sha256(path.read_bytes()).hexdigest().upper() == item['sha256'].upper(), name
-    if path.suffix.lower() in {'.pdb', '.map', '.lib', '.exp'} or path.name == 'Magpie.next.exe':
+    if path.suffix.lower() in {'.pdb', '.map', '.lib', '.exp'} or path.name == 'GMagpie.next.exe':
         continue
     assert not {'config', 'logs', 'cache', 'PortableAppData'}.intersection(rel.parts), name
     payload[name] = path
 
 readme = (source / 'docs/README-EXPERIMENTAL-RELEASE.txt').read_text(encoding='utf-8-sig')
-readme = re.sub(r'^Magpie Experimental v[^ ]+ x64', 'Magpie Experimental v0.6.8-local x64', readme)
+readme = re.sub(r'^GMagpie Experimental v[^ ]+ x64', 'GMagpie Experimental v0.6.8-local x64', readme)
 payload['README-Experimental.txt'] = readme.encode('utf-8')
 payload['THIRD-PARTY-NOTICES.md'] = source / 'docs/THIRD_PARTY_AND_REDISTRIBUTION.md'
 payload['FRAME_SYNC_GUIDE.md'] = source / 'docs/FRAME_SYNC_GUIDE.md'
-payload['RELEASE-NOTES.md'] = f'''# Magpie Experimental 0.6.8-local
+payload['RELEASE-NOTES.md'] = f'''# GMagpie Experimental 0.6.8-local
 
 Source commit: `{commit}`
 
@@ -77,7 +77,7 @@ for name, value in sorted(payload.items()):
     data = content(value)
     records.append({'path': name, 'bytes': len(data), 'sha256': hashlib.sha256(data).hexdigest().upper()})
 manifest = {
-    'schemaVersion': 1, 'package': 'Magpie-Experimental-x64', 'version': deployed['version'],
+    'schemaVersion': 1, 'package': 'GMagpie-Experimental-x64', 'version': deployed['version'],
     'commit': commit, 'sourceDirty': False, 'sourceDateUtc': date.isoformat(),
     'configuration': deployed['configuration'], 'platform': deployed['platform'], 'files': records,
 }
@@ -85,7 +85,7 @@ payload['build-manifest.json'] = json.dumps(manifest, ensure_ascii=False, indent
 print(f'Packaging {len(payload)} files from deployed commit {commit[:12]}', flush=True)
 with zipfile.ZipFile(pending, 'x', compression=zipfile.ZIP_DEFLATED, compresslevel=6, allowZip64=True) as archive:
     for name, value in sorted(payload.items()):
-        info = zipfile.ZipInfo('Magpie-Experimental-x64/' + name, timestamp)
+        info = zipfile.ZipInfo('GMagpie-Experimental-x64/' + name, timestamp)
         info.compress_type = zipfile.ZIP_DEFLATED
         info.external_attr = 0o100644 << 16
         archive.writestr(info, content(value))
@@ -94,10 +94,10 @@ with zipfile.ZipFile(pending) as archive:
     assert archive.testzip() is None
     assert len(archive.namelist()) == len(payload)
     for item in records:
-        data = archive.read('Magpie-Experimental-x64/' + item['path'])
+        data = archive.read('GMagpie-Experimental-x64/' + item['path'])
         assert len(data) == item['bytes']
         assert hashlib.sha256(data).hexdigest().upper() == item['sha256']
-    assert json.loads(archive.read('Magpie-Experimental-x64/build-manifest.json')) == manifest
+    assert json.loads(archive.read('GMagpie-Experimental-x64/build-manifest.json')) == manifest
 os.replace(pending, target)
 digest = hashlib.sha256(target.read_bytes()).hexdigest().upper()
 target.with_suffix('.zip.sha256').write_text(f'{digest}  {target.name}\n', encoding='ascii')

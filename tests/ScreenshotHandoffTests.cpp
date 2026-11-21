@@ -4,7 +4,7 @@
 #include <future>
 #include <iostream>
 
-using namespace Magpie;
+using namespace GMagpie;
 
 static void CheckSelection() {
 	const ScreenshotFrameIdentity paused{ 12, 0, 3 };

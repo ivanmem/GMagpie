@@ -1,10 +1,10 @@
-#include "../src/Magpie/EffectPickerModel.h"
-#include "../src/Magpie/EffectHelper.h"
+#include "../src/GMagpie/EffectPickerModel.h"
+#include "../src/GMagpie/EffectHelper.h"
 #include <cassert>
 #include <iostream>
 
 int main() {
-	using namespace Magpie;
+	using namespace GMagpie;
 	const auto search = NormalizeEffectSearch(L"DLSS\\DLSS_SR 抗锯齿 时序边缘平滑");
 	assert(MatchesEffectSearch(search, L"dlss sr"));
 	assert(MatchesEffectSearch(search, L"抗锯齿 DLSS"));

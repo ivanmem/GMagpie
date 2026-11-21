@@ -22,7 +22,7 @@ int wmain(int argc,wchar_t**argv){
             std::wofstream info(std::filesystem::path(argv[1])/"benchmark-adapter.txt");info<<desc.Description<<L"\nVendor="<<desc.VendorId<<L" Device="<<desc.DeviceId<<L"\n";}
         Image input(W*H);for(unsigned y=0;y<H;++y)for(unsigned x=0;x<W;++x)input[y*W+x]={float(x%256)/255,float(y%256)/255,float((x+y)%256)/255,1};
         for(const auto& [name,values]:cases){
-            for(const auto& [key,value]:values)Require(Magpie::OKLab::Find(key)!=nullptr,"Benchmark references nonexistent parameter");
+            for(const auto& [key,value]:values)Require(GMagpie::OKLab::Find(key)!=nullptr,"Benchmark references nonexistent parameter");
             std::vector<double> timings;
             for(unsigned i=0;i<25;++i){h.Run(input,values,false,i==0);if(i>=5)timings.push_back(h.milliseconds);}
             std::sort(timings.begin(),timings.end());const double median=(timings[9]+timings[10])*.5,p95=timings[18];

@@ -1,5 +1,5 @@
 #Requires -Version 7.0
-param([string]$OutputDirectory = (Join-Path $env:TEMP ('Magpie-RenderingGpu-' + [guid]::NewGuid())),
+param([string]$OutputDirectory = (Join-Path $env:TEMP ('GMagpie-RenderingGpu-' + [guid]::NewGuid())),
       [switch]$NativeProbe)
 $ErrorActionPreference = 'Stop'
 $gpuOutput = [IO.Path]::GetFullPath($OutputDirectory)

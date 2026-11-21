@@ -5,7 +5,7 @@ import sys
 repo = Path(__file__).resolve().parents[1]
 out = Path(sys.argv[1])
 out.mkdir(parents=True, exist_ok=True)
-s = (repo / 'src/Magpie.Core/Renderer.cpp').read_text(encoding='utf-8-sig')
+s = (repo / 'src/GMagpie.Core/Renderer.cpp').read_text(encoding='utf-8-sig')
 start = s.index('void Renderer::_EnsureGpuPriority(')
 brace = s.index('{', start)
 end, depth = brace+1, 1

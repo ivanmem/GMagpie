@@ -7,23 +7,23 @@ import xml.etree.ElementTree as ET
 repo = Path(__file__).resolve().parents[1]
 out = Path(sys.argv[1])
 read = lambda path: (repo / path).read_text(encoding="utf-8-sig")
-header = read("src/Magpie.Core/DLSSNRFilter.h")
+header = read("src/GMagpie.Core/DLSSNRFilter.h")
 settings = header[header.index("struct DLSSNRSettings {"):header.index("DLSSNRSettings ParseDLSSNRSettings(")]
-source = read("src/Magpie.Core/DLSSNRFilter.cpp")
+source = read("src/GMagpie.Core/DLSSNRFilter.cpp")
 parser = source[source.index("DLSSNRSettings ParseDLSSNRSettings("):source.index("\n}\n\n#ifdef MP_ENABLE_DLSSNR")]
 (out / "DLSSNRSettingsUnderTest.h").write_text(settings + "DLSSNRSettings ParseDLSSNRSettings(const EffectOption&, bool = false) noexcept;\n" + parser, encoding="utf-8")
 session = source[source.index("static bool InitializeSignedSnippet(\n"):source.index("static void SetEvaluateParametersUnsafe(")]
 (out / "DLSSNRSessionUnderTest.h").write_text(session, encoding="utf-8")
 live = source[source.index("EffectParameterApplyMode DLSSNRFilter::GetParameterApplyMode("):source.index("EffectParameterRestartReason DLSSNRFilter::GetParameterRestartReason(")]
 live += source[source.index("static bool SameNRSettings("):source.index("bool DLSSNRFilter::Initialize(")]
-sparse = read("src/Magpie.Core/DLSSNRSparse.inl")
+sparse = read("src/GMagpie.Core/DLSSNRSparse.inl")
 live += sparse[sparse.index("void DLSSNRFilter::UpdateSparseParameters("):sparse.index("bool DLSSNRFilter::DrawSparse(")]
 (out / "DLSSNRLiveUnderTest.h").write_text(live, encoding="utf-8")
-guidance_types = read("src/Magpie.Core/FrameGuidanceTypes.h")
+guidance_types = read("src/GMagpie.Core/FrameGuidanceTypes.h")
 guidance_types = guidance_types[guidance_types.index("using FrameGuidanceFrameId"):guidance_types.index("struct MotionVectorProviderOutput;")]
 guidance = source[source.index("static FrameGuidanceRegion ScaleGuidanceRegion("):source.index("static bool CompositeResidual(")]
 guidance += source[source.index("static bool SameGuidance("):source.index("static void TransitionColor(")]
-interop = read("src/Magpie.Core/FrameGuidanceD3D12Interop.cpp")
+interop = read("src/GMagpie.Core/FrameGuidanceD3D12Interop.cpp")
 guidance += interop[interop.index("bool FrameGuidanceD3D12Interop::WaitForProducer("):interop.index("void FrameGuidanceD3D12Interop::Transition(")]
 (out / "DLSSNRGuidanceTypesUnderTest.h").write_text(guidance_types, encoding="utf-8")
 (out / "DLSSNRGuidanceUnderTest.h").write_text(guidance, encoding="utf-8")
@@ -87,13 +87,13 @@ for name in names:
         for field in ("DEFAULT", "MIN", "MAX", "STEP", "LABEL"):
             pattern = rf"//!{field} (.*)"
             assert re.search(pattern, original)[1] == re.search(pattern, later)[1]
-xaml = ET.fromstring(read("src/Magpie/ScalingModesPage.xaml"))
+xaml = ET.fromstring(read("src/GMagpie/ScalingModesPage.xaml"))
 namespace = "{http://schemas.microsoft.com/winfx/2006/xaml/presentation}"
 template = next(element for element in xaml.iter(namespace + "DataTemplate")
                 if element.attrib.get("{http://schemas.microsoft.com/winfx/2006/xaml}Key") == "EffectParametersFlyout")
 assert not list(template.iter(namespace + "ScrollViewer")), "Parameter panels must fit without scrolling"
 for lang in ("en-US", "zh-Hans", "zh-Hant"):
-    root = ET.fromstring(read(f"src/Magpie/Resources.language-{lang}.resw"))
+    root = ET.fromstring(read(f"src/GMagpie/Resources.language-{lang}.resw"))
     entries = {item.attrib["name"]: item.findtext("value") for item in root.findall("data")}
     assert not any("DLSSNR_DLSSNR_AI_Filter_opticalFlowScaleOrder_" in key for key in entries)
     assert entries["EffectParam_DLSSNR_DLSSNR_AI_Filter_multiPass_Label"] == "Multi Pass"

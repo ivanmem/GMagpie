@@ -1,4 +1,4 @@
-// AMD-style Morphological Anti-Aliasing for Magpie.
+// AMD-style Morphological Anti-Aliasing for GMagpie.
 // Adapted from https://github.com/GPUOpen-LibrariesAndSDKs/MLAA11.
 // This port derives luma from RGB rather than expecting luma in alpha.
 //

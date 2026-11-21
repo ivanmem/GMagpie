@@ -28,7 +28,7 @@ inline bool operator==(const RECT& a, const RECT& b) {
 }
 
 #define private public
-#include "../src/Magpie.Core/CursorManager.h"
+#include "../src/GMagpie.Core/CursorManager.h"
 #undef private
 
 namespace {
@@ -51,7 +51,7 @@ std::mutex hitMutex;
 std::condition_variable hitCv;
 bool holdHitTest = false;
 std::atomic<int> hitActive = 0, hitMaximum = 0, hitCalls = 0;
-struct TraceEntry { Magpie::FrameTrace::Event event; int64_t a, b, start, end; };
+struct TraceEntry { GMagpie::FrameTrace::Event event; int64_t a, b, start, end; };
 std::vector<TraceEntry> traces;
 
 void Check(bool value, const char* message) {
@@ -116,7 +116,7 @@ void MockSleep(DWORD milliseconds) {
     if (failShutdownRestoreQuery) queryFails = true;
     if (failShutdownRestoreSet) setFails = true;
 }
-bool HasTrace(Magpie::FrameTrace::Event event, Magpie::FrameTrace::CursorRepositionReason reason) {
+bool HasTrace(GMagpie::FrameTrace::Event event, GMagpie::FrameTrace::CursorRepositionReason reason) {
     return std::any_of(traces.begin(), traces.end(), [&](const auto& entry) {
         return entry.event == event && entry.b == int64_t(reason);
     });
@@ -144,7 +144,7 @@ void ReleaseHitTest() {
 }
 }
 
-namespace Magpie::FrameTrace {
+namespace GMagpie::FrameTrace {
 bool Enabled() noexcept { return true; }
 int64_t Tick() noexcept {
     RequireFrontend();
@@ -158,7 +158,7 @@ void Record(Event event, int64_t start, int64_t end, uint64_t, int64_t a, int64_
 void Mark(Event event, int64_t a, int64_t b) noexcept { Record(event, Tick(), Tick(), Frame(), a, b); }
 }
 
-namespace Magpie {
+namespace GMagpie {
 #include "RuntimeQuitTypes.inc"
 // Only creation/start failure injection wraps the real dispatcher/timer; normal
 // timer ticks and all background/foreground coroutine transitions remain native.
@@ -206,8 +206,8 @@ struct Renderer {
 struct ScalingWindow {
     static inline uint32_t runId = 1;
     static inline winrt::DispatcherQueue dispatcher{ nullptr };
-    static inline Magpie::CursorManager* manager = nullptr;
-    Magpie::CursorManager*& _cursorManager = manager;
+    static inline GMagpie::CursorManager* manager = nullptr;
+    GMagpie::CursorManager*& _cursorManager = manager;
     struct Retirement {
         bool pending = false;
         bool Ready(unsigned depth) const { return pending && !depth; }
@@ -218,7 +218,7 @@ struct ScalingWindow {
     int finished = 0;
     ScalingOptions options;
     SourceTracker source;
-    Magpie::Renderer renderer;
+    GMagpie::Renderer renderer;
     RECT rendererRect{ 0, 0, 2000, 1000 };
     bool foreground = true;
     bool live = true;
@@ -226,10 +226,10 @@ struct ScalingWindow {
     static uint32_t RunId() { return runId; }
     static TestDispatcher Dispatcher() { return { dispatcher }; }
     explicit operator bool() const { return live; }
-    Magpie::CursorManager* TryGetCursorManager() { return manager; }
+    GMagpie::CursorManager* TryGetCursorManager() { return manager; }
     const ScalingOptions& Options() const { return options; }
     const SourceTracker& SrcTracker() const { return source; }
-    const Magpie::Renderer& Renderer() const { return renderer; }
+    const GMagpie::Renderer& Renderer() const { return renderer; }
     const RECT& RendererRect() const { return rendererRect; }
     bool IsSourceForeground() const { return foreground; }
     void _FinishDestroy() { ++finished; }
@@ -284,7 +284,7 @@ void CursorManager::_RestoreCursorSpeed() noexcept {}
 #undef Sleep
 }
 
-using namespace Magpie;
+using namespace GMagpie;
 using Reason = FrameTrace::CursorRepositionReason;
 using Event = FrameTrace::Event;
 

@@ -1,5 +1,5 @@
 // Run the production photo-gallery logic on CPU only: no window, no device,
-// no Magpie process. Doubles for the pipeline types describe the ratios the real
+// no GMagpie process. Doubles for the pipeline types describe the ratios the real
 // effects use (ACNet/Anime4K double the frame); the assertions are the defects
 // the slideshow had, kept as regressions.
 #include <algorithm>
@@ -26,7 +26,7 @@
 
 namespace fs = std::filesystem;
 
-namespace Magpie {
+namespace GMagpie {
 
 // --- stand-ins for the types the extracted code touches -------------------
 // Only the members the production code reads exist here, so a change in what it
@@ -73,7 +73,7 @@ template<class... Args> std::string format(std::string_view, Args&&...) { return
 
 }
 
-using namespace Magpie;
+using namespace GMagpie;
 
 namespace {
 
@@ -347,32 +347,32 @@ void TestPhotoDeleteIndex() {
 
 void TestGalleryLiteArgument() {
 	// «Лёгкий» экземпляр — только запуск с --gallery и папкой после него: без
-	// глобальных хоткеев и наблюдателя foreground он уживается с основным Magpie
+	// глобальных хоткеев и наблюдателя foreground он уживается с основным GMagpie
 	{
-		wchar_t* argv[] = { (wchar_t*)L"Magpie.exe", (wchar_t*)L"--gallery", (wchar_t*)L"D:\\album" };
+		wchar_t* argv[] = { (wchar_t*)L"GMagpie.exe", (wchar_t*)L"--gallery", (wchar_t*)L"D:\\album" };
 		assert(HasGalleryArgument(3, argv));
 	}
 	{
-		wchar_t* argv[] = { (wchar_t*)L"Magpie.exe", (wchar_t*)L"--interval", (wchar_t*)L"5",
+		wchar_t* argv[] = { (wchar_t*)L"GMagpie.exe", (wchar_t*)L"--interval", (wchar_t*)L"5",
 			(wchar_t*)L"--gallery", (wchar_t*)L"D:\\album", (wchar_t*)L"--mode", (wchar_t*)L"X" };
 		assert(HasGalleryArgument(7, argv));
 	}
 	// одна опция без папки — показ не начнётся, экземпляр остаётся обычным
 	{
-		wchar_t* argv[] = { (wchar_t*)L"Magpie.exe", (wchar_t*)L"--gallery" };
+		wchar_t* argv[] = { (wchar_t*)L"GMagpie.exe", (wchar_t*)L"--gallery" };
 		assert(!HasGalleryArgument(2, argv));
 	}
 	// прочие запуски (в том числе «похожие» написания) — полный экземпляр как раньше
 	{
-		wchar_t* argv[] = { (wchar_t*)L"Magpie.exe", (wchar_t*)L"-t" };
+		wchar_t* argv[] = { (wchar_t*)L"GMagpie.exe", (wchar_t*)L"-t" };
 		assert(!HasGalleryArgument(2, argv));
 	}
 	{
-		wchar_t* argv[] = { (wchar_t*)L"Magpie.exe", (wchar_t*)L"--gallery=D:\\album" };
+		wchar_t* argv[] = { (wchar_t*)L"GMagpie.exe", (wchar_t*)L"--gallery=D:\\album" };
 		assert(!HasGalleryArgument(2, argv));
 	}
 	{
-		wchar_t* argv[] = { (wchar_t*)L"Magpie.exe" };
+		wchar_t* argv[] = { (wchar_t*)L"GMagpie.exe" };
 		assert(!HasGalleryArgument(1, argv));
 	}
 

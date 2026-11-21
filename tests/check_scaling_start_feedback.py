@@ -9,7 +9,7 @@ def read(path):
     return (ROOT / path).read_text(encoding="utf-8-sig")
 
 
-runtime = read("src/Magpie.Core/ScalingRuntime.cpp")
+runtime = read("src/GMagpie.Core/ScalingRuntime.cpp")
 start = runtime.split("bool ScalingRuntime::Start(", 1)[1].split(
     "void ScalingRuntime::ToggleScaling(", 1)[0]
 notice = start.index("options.showToast(hwndSrc, message)")
@@ -21,17 +21,17 @@ assert start.rfind("_commandGeneration.load", 0, notice) > start.index("scalingW
 assert start.index("catch (...)") < initialize, "A failed notice must not abort initialization"
 assert "Sleep(" not in start and "sleep_for(" not in start
 
-service = read("src/Magpie/ScalingService.cpp")
+service = read("src/GMagpie/ScalingService.cpp")
 cancel = service.split("else if (state == ScalingState::Starting)", 1)[1].split(
     "else if (state == ScalingState::Stopping)", 1)[0]
 assert "_scalingRuntime->Stop();" in cancel
 
-toast = read("src/Magpie/ToastPage.cpp")
+toast = read("src/GMagpie/ToastPage.cpp")
 assert "SWP_NOACTIVATE" in toast and "SWP_NO_ACTIVATE_MOVE_SIZE" in toast
 assert "SetForegroundWindow(" not in toast and ".Focus(" not in toast and "SetFocus(" not in toast
 
 for locale in ("en-US", "zh-Hans", "zh-Hant"):
-    resources = ET.fromstring(read(f"src/Magpie/Resources.language-{locale}.resw"))
+    resources = ET.fromstring(read(f"src/GMagpie/Resources.language-{locale}.resw"))
     values = [node.findtext("value") for node in resources.findall("data")
               if node.attrib.get("name") == "Message_ScalingPreparing"]
     assert len(values) == 1 and values[0], f"Missing or duplicate preparation message: {locale}"

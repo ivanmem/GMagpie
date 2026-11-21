@@ -10,7 +10,7 @@ int main() {
 	using namespace winrt;
 	init_apartment(apartment_type::single_threaded);
 	const auto manager = Windows::UI::Xaml::Hosting::WindowsXamlManager::InitializeForCurrentThread();
-	const auto production = make_self<Magpie::implementation::SimpleStackPanel>();
+	const auto production = make_self<GMagpie::implementation::SimpleStackPanel>();
 	const auto panel = production.as<Windows::UI::Xaml::Controls::Panel>();
 	ItemsControl items;
 	items.ItemTemplate(Windows::UI::Xaml::Markup::XamlReader::Load(

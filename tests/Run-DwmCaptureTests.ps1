@@ -16,7 +16,7 @@ Import-Module (Join-Path $dwmVs 'Common7/Tools/Microsoft.VisualStudio.DevShell.d
 Enter-VsDevShell -VsInstallPath $dwmVs -SkipAutomaticLocation -DevCmdArguments '-arch=x64 -host_arch=x64' | Out-Null
 foreach ($dwmCase in @('dwm_capture', 'duplicate_capture_pipeline', 'unbounded-copy', 'unavailable-source')) {
     & cl.exe /nologo /std:c++20 /EHsc /utf-8 /MT /O2 /W4 /WX `
-        "/I$dwmRepo/src/Magpie.Core" "$dwmOutput/$dwmCase.cpp" `
+        "/I$dwmRepo/src/GMagpie.Core" "$dwmOutput/$dwmCase.cpp" `
         "/Fe:$dwmOutput/$dwmCase.exe" "/Fo:$dwmOutput/$dwmCase.obj"
     if ($LASTEXITCODE) { throw "DWM capture CPU test compilation failed: $dwmCase" }
     & "$dwmOutput/$dwmCase.exe"

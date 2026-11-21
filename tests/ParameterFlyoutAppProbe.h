@@ -6,8 +6,8 @@
 #include <winrt/Windows.UI.Xaml.Automation.Peers.h>
 #include <winrt/Windows.UI.Xaml.Automation.Provider.h>
 
-namespace winrt::Magpie::implementation {
-using namespace ::Magpie;
+namespace winrt::GMagpie::implementation {
+using namespace ::GMagpie;
 
 static void CALLBACK ProbeForegroundEvent(HWINEVENTHOOK, DWORD, HWND window, LONG, LONG, DWORD, DWORD) {
     DWORD process = 0; GetWindowThreadProcessId(window, &process);
@@ -44,7 +44,7 @@ static fire_and_forget RunParameterFlyoutAppProbe() {
         co_await resume_after(std::chrono::milliseconds(800));
         co_await dispatcher;
         VisitProbeTree(App::Get().RootPage().as<DependencyObject>(), [](const auto& node) {
-            if (auto expander = node.template try_as<winrt::Magpie::SettingsExpander>()) expander.IsExpanded(true);
+            if (auto expander = node.template try_as<winrt::GMagpie::SettingsExpander>()) expander.IsExpanded(true);
         });
         co_await resume_after(std::chrono::milliseconds(500));
         co_await dispatcher;
@@ -54,7 +54,7 @@ static fire_and_forget RunParameterFlyoutAppProbe() {
             const auto button = node.template try_as<Button>();
             const auto flyout = button ? button.Flyout().template try_as<Controls::Flyout>() : nullptr;
             const auto content = flyout ? flyout.Content().template try_as<ContentControl>() : nullptr;
-            if (content && content.Content().template try_as<winrt::Magpie::EffectParametersViewModel>()) {
+            if (content && content.Content().template try_as<winrt::GMagpie::EffectParametersViewModel>()) {
                 anchor = button; parent = flyout;
             }
         });
@@ -72,7 +72,7 @@ static fire_and_forget RunParameterFlyoutAppProbe() {
         VisitProbeTree(parent.Content().as<DependencyObject>(), [&](const auto& node) {
             const auto combo = node.template try_as<ComboBox>();
             if (!combo) return;
-            const auto parameter = combo.DataContext().template try_as<winrt::Magpie::ScalingModeParameter>();
+            const auto parameter = combo.DataContext().template try_as<winrt::GMagpie::ScalingModeParameter>();
             if (!parameter) return;
             if (get_self<ScalingModeParameter>(parameter)->Index() == 0) category = combo;
             if (get_self<ScalingModeParameter>(parameter)->Index() == 1) quality = combo;
@@ -123,10 +123,10 @@ static fire_and_forget RunParameterFlyoutAppProbe() {
             combo.IsDropDownOpen(false);
             co_await resume_after(std::chrono::milliseconds(150));
             co_await dispatcher;
-            ::Magpie::TraceParameterFlyout("probe.iteration", uintptr_t(get_abi(combo)), i, combo.SelectedIndex());
+            ::GMagpie::TraceParameterFlyout("probe.iteration", uintptr_t(get_abi(combo)), i, combo.SelectedIndex());
             if (!*open) throw std::runtime_error("Parent closed during actual-template selection");
             if (combo.SelectedIndex() != next) throw std::runtime_error("Actual-template selection did not commit");
-            const auto model = combo.DataContext().as<winrt::Magpie::ScalingModeParameter>();
+            const auto model = combo.DataContext().as<winrt::GMagpie::ScalingModeParameter>();
             const auto& values = AppSettings::Get().ScalingModes().at(0).effects.at(0).parameters;
             if (values.at(editCategory ? L"category" : L"strength") != float(model.ChoiceValue()))
                 throw std::runtime_error("Selection and actual configuration disagree");
@@ -154,4 +154,4 @@ static fire_and_forget RunParameterFlyoutAppProbe() {
     PostQuitMessage(passed ? 0 : 1);
 }
 
-} // namespace winrt::Magpie::implementation
+} // namespace winrt::GMagpie::implementation

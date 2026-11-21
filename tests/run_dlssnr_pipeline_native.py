@@ -1,7 +1,7 @@
 """Compile/run the current production NR backend against an existing native build.
 
-This compiles a test executable only; it does not build or deploy Magpie.
-The build root contains obj/ plus build/ (or Magpie-Experimental-x64/).
+This compiles a test executable only; it does not build or deploy GMagpie.
+The build root contains obj/ plus build/ (or GMagpie-Experimental-x64/).
 """
 from pathlib import Path
 import argparse
@@ -40,11 +40,11 @@ if sum((options.performance_only, options.alternating_only, options.pipeline_onl
     parser.error("Choose only one native test suite selector.")
 repo = Path(__file__).resolve().parents[1]
 root = options.build_root.resolve()
-runtime = next((root / folder for folder in ("build", "Magpie-Experimental-x64", "runtime")
+runtime = next((root / folder for folder in ("build", "GMagpie-Experimental-x64", "runtime")
                 if (root / folder / "nvngx_dlssnr.dll").is_file()), None)
 if runtime is None:
     parser.error("The existing build must contain the DLSSNR runtime.")
-core_library = options.core_library.resolve() if options.core_library else runtime / "Magpie.Core.lib"
+core_library = options.core_library.resolve() if options.core_library else runtime / "GMagpie.Core.lib"
 if not core_library.is_file():
     parser.error("Core library is missing; use --core-library with the matching build's static library.")
 output = options.output.resolve() if options.output else root / "diagnostics/dlssnr-pipeline"
@@ -52,7 +52,7 @@ if output == runtime or runtime in output.parents:
     parser.error("Test output must be outside the deployment/runtime directory.")
 output.mkdir(parents=True, exist_ok=True)
 # The signed NGX snippet resolves beside the test executable. Copy only runtime
-# binaries, never the user's config/log/cache or the installed Magpie executable.
+# binaries, never the user's config/log/cache or the installed GMagpie executable.
 for source in runtime.glob("*.dll"):
     shutil.copy2(source, output / source.name)
 
@@ -77,14 +77,14 @@ def project_log(project, name):
     return next((root / folder / relative for folder in ("obj", "obj/x64/Release")
                  if (root / folder / relative).is_file()), root / "obj" / relative)
 
-clargs = command_args(tlog(project_log("Magpie.Core", "CL.command.1.tlog")))
+clargs = command_args(tlog(project_log("GMagpie.Core", "CL.command.1.tlog")))
 includes = list(dict.fromkeys(arg for arg in clargs if arg.lower().startswith("/i")))
 definitions = list(dict.fromkeys(clargs[i + 1] for i, arg in enumerate(clargs)
                                  if arg == "/D" and clargs[i + 1] != "NDEBUG"))
 defs = [item for value in definitions for item in ("/D", value)]
 if options.timing:
     defs += ["/D", "MP_ENABLE_NATIVE_BACKEND_TIMING"]
-linkargs = command_args(tlog(project_log("Magpie", "link.command.1.tlog")))
+linkargs = command_args(tlog(project_log("GMagpie", "link.command.1.tlog")))
 libs = list(dict.fromkeys(arg for arg in linkargs
                          if arg.lower().endswith(".lib") or arg.lower().startswith("/libpath:")))
 libs = [arg for arg in libs if Path(arg).name.lower() not in ("magpie.lib", "magpie.core.lib")]
@@ -92,19 +92,19 @@ libs.append(str(core_library))
 
 exe = output / "DLSSNRPipelineTests.exe"
 command = ["cl.exe", "/nologo", "/std:c++20", "/EHsc", "/utf-8", "/MT", "/O2", "/bigobj",
-           "/I" + str(repo / "src/Magpie.Core"), "/I" + str(repo / "src/Magpie.Core/include")]
+           "/I" + str(repo / "src/GMagpie.Core"), "/I" + str(repo / "src/GMagpie.Core/include")]
 command += includes + defs + [str(repo / "tests/DLSSNRPipelineTests.cpp"),
                               "/Fe:" + str(exe), "/Fo:" + str(exe.with_suffix(".obj")), "/link", "/LTCG"]
 command += libs + ["d3d11.lib", "d3dcompiler.lib", "dxgi.lib", "d3d12.lib", "WindowsApp.lib"]
 print("Compiling the native test against current production sources.", flush=True)
-result = subprocess.run(command, cwd=repo / "src/Magpie.Core")
-source_files = ["src/Magpie.Core/" + name for name in
+result = subprocess.run(command, cwd=repo / "src/GMagpie.Core")
+source_files = ["src/GMagpie.Core/" + name for name in
                 ("DLSSNRFilter.cpp", "DLSSNRFilter.h", "DLSSNRPerformance.inl", "DLSSNRPerformanceShader.h",
                  "DLSSNRMultiPass.h", "DLSSNRGpuTimer.h", "DLSSNRSparse.h", "DLSSNRSparse.inl",
                  "DLSSNRSparseShader.h", "DLSSNRColorShader.h", "DLSSNRDetailShader.h", "include/DLSSNREnhancementPool.h",
                  "include/DLSSNRPerformanceParameters.h", "include/DLSSNRPerformanceState.h",
                  "include/DLSSNRAdaptiveResolution.h")]
-source_files += ["src/Magpie.Core/include/DLSSNRSubmissionWorker.h"]
+source_files += ["src/GMagpie.Core/include/DLSSNRSubmissionWorker.h"]
 test_files = ["tests/" + name for name in ("DLSSNRPipelineTests.cpp", "DLSSNRPerformanceNativeCases.inl",
                                            "DLSSNRBeta3NativeCases.inl", "DLSSNRGpuFusionNativeCases.inl",
                                            "DLSSNRSubmissionWorkerNativeCases.inl",

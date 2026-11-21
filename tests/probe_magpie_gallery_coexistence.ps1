@@ -1,11 +1,11 @@
-# Два Magpie рядом: обычный экземпляр (хоткеи, трей) + лёгкий показ с --gallery.
+# Два GMagpie рядом: обычный экземпляр (хоткеи, трей) + лёгкий показ с --gallery.
 # Ожидание: оба живут, показ стартует, повторный --gallery блокируется только
 # внутри своей группы. Красный на сборке без лёгкого режима: вторая копия выходит
 # сразу («已经有一个实例正在运行»), окна показа нет.
 $ErrorActionPreference = 'Continue'
 [Console]::OutputEncoding = [System.Text.Encoding]::UTF8
 $repo = Split-Path -Parent $PSScriptRoot
-$exe = Join-Path $repo "bin\x64\Release\Magpie.exe"
+$exe = Join-Path $repo "bin\x64\Release\GMagpie.exe"
 if (-not (Test-Path $exe)) { Write-Output "НЕТ СБОРКИ $exe"; exit 2 }
 
 Add-Type -Language CSharp -TypeDefinition @'
@@ -26,7 +26,7 @@ $g = [System.Drawing.Graphics]::FromImage($bmp); $g.Clear([System.Drawing.Color]
 $png = (Join-Path -Path $album -ChildPath "one.png")
 $bmp.Save($png, [System.Drawing.Imaging.ImageFormat]::Png); $bmp.Dispose()
 
-Get-Process Magpie -ErrorAction SilentlyContinue | Where-Object { try { $_.Path -like "$repo\bin\*" } catch { $false } } | Stop-Process -Force
+Get-Process GMagpie -ErrorAction SilentlyContinue | Where-Object { try { $_.Path -like "$repo\bin\*" } catch { $false } } | Stop-Process -Force
 Start-Sleep -Seconds 2
 
 # 1) обычный экземпляр — сразу в трей (-t), экран не трогает
@@ -58,7 +58,7 @@ Start-Sleep -Seconds 1
 foreach ($p in @($normal, $gallery, $dup)) {
     if ($p -and -not $p.HasExited) { Stop-Process -Id $p.Id -Force -ErrorAction SilentlyContinue }
 }
-Get-Process Magpie -ErrorAction SilentlyContinue | Where-Object { try { $_.Path -like "$repo\bin\*" } catch { $false } } | Stop-Process -Force
+Get-Process GMagpie -ErrorAction SilentlyContinue | Where-Object { try { $_.Path -like "$repo\bin\*" } catch { $false } } | Stop-Process -Force
 
 Write-Output '--- итог ---'
 $fail = @()

@@ -8,14 +8,14 @@
 #include <iostream>
 #include <filesystem>
 #include <chrono>
-#include "../src/Magpie.Core/XeSSFGTiming.h"
-#include "../src/Magpie.Core/XeSSFGCompatibility.h"
-#include "../src/Magpie.Core/PresentationFrameRate.h"
+#include "../src/GMagpie.Core/XeSSFGTiming.h"
+#include "../src/GMagpie.Core/XeSSFGCompatibility.h"
+#include "../src/GMagpie.Core/PresentationFrameRate.h"
 #pragma comment(lib,"d3d12.lib")
 #pragma comment(lib,"dxgi.lib")
 #pragma comment(lib,"user32.lib")
 using Microsoft::WRL::ComPtr;
-using namespace Magpie::XeSSFGCompatibility;
+using namespace GMagpie::XeSSFGCompatibility;
 #define API(module, name) auto name = reinterpret_cast<decltype(&::name)>(GetProcAddress(module, #name)); assert(name)
 int wmain(int argc,wchar_t** argv) {
     assert(argc==2);
@@ -68,7 +68,7 @@ int wmain(int argc,wchar_t** argv) {
         assert(lease.ObservesOutput());
         assert(lease.Patched() == (multiplier > 2));
         Pacing::outputProfiler.SetActive(true);
-        Magpie::PresentationFrameRate outputRate;
+        GMagpie::PresentationFrameRate outputRate;
         outputRate.StartProfile();
         size_t observedIntervals = 0;
         auto activeSince=std::chrono::steady_clock::now();
@@ -157,7 +157,7 @@ int wmain(int argc,wchar_t** argv) {
             device->CreateRenderTargetView(backBuffers[i].Get(),nullptr,rtv);
         }
         uint64_t successfulFrames=0,fullBursts=0,measuredSubmissions=0,timingResets=0;
-        Magpie::XeSSFGTiming timing;
+        GMagpie::XeSSFGTiming timing;
         double previousExtraWaitMs=0;
         for(uint32_t frame=1;frame<=60;++frame) {
             if(frame==21)Pacing::outputProfiler.SetActive(false);
@@ -198,7 +198,7 @@ int wmain(int argc,wchar_t** argv) {
                 // Exercise the production timing path with the real metadata
                 // contract: session stays constant, frame ID/timestamp advance.
                 // Also simulate a capture restart and a resource generation change.
-                const Magpie::XeSSFGSourceSample source{frame,frame>20?2u:1u,frame>40?2u:1u,
+                const GMagpie::XeSSFGSourceSample source{frame,frame>20?2u:1u,frame>40?2u:1u,
                     1000000 + static_cast<int64_t>(frame)*166667};
                 const auto estimate=timing.Submit(source,
                     std::chrono::duration<double,std::milli>(std::chrono::steady_clock::now().time_since_epoch()).count(),

@@ -1,5 +1,5 @@
 #Requires -Version 7.0
-param([string]$OutputDirectory = (Join-Path $env:TEMP ('Magpie-FSR3FG-motion-' + [guid]::NewGuid())))
+param([string]$OutputDirectory = (Join-Path $env:TEMP ('GMagpie-FSR3FG-motion-' + [guid]::NewGuid())))
 $ErrorActionPreference = 'Stop'
 # Compile/run only in the later build session, from an x64 VS developer shell.
 # WARP validates the resource contract/remap, not the FSR SDK or real displays.

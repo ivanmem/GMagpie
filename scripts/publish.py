@@ -67,7 +67,7 @@ msbuildProperties = (
     f"CommitId={commitId}{versionNumProps}{versionStrProp}"
 )
 p = subprocess.run(
-    [msbuildPath, "Magpie.slnx", "-m", "-t:Rebuild", "-restore", msbuildProperties]
+    [msbuildPath, "GMagpie.slnx", "-m", "-t:Rebuild", "-restore", msbuildProperties]
 )
 if p.returncode != 0:
     raise Exception("编译失败")

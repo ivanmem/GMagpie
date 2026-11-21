@@ -12,7 +12,7 @@ Enter-VsDevShell -VsInstallPath $vs -SkipAutomaticLocation -DevCmdArguments '-ar
 $rapid = Get-ChildItem -LiteralPath (Join-Path $env:USERPROFILE '.conan2/p') -Directory -Filter 'rapid*' |
     Where-Object { Test-Path -LiteralPath (Join-Path $_.FullName 'p/include/rapidjson/document.h') } | Select-Object -First 1
 if (!$rapid) { throw 'Restore rapidjson before running profile frame-sync tests.' }
-& cl.exe /nologo /std:c++20 /EHsc /utf-8 /MT /O2 "/I$repo/src/Magpie" "/I$repo/src/Magpie.Core/include" "/I$($rapid.FullName)/p/include" `
+& cl.exe /nologo /std:c++20 /EHsc /utf-8 /MT /O2 "/I$repo/src/GMagpie" "/I$repo/src/GMagpie.Core/include" "/I$($rapid.FullName)/p/include" `
     (Join-Path $PSScriptRoot 'ProfileFrameSyncTests.cpp') "/Fe:$OutputDirectory/ProfileFrameSyncTests.exe" "/Fo:$OutputDirectory/ProfileFrameSyncTests.obj"
 if ($LASTEXITCODE) { throw 'Profile frame-sync compilation failed.' }
 & (Join-Path $OutputDirectory 'ProfileFrameSyncTests.exe')

@@ -1,4 +1,4 @@
-# Magpie Experimental v0.6.11
+# GMagpie Experimental v0.6.11
 
 本版新增可调整大小的性能分析浮窗和捕获／输出图表，完善 XeSS FG 帧间隔显示，加入 DLSS 模型预设与 DLSSNR 抗闪烁响应时间，并改进暂停截图和文件命名。
 
@@ -45,20 +45,20 @@
 
 ## 应该下载哪个文件？
 
-首次安装或从任意旧版本、本地 Beta 升级，统一下载完整主包 **`Magpie-Experimental-x64.zip`**。
+首次安装或从任意旧版本、本地 Beta 升级，统一下载完整主包 **`GMagpie-Experimental-x64.zip`**。
 
-将 ZIP 完整解压到新目录，运行其中的 `Magpie.exe`。升级前先备份设置并从托盘完全退出旧版，保留旧程序和配置备份供回退。
+将 ZIP 完整解压到新目录，运行其中的 `GMagpie.exe`。升级前先备份设置并从托盘完全退出旧版，保留旧程序和配置备份供回退。
 
 ### 可选附件
 
 | 附件                     | 用途                                                                                                                                                                                  |
 | ------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `DLSSNR-DLL-Options.zip` | 提供 RTX 50 使用的 NVIDIA 原版 310.9.16，以及 RTX 20／30／40 使用的社区兼容版。主包已包含社区兼容版。切换前退出 Magpie 并备份原 DLL，将所选 `nvngx_dlssnr.dll` 放到 `Magpie.exe` 旁。 |
+| `DLSSNR-DLL-Options.zip` | 提供 RTX 50 使用的 NVIDIA 原版 310.9.16，以及 RTX 20／30／40 使用的社区兼容版。主包已包含社区兼容版。切换前退出 GMagpie 并备份原 DLL，将所选 `nvngx_dlssnr.dll` 放到 `GMagpie.exe` 旁。 |
 | `NGX_OTA_Switch.bat`     | 管理 NVIDIA NGX OTA 更新，需要管理员权限；选择 Restore default 恢复默认设置。常规安装无需使用。                                                                                       |
 
 ---
 
-# Magpie Experimental v0.6.11
+# GMagpie Experimental v0.6.11
 
 This release adds a resizable performance profiler with capture/output charts, improves XeSS FG interval reporting, introduces DLSS model presets and DLSSNR anti-flicker response time, and improves paused screenshots and filenames.
 
@@ -105,13 +105,13 @@ If switching between DLSS and XeSS effect chains crashes while RTSS is running, 
 
 ## Which file should I download?
 
-For a first installation or an upgrade from any older version or local Beta, download the complete **`Magpie-Experimental-x64.zip`**.
+For a first installation or an upgrade from any older version or local Beta, download the complete **`GMagpie-Experimental-x64.zip`**.
 
-Extract the entire ZIP into a new folder and run `Magpie.exe`. Before upgrading, back up settings and fully exit the old version from the tray. Keep the previous program and configuration backup for rollback.
+Extract the entire ZIP into a new folder and run `GMagpie.exe`. Before upgrading, back up settings and fully exit the old version from the tray. Keep the previous program and configuration backup for rollback.
 
 ### Optional assets
 
 | Asset                    | Purpose                                                                                                                                                                                                                                                              |
 | ------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `DLSSNR-DLL-Options.zip` | Contains NVIDIA original 310.9.16 for RTX 50 and the community version for RTX 20 / 30 / 40. The main package already includes the community version. To switch, exit Magpie, back up the current DLL and place the selected `nvngx_dlssnr.dll` beside `Magpie.exe`. |
+| `DLSSNR-DLL-Options.zip` | Contains NVIDIA original 310.9.16 for RTX 50 and the community version for RTX 20 / 30 / 40. The main package already includes the community version. To switch, exit GMagpie, back up the current DLL and place the selected `nvngx_dlssnr.dll` beside `GMagpie.exe`. |
 | `NGX_OTA_Switch.bat`     | Manage NVIDIA NGX OTA updates with administrator privileges. Choose Restore default to restore the default setting. Normal installation does not require this tool.                                                                                                  |

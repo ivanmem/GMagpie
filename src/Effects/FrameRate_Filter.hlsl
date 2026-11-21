@@ -1,4 +1,4 @@
-// Limits Magpie's capture-processing rate through the native frame limiter.
+// Limits GMagpie's capture-processing rate through the native frame limiter.
 // The shader itself is a same-resolution pass-through.
 
 //!MAGPIE EFFECT

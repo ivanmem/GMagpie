@@ -1,4 +1,4 @@
-# Magpie Experimental v0.6.7 Beta 3
+# GMagpie Experimental v0.6.7 Beta 3
 
 保留 Beta 2 的全部功能，本次更新：
 
@@ -9,7 +9,7 @@
 
 ---
 
-# Magpie Experimental v0.6.7 Beta 3
+# GMagpie Experimental v0.6.7 Beta 3
 
 Includes all Beta 2 features, with the following updates:
 

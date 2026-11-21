@@ -23,7 +23,7 @@
 #include <string_view>
 #include <vector>
 
-namespace Magpie::RecoveryScene {
+namespace GMagpie::RecoveryScene {
 
 enum class Kind : uint32_t { Static = 0, Occlusion = 1, Lighting = 2, Cut = 3, Ui = 4 };
 
@@ -380,4 +380,4 @@ uint3 SceneColorBytes(uint kind,uint frame,uint width,uint height,uint warmup,
 }
 )RECOVERY_SCENE";
 
-} // namespace Magpie::RecoveryScene
+} // namespace GMagpie::RecoveryScene

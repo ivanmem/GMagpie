@@ -4,13 +4,13 @@
 #include <map>
 #include <string>
 #include <vector>
-#include "../src/Magpie.Core/include/XeSSFGParameters.h"
-#include "../src/Magpie.Core/include/OpticalFlowDefaults.h"
-#include "../src/Magpie.Core/XeSSFGTiming.h"
-#include "../src/Magpie.Core/XeSSFGCompatibility.h"
+#include "../src/GMagpie.Core/include/XeSSFGParameters.h"
+#include "../src/GMagpie.Core/include/OpticalFlowDefaults.h"
+#include "../src/GMagpie.Core/XeSSFGTiming.h"
+#include "../src/GMagpie.Core/XeSSFGCompatibility.h"
 
-using namespace Magpie;
-using namespace Magpie::XeSSFGCompatibility;
+using namespace GMagpie;
+using namespace GMagpie::XeSSFGCompatibility;
 struct Effect { std::wstring name; std::map<std::wstring, float> parameters; int scale = 7; };
 struct Mode { std::wstring name; std::vector<Effect> effects; };
 

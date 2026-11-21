@@ -10,7 +10,7 @@ if (!$CachedRepoDirectory) {
     $CachedRepoDirectory = Split-Path ([IO.Path]::GetFullPath($common)) -Parent
 }
 $workspace = Split-Path $CachedRepoDirectory -Parent
-if (!$RuntimeDirectory) { $RuntimeDirectory = Join-Path $workspace 'release/v0.6.9-beta1/Magpie-Experimental-x64' }
+if (!$RuntimeDirectory) { $RuntimeDirectory = Join-Path $workspace 'release/v0.6.9-beta1/GMagpie-Experimental-x64' }
 if (!$IntermediateRoot) { $IntermediateRoot = Join-Path $workspace 'release/v0.6.9-beta1/obj' }
 if (!$OutputDirectory) { $OutputDirectory = Join-Path $workspace '.tools/069-effect-groups-page/tests' }
 New-Item -ItemType Directory -Path $OutputDirectory -Force | Out-Null
@@ -33,27 +33,27 @@ $manifest = Join-Path $OutputDirectory 'WinUI.manifest'
 & mt.exe -nologo "-winmd:$winmd" '-dll:Microsoft.UI.Xaml.dll' "-out:$manifest"
 if ($LASTEXITCODE) { throw 'Generate WinUI test activation manifest failed' }
 # Read cached dependencies only. The test has its own Application, with no
-# Magpie App.xbf/config/startup, and writes no product runtime/intermediates.
+# GMagpie App.xbf/config/startup, and writes no product runtime/intermediates.
 Copy-Item -LiteralPath (Join-Path $RuntimeDirectory 'Microsoft.UI.Xaml.dll') -Destination $OutputDirectory -Force
 $winuiPri = Join-Path $IntermediateRoot 'x64/Release/x64/WinUI/Microsoft.UI.Xaml.pri'
 if (!(Test-Path -LiteralPath $winuiPri)) { $winuiPri = Join-Path $IntermediateRoot 'x64/WinUI/Microsoft.UI.Xaml.pri' }
 Copy-Item -LiteralPath $winuiPri -Destination (Join-Path $OutputDirectory 'resources.pri') -Force
-$cachedGenerated = Join-Path $IntermediateRoot 'x64/Release/Magpie/Generated Files'
+$cachedGenerated = Join-Path $IntermediateRoot 'x64/Release/GMagpie/Generated Files'
 if (!$GeneratedFilesDirectory) { $GeneratedFilesDirectory = $cachedGenerated }
 $generated = [IO.Path]::GetFullPath($GeneratedFilesDirectory)
-if (!(Test-Path -LiteralPath (Join-Path $generated 'winrt/Magpie.h'))) {
-    throw 'Current Magpie C++/WinRT projection is missing; specify GeneratedFilesDirectory.'
+if (!(Test-Path -LiteralPath (Join-Path $generated 'winrt/GMagpie.h'))) {
+    throw 'Current GMagpie C++/WinRT projection is missing; specify GeneratedFilesDirectory.'
 }
-$includes = @("/I$repo/src/Magpie", "/I$repo/src/Shared", "/I$repo/src/Magpie.Core/include", "/I$OutputDirectory", "/I$generated",
+$includes = @("/I$repo/src/GMagpie", "/I$repo/src/Shared", "/I$repo/src/GMagpie.Core/include", "/I$OutputDirectory", "/I$generated",
     "/I$cachedGenerated",
     "/I$CachedRepoDirectory/packages/Microsoft.Windows.ImplementationLibrary.1.0.260126.7/include")
 # Reuse the cached dependency include paths, including fmt, without rebuilding
 # or overwriting the application's PCH, generated XAML files or EXE.
-$commands = Get-Content -LiteralPath (Join-Path $IntermediateRoot 'x64/Release/Magpie/Magpie.tlog/CL.command.1.tlog') -Raw
+$commands = Get-Content -LiteralPath (Join-Path $IntermediateRoot 'x64/Release/GMagpie/GMagpie.tlog/CL.command.1.tlog') -Raw
 foreach ($match in [regex]::Matches($commands, '(?i)/(?:external:)?I(?:"(?<quoted>[^"]+)"|(?<bare>[^\s]+))')) {
     $include = $match.Groups['quoted'].Value
     if (!$include) { $include = $match.Groups['bare'].Value }
-    if (![IO.Path]::IsPathRooted($include)) { $include = Join-Path (Join-Path $CachedRepoDirectory 'src/Magpie') $include }
+    if (![IO.Path]::IsPathRooted($include)) { $include = Join-Path (Join-Path $CachedRepoDirectory 'src/GMagpie') $include }
     if ($include -notmatch '(?i)\\src\\magpie\\?$|generated files|beta1-fix\d-work') { $includes += "/I$include" }
 }
 $includes = @($includes | Select-Object -Unique)
@@ -67,17 +67,17 @@ if ($SyntaxOnly) {
         $syntaxDefines += "/D$define"
     }
     $syntaxDefines = @($syntaxDefines | Select-Object -Unique)
-    & cl.exe /nologo /Zs /std:c++20 /EHsc /utf-8 /bigobj /W4 /WX @syntaxDefines @includes (Join-Path $repo 'src/Magpie/ScalingModesPage.cpp')
+    & cl.exe /nologo /Zs /std:c++20 /EHsc /utf-8 /bigobj /W4 /WX @syntaxDefines @includes (Join-Path $repo 'src/GMagpie/ScalingModesPage.cpp')
     if ($LASTEXITCODE) { throw 'Changed page C++ syntax check failed' }
     Write-Output 'PASS changed page C++ syntax: MSVC /W4 /WX, cached generated headers; no application build or link.'
     return
 }
 if ($SinglePageOnly) {
-    $sources = @((Join-Path $PSScriptRoot 'ParameterSinglePageLayoutTests.cpp'), (Join-Path $repo 'src/Magpie/SimpleStackPanel.cpp'), (Join-Path $repo 'src/Magpie/WrapPanel.cpp'), (Join-Path $repo 'src/Shared/SmallVector.cpp'))
+    $sources = @((Join-Path $PSScriptRoot 'ParameterSinglePageLayoutTests.cpp'), (Join-Path $repo 'src/GMagpie/SimpleStackPanel.cpp'), (Join-Path $repo 'src/GMagpie/WrapPanel.cpp'), (Join-Path $repo 'src/Shared/SmallVector.cpp'))
 } elseif ($PairedCheckboxesOnly) {
-    $sources = @((Join-Path $PSScriptRoot 'PairedCheckboxLayoutTests.cpp'), (Join-Path $repo 'src/Magpie/SimpleStackPanel.cpp'))
+    $sources = @((Join-Path $PSScriptRoot 'PairedCheckboxLayoutTests.cpp'), (Join-Path $repo 'src/GMagpie/SimpleStackPanel.cpp'))
 } else {
-    $sources = @((Join-Path $PSScriptRoot 'EffectGroupsPageLayoutTests.cpp'), (Join-Path $repo 'src/Magpie/SimpleStackPanel.cpp'))
+    $sources = @((Join-Path $PSScriptRoot 'EffectGroupsPageLayoutTests.cpp'), (Join-Path $repo 'src/GMagpie/SimpleStackPanel.cpp'))
 }
 $exe = Join-Path $OutputDirectory $(if ($SinglePageOnly) { 'ParameterSinglePageLayoutTests.exe' } elseif ($PairedCheckboxesOnly) { 'PairedCheckboxLayoutTests.exe' } else { 'EffectGroupsPageLayoutTests.exe' })
 & cl.exe /nologo /std:c++20 /EHsc /utf-8 /MT /O2 /bigobj @defines @includes @sources "/Fe:$exe" "/Fo:$OutputDirectory/" `
@@ -97,7 +97,7 @@ if ($PairedCheckboxesOnly -or $SinglePageOnly) { return }
 # Existing hidden-presenter regression guards the shared panel behavior.
 $containers = Join-Path $OutputDirectory 'Beta1Fix2ContainerTests.exe'
 & cl.exe /nologo /std:c++20 /EHsc /utf-8 /MT /O2 /bigobj @defines @includes `
-    (Join-Path $PSScriptRoot 'Beta1Fix2ContainerTests.cpp') (Join-Path $repo 'src/Magpie/SimpleStackPanel.cpp') `
+    (Join-Path $PSScriptRoot 'Beta1Fix2ContainerTests.cpp') (Join-Path $repo 'src/GMagpie/SimpleStackPanel.cpp') `
     "/Fe:$containers" "/Fo:$OutputDirectory/" /link WindowsApp.lib user32.lib /MANIFEST:EMBED "/MANIFESTINPUT:$PSScriptRoot/EffectChoiceItemsTests.manifest"
 if ($LASTEXITCODE) { throw 'Compile existing container regression failed' }
 & $containers

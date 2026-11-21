@@ -4,7 +4,7 @@ labels: bug
 body:
 - type: input
   attributes:
-    label: Magpie version 程序版本
+    label: GMagpie version 程序版本
   validations:
     required: true
 - type: input

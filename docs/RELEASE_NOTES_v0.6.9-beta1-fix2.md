@@ -1,4 +1,4 @@
-# Magpie 0.6.9 Beta1 fix2
+# GMagpie 0.6.9 Beta1 fix2
 
 本轮根据 Beta1 使用反馈调整参数面板、配置保存和工具栏交互。
 
@@ -10,6 +10,6 @@
 - 移除工具栏拖动按钮。按住空白或 FPS 区域可直接拖动，功能按钮保持点击操作；FPS 按整个工具栏中心定位。
 - 延续顶部／底部居中位置左右各 12 实际像素吸附，拖动吸附期间显示中央青色 2 实际像素竖线。
 
-部署目录沿用 `release/v0.6.9-beta1/Magpie-Experimental-x64/`。升级前保留完整旧包和最新用户配置；完整原生鼠标、多显示器及实际捕获画面的验收状态见本轮实施记录。
+部署目录沿用 `release/v0.6.9-beta1/GMagpie-Experimental-x64/`。升级前保留完整旧包和最新用户配置；完整原生鼠标、多显示器及实际捕获画面的验收状态见本轮实施记录。
 
 关联：[fix2 TODO](experimental/todos/20261001-v0.6.9-beta1-fix2-TODO.md)、[参数文案 Review](experimental/reviews/20261001-v0.6.9-beta1-fix1-dlssnr-parameter-copy-review.md)、[帧同步说明](FRAME_SYNC_GUIDE.md)。

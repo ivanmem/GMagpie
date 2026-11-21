@@ -9,7 +9,7 @@ if ($start -lt 0 -or $end -lt 0) { throw 'Feature preflight boundary not found' 
 # Execute only the production feature resolution block; no build/staging entry.
 $resolve = [scriptblock]::Create($build.Substring($start, $end - $start) + "`nreturn ,`$featureOptions")
 $tempBase = [IO.Path]::GetFullPath([IO.Path]::GetTempPath())
-$fixtureRoot = Join-Path $tempBase ('Magpie-FG-preflight-' + [guid]::NewGuid())
+$fixtureRoot = Join-Path $tempBase ('GMagpie-FG-preflight-' + [guid]::NewGuid())
 $sourceRoot = $fixtureRoot
 $Platform = 'x64'
 $checks = 0
@@ -55,7 +55,7 @@ try {
     try { & $validate -PackageDirectory $package | Out-Null } catch { $rejected = $_ -match 'no compiled AMDOF capability marker' }
     if (!$rejected) { throw 'Package without provider capability was accepted' }; ++$checks
     # This is data for testing the capability scan; it is never executed.
-    [IO.File]::WriteAllText((Join-Path $package 'Magpie.exe'), 'Synthetic AMDOF capability v1: FSR3-FG required input')
+    [IO.File]::WriteAllText((Join-Path $package 'GMagpie.exe'), 'Synthetic AMDOF capability v1: FSR3-FG required input')
     & $validate -PackageDirectory $package | Out-Null
     ++$checks
     [IO.File]::AppendAllText($markerPath, "`n//!OPTION 0 None`n")
@@ -66,7 +66,7 @@ try {
 } finally {
     if (Test-Path -LiteralPath $fixtureRoot) {
         $resolved = (Resolve-Path -LiteralPath $fixtureRoot).Path
-        if (![IO.Path]::GetFullPath($resolved).StartsWith((Join-Path $tempBase 'Magpie-FG-preflight-'), [StringComparison]::OrdinalIgnoreCase)) {
+        if (![IO.Path]::GetFullPath($resolved).StartsWith((Join-Path $tempBase 'GMagpie-FG-preflight-'), [StringComparison]::OrdinalIgnoreCase)) {
             throw 'Refusing to remove fixture outside its expected temporary root'
         }
         Remove-Item -LiteralPath $resolved -Recurse -Force

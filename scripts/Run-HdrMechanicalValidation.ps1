@@ -29,8 +29,8 @@ function Assert-Contains {
 }
 
 $root = Split-Path -Parent $PSScriptRoot
-$core = Join-Path $root 'src\Magpie.Core'
-$app = Join-Path $root 'src\Magpie'
+$core = Join-Path $root 'src\GMagpie.Core'
+$app = Join-Path $root 'src\GMagpie'
 
 Assert-Contains (Join-Path $core 'include\ScalingOptions.h') @(
     'EnableHdrCompatibility = 1 << 23',

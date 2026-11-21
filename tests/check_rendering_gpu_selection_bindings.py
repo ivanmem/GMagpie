@@ -7,8 +7,8 @@ def read(path):
     return (repo / path).read_text(encoding='utf-8-sig')
 
 x = '{http://schemas.microsoft.com/winfx/2006/xaml}'
-local = '{using:Magpie}'
-root = ET.fromstring(read('src/Magpie/ProfilePage.xaml'))
+local = '{using:GMagpie}'
+root = ET.fromstring(read('src/GMagpie/ProfilePage.xaml'))
 general = next(n for n in root.iter() if n.get(x + 'Uid') == 'Profile_General')
 performance = next(n for n in root.iter() if n.get(x + 'Uid') == 'Profile_Performance')
 children = list(performance)
@@ -26,10 +26,10 @@ combo = next(n for n in card if n.tag.endswith('ComboBox'))
 assert combo.get('SelectedItem') == '{x:Bind ViewModel.GraphicsCard, Mode=TwoWay}'
 assert combo.get('SelectedIndex') is None
 assert combo.get('IsEnabled') == '{x:Bind ViewModel.IsGraphicsCardSelectionEnabled, Mode=OneWay}'
-vm = read('src/Magpie/ProfileViewModel.cpp')
+vm = read('src/GMagpie/ProfileViewModel.cpp')
 assert '_BuildMonitorOptions();\n\t_BuildGraphicsCards();' in vm
 assert 'IsShowGraphicsCardSettingsCard' not in vm
-idl = read('src/Magpie/ProfileViewModel.idl')
+idl = read('src/GMagpie/ProfileViewModel.idl')
 assert 'IInspectable GraphicsCard;' in idl
 keys = ('Profile_General_GraphicsCard.Header',
         'Profile_General_GraphicsCard_Input.[using:Windows.UI.Xaml.Automation]AutomationProperties.Name',
@@ -37,7 +37,7 @@ keys = ('Profile_General_GraphicsCard.Header',
         'Profile_General_GraphicsCard_Unavailable', 'Profile_General_NoGraphicsCard.Title',
         'Profile_General_NoGraphicsCard.Message', 'Profile_General_GraphicsCardUnavailable.Title',
         'Profile_General_GraphicsCardUnavailable.Message')
-files = list((repo / 'src/Magpie').glob('Resources.language-*.resw'))
+files = list((repo / 'src/GMagpie').glob('Resources.language-*.resw'))
 for path in files:
     data = ET.parse(path).getroot().findall('data')
     resources = {n.get('name'): n.findtext('value') for n in data}

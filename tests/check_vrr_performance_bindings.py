@@ -7,11 +7,11 @@ repo = Path(__file__).resolve().parents[1]
 def read(path):
     return (repo / path).read_text(encoding="utf-8-sig")
 
-controller = read("src/Magpie.Core/NvidiaForegroundCompatibility.cpp")
-state = read("src/Magpie.Core/ForegroundCompatibilityState.h")
-performance = read("src/Magpie.Core/VRRPerformance.h")
-renderer = read("src/Magpie.Core/Renderer.cpp")
-base = read("src/Magpie.Core/PresenterBase.cpp")
+controller = read("src/GMagpie.Core/NvidiaForegroundCompatibility.cpp")
+state = read("src/GMagpie.Core/ForegroundCompatibilityState.h")
+performance = read("src/GMagpie.Core/VRRPerformance.h")
+renderer = read("src/GMagpie.Core/Renderer.cpp")
+base = read("src/GMagpie.Core/PresenterBase.cpp")
 
 # Instrumentation is an explicit session option, also usable with VRR disabled.
 assert 'L"MAGPIE_VRR_PERFORMANCE"' in controller and "performance[0] == L'1'" in controller
@@ -48,7 +48,7 @@ assert "ForegroundQuerySnapshot" in state and "ReadQuery(" in state
 
 ns = "{http://schemas.microsoft.com/developer/msbuild/2003}"
 for suffix in ("vcxproj", "vcxproj.filters"):
-    project = ET.fromstring(read("src/Magpie.Core/Magpie.Core." + suffix))
+    project = ET.fromstring(read("src/GMagpie.Core/GMagpie.Core." + suffix))
     for name in ("VRRPerformance.h", "VRROutputProbe.h"):
         assert sum(node.get("Include") == name for node in project.iter(ns + "ClInclude")) == 1
 print("VRR performance diagnostic/project/source boundaries passed (no C++ or hardware proof).")

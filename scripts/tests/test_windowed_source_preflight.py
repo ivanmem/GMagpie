@@ -3,8 +3,8 @@ from pathlib import Path
 import sys
 
 root = Path(__file__).resolve().parents[2]
-tracker = (root / 'src/Magpie.Core/SrcTracker.cpp').read_text(encoding='utf-8-sig')
-window = (root / 'src/Magpie.Core/ScalingWindow.cpp').read_text(encoding='utf-8-sig')
+tracker = (root / 'src/GMagpie.Core/SrcTracker.cpp').read_text(encoding='utf-8-sig')
+window = (root / 'src/GMagpie.Core/ScalingWindow.cpp').read_text(encoding='utf-8-sig')
 
 
 def block(text, marker):
@@ -35,7 +35,7 @@ harness = r'''
 #include <iostream>
 #include <string>
 #include <limits>
-using namespace Magpie;
+using namespace GMagpie;
 enum class ScalingError { NoError, DisplayLayoutFailed, BannedInWindowedMode, Maximized };
 struct Logger {
     static Logger& Get() { static Logger l; return l; }

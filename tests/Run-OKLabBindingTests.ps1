@@ -7,14 +7,14 @@ param(
 $ErrorActionPreference='Stop'
 $repo=Split-Path $PSScriptRoot -Parent
 $output=[IO.Path]::GetFullPath($OutputDirectory)
-$cached=Join-Path $CachedIntermediateRoot 'x64/Release/Magpie'
+$cached=Join-Path $CachedIntermediateRoot 'x64/Release/GMagpie'
 $generated=Join-Path $cached 'Generated Files'
 New-Item -ItemType Directory -Path $output -Force | Out-Null
 & python (Join-Path $PSScriptRoot 'prepare_oklab_binding_test.py') $output
 if($LASTEXITCODE){throw 'Prepare binding regression failed'}
 & (Join-Path $PSScriptRoot 'Validate-OKLabXaml.ps1') -CachedIntermediateRoot $CachedIntermediateRoot -CachedRepoDirectory $repo `
     -OutputDirectory $output -PagePath (Join-Path $output 'ScalingModesPage.xaml') `
-    -HeaderPaths (Join-Path $output 'ScalingModesPage.h') -MetadataPath (Join-Path $cached 'Merged/Magpie.winmd') `
+    -HeaderPaths (Join-Path $output 'ScalingModesPage.h') -MetadataPath (Join-Path $cached 'Merged/GMagpie.winmd') `
     -ComponentResourceLocation application
 foreach($name in @('ScalingModesPage.xaml.g.h','ScalingModesPage.xaml.g.hpp','ScalingModesPage.xbf','XamlBindingInfo.xaml.g.h','XamlBindingInfo.xaml.g.hpp')){
     Copy-Item -LiteralPath (Join-Path "$output/Xaml" $name) -Destination $output -Force
@@ -29,12 +29,12 @@ Import-Module (Join-Path $vs 'Common7/Tools/Microsoft.VisualStudio.DevShell.dll'
 Enter-VsDevShell -VsInstallPath $vs -SkipAutomaticLocation -DevCmdArguments '-arch=x64 -host_arch=x64' | Out-Null
 & mt.exe -nologo "-winmd:$repo/packages/Microsoft.UI.Xaml.2.8.7/lib/uap10.0/Microsoft.UI.Xaml.winmd" '-dll:Microsoft.UI.Xaml.dll' "-out:$output/WinUI.manifest"
 if($LASTEXITCODE){throw 'WinUI activation manifest failed'}
-$includes=@("/I$output","/I$repo/src/Magpie","/I$repo/src/Shared","/I$repo/src/Magpie.Core/include","/I$generated")
-$commands=Get-Content -LiteralPath (Join-Path $cached 'Magpie.tlog/CL.command.1.tlog') -Raw
+$includes=@("/I$output","/I$repo/src/GMagpie","/I$repo/src/Shared","/I$repo/src/GMagpie.Core/include","/I$generated")
+$commands=Get-Content -LiteralPath (Join-Path $cached 'GMagpie.tlog/CL.command.1.tlog') -Raw
 foreach($match in [regex]::Matches($commands,'(?i)/(?:external:)?I(?:"(?<quoted>[^"]+)"|(?<bare>[^\s]+))')){
     $inc=$match.Groups['quoted'].Value
     if(!$inc){$inc=$match.Groups['bare'].Value}
-    if(![IO.Path]::IsPathRooted($inc)){$inc=Join-Path "$repo/src/Magpie" $inc}
+    if(![IO.Path]::IsPathRooted($inc)){$inc=Join-Path "$repo/src/GMagpie" $inc}
     $includes+="/I$inc"
 }
 $includes=@($includes | Select-Object -Unique)

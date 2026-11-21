@@ -1,5 +1,5 @@
 #Requires -Version 7.0
-param([string]$OutputDirectory = (Join-Path $env:TEMP ('Magpie-CursorReposition-' + [guid]::NewGuid())))
+param([string]$OutputDirectory = (Join-Path $env:TEMP ('GMagpie-CursorReposition-' + [guid]::NewGuid())))
 $ErrorActionPreference = 'Stop'
 $repositionRepo = Split-Path $PSScriptRoot -Parent
 $repositionOutput = [IO.Path]::GetFullPath($OutputDirectory)
@@ -12,7 +12,7 @@ Enter-VsDevShell -VsInstallPath $repositionVs -SkipAutomaticLocation -DevCmdArgu
 if ($LASTEXITCODE) { throw 'Production cursor extraction/binding checks failed.' }
 foreach ($repositionCase in @('CursorRepositionTests', 'RuntimeQuitAdmissionTests')) {
     & cl.exe /nologo /std:c++20 /EHsc /utf-8 /MT /O2 /W4 /WX /DNOMINMAX /DUNICODE /D_UNICODE /DMP_ENABLE_FRAME_TRACE `
-        "/I$repositionOutput" "/I$repositionRepo/src/Magpie.Core/include" `
+        "/I$repositionOutput" "/I$repositionRepo/src/GMagpie.Core/include" `
         "$PSScriptRoot/$repositionCase.cpp" "/Fe:$repositionOutput/$repositionCase.exe" "/Fo:$repositionOutput/$repositionCase.obj" `
         /link user32.lib coremessaging.lib windowsapp.lib
     if ($LASTEXITCODE) { throw "Production cursor fixture compilation failed: $repositionCase" }

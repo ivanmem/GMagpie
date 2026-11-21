@@ -14,11 +14,11 @@ def block(text, marker):
         end += 1
     return text[start:end]
 
-group = (repo / 'src/Magpie/ScalingModeItem.cpp').read_text(encoding='utf-8-sig')
-effect = (repo / 'src/Magpie/ScalingModeEffectItem.cpp').read_text(encoding='utf-8-sig')
-options = (repo / 'src/Magpie.Core/include/ScalingOptions.h').read_text(encoding='utf-8-sig')
+group = (repo / 'src/GMagpie/ScalingModeItem.cpp').read_text(encoding='utf-8-sig')
+effect = (repo / 'src/GMagpie/ScalingModeEffectItem.cpp').read_text(encoding='utf-8-sig')
+options = (repo / 'src/GMagpie.Core/include/ScalingOptions.h').read_text(encoding='utf-8-sig')
 fg = options[options.index('enum class FrameGenerationEffectKind'):options.index('enum class EffectParameterApplyMode')]
-(out / 'manual_fg.inc').write_text('namespace Magpie {\n' + fg + '\n}\n', encoding='utf-8')
+(out / 'manual_fg.inc').write_text('namespace GMagpie {\n' + fg + '\n}\n', encoding='utf-8')
 parts = [block(group, marker) for marker in [
     'void ScalingModeItem::_Effects_VectorChanged(',
     'void ScalingModeItem::_ScalingModeEffectItem_Removed(',
@@ -58,7 +58,7 @@ prefix = r'''
 using hstring=std::wstring;
 struct SIZE { long cx,cy; };
 static SIZE GetMonitorSize() { return {1920,1080}; }
-namespace Magpie {
+namespace GMagpie {
 enum class ScalingType : uint32_t { Normal,Fit,Absolute,Fill };
 struct EffectItem {
  std::wstring name; std::map<std::wstring,float> parameters;
@@ -87,7 +87,7 @@ struct EffectsService {
 };
 static void NormalizeDLSSNRDetailParameters(auto&) {} // Ordinary-effect initialization is outside this test.
 }
-using namespace Magpie;
+using namespace GMagpie;
 struct RemovedEvent {
  std::function<void(uint32_t)> handler;
  void Invoke(uint32_t i) { if(handler) handler(i); }
@@ -169,7 +169,7 @@ int main() {
  assert(effects[3].scale.first==1.2345f && AppSettings::Get().saves==saves+1);
  scaled->ScaleFactorX(1.2345); scaled->ScaleFactorX(std::numeric_limits<double>::quiet_NaN());
  assert(AppSettings::Get().saves==saves+1);
- scaled->ScalingType(int(Magpie::ScalingType::Absolute)); scaled->ScalingPixelsY(1440);
+ scaled->ScalingType(int(GMagpie::ScalingType::Absolute)); scaled->ScalingPixelsY(1440);
  assert(effects[3].scale==std::pair(1920.f,1440.f) && effects.size()==4);
  // Move callbacks update only order and row identity, including actual converter rows.
  before=effects; group._effects.Move(2,0);

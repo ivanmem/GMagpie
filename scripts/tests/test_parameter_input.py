@@ -9,7 +9,7 @@ import re
 import sys
 
 root = Path(__file__).resolve().parents[2]
-core = root / 'src/Magpie.Core'
+core = root / 'src/GMagpie.Core'
 def body(name):
     return '\n'.join(line for line in (core / name).read_text(encoding='utf-8-sig').splitlines()
                      if not line.startswith(('#include', '#pragma once')))
@@ -156,7 +156,7 @@ namespace ImGui { inline void FakePosition(ImGuiWindow* w, ImVec2 p) { SetWindow
 #define GetMessagePos FakeMessagePos
 #define IsWindow(hwnd) ((hwnd) != nullptr)
 #include "SourceWindowRelations.h"
-namespace Magpie {
+namespace GMagpie {
 struct DeviceResources {};
 struct ImGuiBackend {
     bool Initialize(DeviceResources&) { return true; }
@@ -186,7 +186,7 @@ struct NvidiaForegroundCompatibility {
 '''
 
 fixture = r'''
-namespace Magpie {
+namespace GMagpie {
 ENUM
 SESSION
 // Relocation lifecycle is covered by CursorRepositionTests; this fixture tests
@@ -261,7 +261,7 @@ public:
     TestRenderer renderer;
     TestRenderer* _renderer=&renderer;
     RECT _rendererRect{0,0,800,600};
-    Magpie::CursorManager cursorManager;
+    GMagpie::CursorManager cursorManager;
     TestSource source;
     int toasts=0;
     bool alive=true, _stopRequested=false, _isDestroying=false;
@@ -277,8 +277,8 @@ public:
     TestRenderer* TryGetRenderer() { return &renderer; }
     struct Retirement { bool Pending() const { return false; } } _retirement;
     const RECT& RendererRect() const { return renderer.rect; }
-    Magpie::CursorManager& CursorManager() { return cursorManager; }
-    Magpie::CursorManager* TryGetCursorManager() { return &cursorManager; }
+    GMagpie::CursorManager& CursorManager() { return cursorManager; }
+    GMagpie::CursorManager* TryGetCursorManager() { return &cursorManager; }
     TestSource& SrcTracker() { return source; }
     const TestSource& SrcTracker() const { return source; }
     bool SourceIdentityValid() const { return sourceValid; }
@@ -297,7 +297,7 @@ public:
 '''.replace('ENUM', enum).replace('HOST_MEMBERS', host_members)
 
 tests = r'''
-using namespace Magpie;
+using namespace GMagpie;
 enum class ShortcutAction { EffectParameters, COUNT_OR_NONE };
 static LRESULT HotkeyNext(HHOOK, int, WPARAM, LPARAM) { return 17; }
 #define CallNextHookEx HotkeyNext
@@ -919,21 +919,21 @@ assert 'ImGui::Begin(title.c_str(), _parameterFocusSwitchingEnabled ? nullptr : 
 parameter_action = drawer_cpp.split('case OverlayAction::EffectParameters:', 1)[1].split('break;', 1)[0]
 assert '_ToggleParameterPanel();' in parameter_action
 assert 'parametersVisible != _isEffectParametersVisible) InvokeAction(OverlayAction::EffectParameters)' in drawer_cpp
-session_code = 'namespace Magpie {\n' + method(drawer_cpp, 'OverlaySessionState OverlayDrawer::CaptureSessionState()') + '\n' + method(drawer_cpp, 'void OverlayDrawer::RestoreSessionState(') + '\n' + method(drawer_cpp, 'bool OverlayDrawer::MessageHandler(') + '\n}\n'
+session_code = 'namespace GMagpie {\n' + method(drawer_cpp, 'OverlaySessionState OverlayDrawer::CaptureSessionState()') + '\n' + method(drawer_cpp, 'void OverlayDrawer::RestoreSessionState(') + '\n' + method(drawer_cpp, 'bool OverlayDrawer::MessageHandler(') + '\n}\n'
 cursor_cpp = (core / 'CursorManager.cpp').read_text(encoding='utf-8-sig')
 cursor_state = method(cursor_cpp, 'void CursorManager::_UpdateCursorState()')
 assert cursor_state.index('if (_UpdateParameterCursor()) return;') < cursor_state.index('if (options.Is3DGameMode())')
-cursor_code = 'namespace Magpie {\n' + method(cursor_cpp, 'bool CursorManager::_UpdateParameterCursor()') + '\n}\n'
-shortcut_cpp = (root / 'src/Magpie/ShortcutService.cpp').read_text(encoding='utf-8-sig')
+cursor_code = 'namespace GMagpie {\n' + method(cursor_cpp, 'bool CursorManager::_UpdateParameterCursor()') + '\n}\n'
+shortcut_cpp = (root / 'src/GMagpie/ShortcutService.cpp').read_text(encoding='utf-8-sig')
 route = re.search(r'if \(action == ShortcutAction::EffectParameters\)\s+return CallNextHookEx\([^;]+;', shortcut_cpp).group()
 tests = tests.replace('SHORTCUT_ROUTE', route)
 tests = tests.replace('HOTKEY_ROUTE', method(shortcut_cpp, 'if (message == WM_HOTKEY)'))
 numeric_desc = (core / 'include/EffectDesc.h').read_text(encoding='utf-8-sig')
 numeric_types = numeric_desc[numeric_desc.index('template <typename T>'):numeric_desc.index('struct EffectPassFlags')]
-numeric_code = 'namespace Magpie {\n' + numeric_types + '\n}\n' + body('include/EffectParameterValue.h') + '\nnamespace Magpie {\n' + method(drawer_cpp, 'static bool DrawEffectParameterSlider(') + '\n}\n'
-stop_code = 'namespace Magpie {\n' + method(scaling_cpp, 'void ScalingWindow::Stop() noexcept') + '\n}\n'
+numeric_code = 'namespace GMagpie {\n' + numeric_types + '\n}\n' + body('include/EffectParameterValue.h') + '\nnamespace GMagpie {\n' + method(drawer_cpp, 'static bool DrawEffectParameterSlider(') + '\n}\n'
+stop_code = 'namespace GMagpie {\n' + method(scaling_cpp, 'void ScalingWindow::Stop() noexcept') + '\n}\n'
 tracker_cpp = (core / 'SrcTracker.cpp').read_text(encoding='utf-8-sig')
-foreground_code = 'namespace Magpie {\n' + '\n'.join(method(scaling_cpp, marker) for marker in [
+foreground_code = 'namespace GMagpie {\n' + '\n'.join(method(scaling_cpp, marker) for marker in [
     'SourceForegroundKind ScalingWindow::ClassifyForeground(', 'bool ScalingWindow::IsSessionForeground(', 'bool ScalingWindow::IsParameterForeground(',
     'HWND ScalingWindow::SourceActivationTarget(', 'bool ScalingWindow::_CheckForegroundFor3DGameMode(']) + '\n' + \
     '\n'.join(method(tracker_cpp, marker).replace('SrcTracker::', 'TestSource::') for marker in [

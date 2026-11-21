@@ -1,7 +1,7 @@
 """Extract current GPU view-model behavior for a real WinRT collection harness.
 
 Resource loading, notifications and persistence are doubles. The tests use
-real boxed IInspectable objects and IVector identity, with no Magpie startup.
+real boxed IInspectable objects and IVector identity, with no GMagpie startup.
 """
 from pathlib import Path
 import re
@@ -10,7 +10,7 @@ import sys
 repo = Path(__file__).resolve().parents[1]
 out = Path(sys.argv[1]).resolve()
 out.mkdir(parents=True, exist_ok=True)
-source = (repo / 'src/Magpie/ProfileViewModel.cpp').read_text(encoding='utf-8-sig')
+source = (repo / 'src/GMagpie/ProfileViewModel.cpp').read_text(encoding='utf-8-sig')
 names = ('GraphicsCards', '_BuildGraphicsCards', 'GraphicsCard', 'IsGraphicsCardSelectionEnabled',
          'IsNoGraphicsCard', 'ShowGraphicsCardUnavailableWarning', '_RefreshGraphicsCardSettings')
 declarations, definitions = [], []

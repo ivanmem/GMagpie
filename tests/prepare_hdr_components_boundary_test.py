@@ -3,7 +3,7 @@ from pathlib import Path
 import sys
 repo = Path(__file__).resolve().parents[1]
 output = Path(sys.argv[1])
-renderer = (repo/'src/Magpie.Core/Renderer.cpp').read_text(encoding='utf-8-sig')
+renderer = (repo/'src/GMagpie.Core/Renderer.cpp').read_text(encoding='utf-8-sig')
 def function(signature):
     start = renderer.index(signature)
     brace = renderer.index('{', start)
@@ -23,7 +23,7 @@ prefix = r'''
 #include <map>
 #include <memory>
 #include <vector>
-using namespace Magpie;
+using namespace GMagpie;
 '''+texture+r'''
 struct EffectOption { std::string name; std::map<std::string,float> parameters; };
 struct Options {

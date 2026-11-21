@@ -9,7 +9,7 @@ Import-Module (Join-Path $vs 'Common7/Tools/Microsoft.VisualStudio.DevShell.dll'
 Enter-VsDevShell -VsInstallPath $vs -SkipAutomaticLocation -DevCmdArguments '-arch=x64 -host_arch=x64' | Out-Null
 & python (Join-Path $PSScriptRoot 'prepare_dlss_optical_flow_test.py') $output
 if ($LASTEXITCODE) { throw 'Extract production functions failed' }
-& cl.exe /nologo /std:c++20 /EHsc /utf-8 /MT /O2 "/I$output" "/I$repo/src/Magpie.Core" "/I$repo/src/Magpie.Core/include" `
+& cl.exe /nologo /std:c++20 /EHsc /utf-8 /MT /O2 "/I$output" "/I$repo/src/GMagpie.Core" "/I$repo/src/GMagpie.Core/include" `
     (Join-Path $PSScriptRoot 'DlssOpticalFlowTests.cpp') "/Fe:$output/DlssOpticalFlowTests.exe" "/Fo:$output/DlssOpticalFlowTests.obj"
 if ($LASTEXITCODE) { throw 'Compile DLSS optical-flow tests failed' }
 & "$output/DlssOpticalFlowTests.exe"

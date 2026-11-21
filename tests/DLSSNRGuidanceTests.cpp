@@ -15,7 +15,7 @@ struct ID3D11DeviceContext4 {
 };
 bool FAILED(int value) { return value < 0; }
 enum DXGI_FORMAT { DXGI_FORMAT_UNKNOWN, DXGI_FORMAT_R16G16_FLOAT, DXGI_FORMAT_R32_FLOAT, DXGI_FORMAT_R8_UNORM };
-namespace Magpie {
+namespace GMagpie {
 #include "DLSSNRGuidanceTypesUnderTest.h"
 struct TextureRef { ID3D11Texture2D* texture; ID3D11Texture2D* get() const { return texture; } };
 struct DLSSNRFilter { struct Impl {
@@ -27,7 +27,7 @@ struct FrameGuidanceD3D12Interop { bool WaitForProducer(ID3D11DeviceContext4*, c
 }
 
 int main() {
-	using namespace Magpie;
+	using namespace GMagpie;
 	ID3D11Texture2D motion, depth, confidence, replacement, reducedMotion, reducedDepth, reducedConfidence;
 	ID3D11Fence firstFence, secondFence;
 	FrameGuidanceMetadata metadata{.frameId=5, .resourceGeneration=2, .sourceExtent={17,11},

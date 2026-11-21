@@ -62,7 +62,7 @@ struct Harness {
 		Check(device->CreateSamplerState(&sd,&sampler));
 		for (const char* entry : {"PublishEnhancement","CheckReuse","ComposeCurrent","ComposeMotion","MeasureCoverage"}) {
 			ComPtr<ID3DBlob> code,error;
-			const auto source=Magpie::DLSSNR_PERFORMANCE_HLSL;
+			const auto source=GMagpie::DLSSNR_PERFORMANCE_HLSL;
 			const auto hr=D3DCompile(source.data(),source.size(),"production",nullptr,nullptr,entry,
 				"cs_5_0",D3DCOMPILE_ENABLE_STRICTNESS,0,&code,&error);
 			if (error) std::cerr << static_cast<const char*>(error->GetBufferPointer());

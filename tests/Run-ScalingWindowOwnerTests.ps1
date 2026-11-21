@@ -1,5 +1,5 @@
 #Requires -Version 7.0
-param([string]$OutputDirectory = (Join-Path $env:TEMP ('Magpie-WindowOwner-' + [guid]::NewGuid())), [string[]]$TestNames = @())
+param([string]$OutputDirectory = (Join-Path $env:TEMP ('GMagpie-WindowOwner-' + [guid]::NewGuid())), [string[]]$TestNames = @())
 $ErrorActionPreference = 'Stop'
 $TestNames = @($TestNames | ForEach-Object { $_ -split ',' })
 $ownerRepo = Split-Path $PSScriptRoot -Parent
@@ -39,7 +39,7 @@ if ($LASTEXITCODE) { throw 'Capture shutdown extraction failed.' }
 & python "$ownerRepo/scripts/tests/test_scaling_prerequisites.py" $ownerOutput
 if ($LASTEXITCODE) { throw 'Scaling prerequisites extraction failed.' }
 $ownerFlags = @('/nologo', '/std:c++20', '/EHsc', '/utf-8', '/MT', '/W4', '/WX', '/DNOMINMAX', '/DUNICODE', '/D_UNICODE',
-    '/DFMT_HEADER_ONLY', "/I$ownerFmt", "/I$ownerOutput", "/I$ownerRepo/src/Magpie.Core/include", "/I$ownerRepo/src/Magpie.Core") + $ownerWilFlags
+    '/DFMT_HEADER_ONLY', "/I$ownerFmt", "/I$ownerOutput", "/I$ownerRepo/src/GMagpie.Core/include", "/I$ownerRepo/src/GMagpie.Core") + $ownerWilFlags
 $ownerSelectedCount = 0
 foreach ($ownerSource in @("$ownerRepo/tests/WindowIdentityTests.cpp", "$ownerRepo/tests/WindowIdentityIntegrationTests.cpp", "$ownerRepo/scripts/tests/scaling_window_owner_policy.cpp",
     "$ownerRepo/scripts/tests/scaling_window_owner.cpp", "$ownerRepo/scripts/tests/scaling_window_lifecycle.cpp", "$ownerRepo/scripts/tests/ngx_runtime_guard.cpp",

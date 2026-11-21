@@ -64,7 +64,7 @@ struct ResourceLoader {
 };
 }
 
-namespace Magpie {
+namespace GMagpie {
 #include "RuntimeQuitTypes.inc"
 namespace CommonSharedConstants {
 constexpr int APP_RESOURCE_MAP_ID = 0;
@@ -164,7 +164,7 @@ bool ScalingRuntime::DispatchPass() {
 #undef MsgWaitForMultipleObjectsEx
 }
 
-using namespace Magpie;
+using namespace GMagpie;
 static void Reset() {
     callbacks.clear(); messages.clear(); dispatched = 0;
     ScalingWindow::Get() = {};

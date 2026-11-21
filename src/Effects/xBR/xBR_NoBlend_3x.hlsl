@@ -23,7 +23,7 @@
 
    Incorporates some of the ideas from SABR shader. Thanks to Joshua Street.
 
-   Magpie Effect v4 port based on libretro/glsl-shaders commit
+   GMagpie Effect v4 port based on libretro/glsl-shaders commit
    f8e23ff880668f0f0e837a05a316534d82a7f31b:
    xbr/shaders/xbr-lv2-noblend.glsl
 */

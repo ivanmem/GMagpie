@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Magpie repo consistency checks (stdlib only, Python 3.11+).
+"""GMagpie repo consistency checks (stdlib only, Python 3.11+).
 
 Runs declarative consistency rules over the repository. These checks encode
 rules already documented by the maintainers (docs/experimental/RELEASE-WORKFLOW.md,
@@ -71,7 +71,7 @@ def r2_release_notes_bilingual(f: Findings) -> None:
         txt = read_text(p)
         has_zh = len(re.findall(r'[一-鿿]', txt)) > 200
         has_en = ('## English' in txt or '## English quick guide' in txt
-                  or txt.count('# Magpie Experimental') >= 2)
+                  or txt.count('# GMagpie Experimental') >= 2)
         if has_zh and has_en:
             continue
         is_draft = ('未发布' in txt or 'never officially released' in txt.lower())
@@ -130,7 +130,7 @@ def r3_presets(f: Findings) -> None:
 # R4: resw structural integrity + per-language coverage.
 def r4_resw(f: Findings) -> None:
     langs: dict[str, set[str]] = {}
-    for p in sorted((ROOT / 'src' / 'Magpie').glob('Resources.language-*.resw')):
+    for p in sorted((ROOT / 'src' / 'GMagpie').glob('Resources.language-*.resw')):
         lang = p.stem.split('language-')[1]
         try:
             tree = ET.parse(p)
@@ -165,7 +165,7 @@ def r5_effect_param_labels(f: Findings) -> None:
     if not effects:
         f.add('R5', 'WARN', '未解析到任何效果参数(检查正则是否与 !PARAMETER 元数据格式匹配)')
         return
-    en = read_text(ROOT / 'src' / 'Magpie' / 'Resources.language-en-US.resw')
+    en = read_text(ROOT / 'src' / 'GMagpie' / 'Resources.language-en-US.resw')
     total = sum(len(v) for v in effects.values())
     have = 0
     for rel, params in effects.items():
@@ -181,7 +181,7 @@ def r5_effect_param_labels(f: Findings) -> None:
 # definitions without references are INFO (candidate cleanup; resw files are
 # Weblate-managed, so removal is a maintainer decision).
 def r6_resource_usage(f: Findings) -> None:
-    tree = ET.parse(ROOT / 'src' / 'Magpie' / 'Resources.language-en-US.resw')
+    tree = ET.parse(ROOT / 'src' / 'GMagpie' / 'Resources.language-en-US.resw')
     names = [d.attrib['name'] for d in tree.getroot().iter('data')]
 
     def stem_of(name: str) -> str:
@@ -194,7 +194,7 @@ def r6_resource_usage(f: Findings) -> None:
 
     stems = {stem_of(n) for n in names}
     corpus = ''
-    for p in (ROOT / 'src' / 'Magpie').rglob('*'):
+    for p in (ROOT / 'src' / 'GMagpie').rglob('*'):
         if p.suffix.lower() in ('.xaml', '.cpp', '.h', '.idl', '.cs'):
             corpus += read_text(p) + '\n'
     unreferenced = sorted(s for s in stems if s not in corpus)
@@ -228,7 +228,7 @@ def r7_doc_links(f: Findings) -> None:
 # R8: files referenced by CI workflow must exist.
 def r8_ci_refs(f: Findings) -> None:
     wf = read_text(ROOT / '.github' / 'workflows' / 'build.yml')
-    for path in ('Magpie.slnx', 'scripts/publish.py'):
+    for path in ('GMagpie.slnx', 'scripts/publish.py'):
         if path in wf and not (ROOT / path).is_file():
             f.add('R8', 'FAIL', f'build.yml 引用不存在:{path}')
 
@@ -236,7 +236,7 @@ def r8_ci_refs(f: Findings) -> None:
 # R9: release script keeps the required runtime layout list.
 def r9_release_layout(f: Findings) -> None:
     ps = read_text(ROOT / 'scripts' / 'Build-Release.ps1')
-    for needle in ('"Magpie.exe"', '"resources.pri"', '"TouchHelper.exe"', '"Updater.exe"'):
+    for needle in ('"GMagpie.exe"', '"resources.pri"', '"TouchHelper.exe"', '"Updater.exe"'):
         if needle not in ps:
             f.add('R9', 'FAIL', f'Build-Release.ps1 的运行时清单缺少 {needle}')
 

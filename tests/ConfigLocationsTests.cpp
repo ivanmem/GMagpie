@@ -16,10 +16,10 @@ int wmain(int argc, wchar_t** argv) {
 	const auto root = std::filesystem::absolute(argv[1]) / (L"locations-" + std::to_wstring(GetCurrentProcessId()));
 	const auto exe = root / L"app";
 	const auto user = root / L"local";
-	const auto enhanced = user / L"Magpie" / L"config" / L"v4e" / L"config.json";
-	const auto legacy = user / L"Magpie" / L"config" / L"v4" / L"config.json";
+	const auto enhanced = user / L"GMagpie" / L"config" / L"v4e" / L"config.json";
+	const auto legacy = user / L"GMagpie" / L"config" / L"v4" / L"config.json";
 	const auto portable = exe / L"config" / L"v4e" / L"config.json";
-	using Magpie::ConfigLocations::Select;
+	using GMagpie::ConfigLocations::Select;
 	auto selected = Select(exe, user);
 	assert(selected.source.empty() && selected.destination == enhanced && !selected.error);
 	Put(legacy, R"({"original":4})");
@@ -27,16 +27,16 @@ int wmain(int argc, wchar_t** argv) {
 	Put(legacy, upstreamBytes);
 	std::string loaded;
 	uint32_t readError = 0;
-	assert(Magpie::ConfigPersistence::ReadFileBytes(legacy, loaded, &readError));
+	assert(GMagpie::ConfigPersistence::ReadFileBytes(legacy, loaded, &readError));
 	assert(loaded == upstreamBytes && !readError);
 	selected = Select(exe, user);
 	assert(selected.source == legacy && selected.destination == enhanced && !selected.portable);
-	Magpie::ConfigSaveState state;
-	assert(Magpie::ConfigPersistence::WriteAtomic(selected.destination, R"({"enhanced":true})", 1, state));
-	assert(Magpie::ConfigPersistence::Read(legacy) == upstreamBytes);
-	const auto preserved = Magpie::ConfigRecovery::FilesFor(enhanced, loaded);
-	assert(Magpie::ConfigRecovery::Preserve(legacy, loaded, preserved));
-	assert(Magpie::ConfigPersistence::Read(preserved.original) == upstreamBytes);
+	GMagpie::ConfigSaveState state;
+	assert(GMagpie::ConfigPersistence::WriteAtomic(selected.destination, R"({"enhanced":true})", 1, state));
+	assert(GMagpie::ConfigPersistence::Read(legacy) == upstreamBytes);
+	const auto preserved = GMagpie::ConfigRecovery::FilesFor(enhanced, loaded);
+	assert(GMagpie::ConfigRecovery::Preserve(legacy, loaded, preserved));
+	assert(GMagpie::ConfigPersistence::Read(preserved.original) == upstreamBytes);
 	assert(Select(exe, user).source == enhanced);
 	Put(enhanced, "{broken");
 	assert(Select(exe, user).source == enhanced); // Existing v4e damage never selects v4.
@@ -53,10 +53,10 @@ int wmain(int argc, wchar_t** argv) {
 	assert(Select(exe, user).source == portable);
 	// Switching away first commits a newer destination revision. An older
 	// async save arriving after old-file removal must not resurrect portability.
-	Magpie::ConfigSaveState switched;
-	assert(Magpie::ConfigPersistence::WriteAtomic(enhanced, R"({"latest":true})", 2, switched));
+	GMagpie::ConfigSaveState switched;
+	assert(GMagpie::ConfigPersistence::WriteAtomic(enhanced, R"({"latest":true})", 2, switched));
 	std::filesystem::remove(portable);
-	assert(Magpie::ConfigPersistence::WriteAtomic(portable, R"({"stale":true})", 1, switched));
+	assert(GMagpie::ConfigPersistence::WriteAtomic(portable, R"({"stale":true})", 1, switched));
 	assert(!std::filesystem::exists(portable) && Select(exe, user).source == enhanced);
 	std::filesystem::create_directory(portable);
 	selected = Select(exe, user);

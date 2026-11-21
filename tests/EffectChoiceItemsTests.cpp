@@ -1,5 +1,5 @@
-#include "../src/Magpie/EffectChoiceItems.h"
-#include "../src/Magpie/EffectPickerLayout.h"
+#include "../src/GMagpie/EffectChoiceItems.h"
+#include "../src/GMagpie/EffectPickerLayout.h"
 #include <winrt/Windows.UI.Xaml.Controls.h>
 #include <winrt/Windows.UI.Xaml.Controls.Primitives.h>
 #include <winrt/Windows.UI.Xaml.Hosting.h>
@@ -18,7 +18,7 @@ int main(int argc, char**) {
 	const auto broken = single_threaded_vector(std::vector<hstring>{ L"低", L"中", L"高", L"极高" });
 	assert(!broken.try_as<IVector<IInspectable>>());
 	assert(!broken.try_as<IIterable<IInspectable>>());
-	const auto fixed = Magpie::MakeEffectChoiceItems({ L"低", L"中", L"高", L"极高" });
+	const auto fixed = GMagpie::MakeEffectChoiceItems({ L"低", L"中", L"高", L"极高" });
 	const auto bindable = fixed.as<IVector<IInspectable>>();
 	assert(bindable.Size() == 4);
 	uint32_t index = 0;
@@ -27,7 +27,7 @@ int main(int argc, char**) {
 	assert(unbox_value<hstring>(bindable.GetAt(3)) == L"极高");
 	std::cout << "Old string vector lacks XAML collection interfaces; production choices expose boxed values correctly.\n";
 	if (argc > 1) {
-		// No visible window or Magpie instance. Exercise the real XAML setter that
+		// No visible window or GMagpie instance. Exercise the real XAML setter that
 		// runs both during x:Bind initialization and during picker construction.
 		const auto manager = Windows::UI::Xaml::Hosting::WindowsXamlManager::InitializeForCurrentThread();
 		Windows::UI::Xaml::Controls::ComboBox brokenCombo;
@@ -53,12 +53,12 @@ int main(int argc, char**) {
 				StackPanel panel;
 				Grid first, last;
 				first.Height(50); last.Height(50);
-				Magpie::SetEffectPickerRowMargin(first); Magpie::SetEffectPickerRowMargin(last);
+				GMagpie::SetEffectPickerRowMargin(first); GMagpie::SetEffectPickerRowMargin(last);
 				if (placement != 0) panel.Children().Append(first);
 				if (placement == 2) panel.Children().Append(last);
 				for (int i = 0; i < hidden; ++i) {
 					Grid row;
-					row.Height(50); Magpie::SetEffectPickerRowMargin(row, 13);
+					row.Height(50); GMagpie::SetEffectPickerRowMargin(row, 13);
 					row.Visibility(Visibility::Collapsed);
 					panel.Children().Append(row);
 				}
@@ -77,7 +77,7 @@ int main(int argc, char**) {
 			}
 		}
 		Button toggle;
-		const auto icon = Magpie::MakeEffectPickerToggleIcon(toggle);
+		const auto icon = GMagpie::MakeEffectPickerToggleIcon(toggle);
 		for (bool expanded : {false, true, false}) {
 			icon.Expanded(expanded); icon.root.Measure({100, 100}); icon.root.Arrange({0, 0, 12, 12});
 			assert(icon.root.DesiredSize().Width == 12 && icon.root.DesiredSize().Height == 12);
@@ -85,14 +85,14 @@ int main(int argc, char**) {
 		}
 		for (double dpi : {96.0, 144.0, 192.0, 288.0}) {
 			for (Size work : {Size{1920, 1040}, Size{1280, 680}, Size{800, 560}}) {
-				const auto size = Magpie::EffectPickerSize(work.Width, work.Height, dpi / 96);
+				const auto size = GMagpie::EffectPickerSize(work.Width, work.Height, dpi / 96);
 				assert(size.Width <= 820 && size.Height <= 800);
 				assert((size.Width + 64) * dpi / 96 <= work.Width);
 				assert((size.Height + 64) * dpi / 96 <= work.Height);
 			}
 		}
 		std::cout << "Windowless XAML: hidden 0/1/10/100 rows at head/middle/tail, all-hidden/single result, +/- geometry and monitor sizing passed.\n";
-		const auto layout = Magpie::MakeEffectPickerLayout();
+		const auto layout = GMagpie::MakeEffectPickerLayout();
 		assert(Grid::GetColumn(layout.list) == 1);
 		assert(Grid::GetRow(layout.details) == 1 && Grid::GetColumnSpan(layout.details) == 2);
 		assert(layout.root.Children().Size() == 3);
@@ -101,7 +101,7 @@ int main(int argc, char**) {
 		TextBlock description;
 		description.Text(L"用途与组合建议");
 		layout.details.Child(description);
-		assert(Magpie::EffectPickerSize(1920, 1040, 1).Height == 800);
+		assert(GMagpie::EffectPickerSize(1920, 1040, 1).Height == 800);
 		for (const Size size : { Size{820, 800}, Size{820, 640}, Size{480, 360}, Size{280, 220} }) {
 			layout.root.Width(size.Width); layout.root.Height(size.Height);
 			layout.root.ColumnDefinitions().GetAt(0).Width({ size.Width < 560 ? 160.0 : 220.0,
@@ -146,7 +146,7 @@ int main(int argc, char**) {
 			// wrapped text explicitly; runtime uses the presenter's actual extent.
 			detailContent.Measure({float(detailArea.ActualWidth()), std::numeric_limits<float>::infinity()});
 			const double measuredContent = detailContent.DesiredSize().Height;
-			const bool overflow = Magpie::EffectPickerDetailsOverflow(measuredContent, detailArea.ActualHeight());
+			const bool overflow = GMagpie::EffectPickerDetailsOverflow(measuredContent, detailArea.ActualHeight());
 			hint.Visibility(overflow ? Visibility::Visible : Visibility::Collapsed);
 			arrange();
 			assert(layout.details.ActualHeight() == 200);
@@ -161,7 +161,7 @@ int main(int argc, char**) {
 			} else assert(detailScroll.ActualHeight() == detailArea.ActualHeight());
 			return overflow;
 		};
-		std::ifstream input("src/Magpie/EffectCatalog/zh-Hans.json", std::ios::binary);
+		std::ifstream input("src/GMagpie/EffectCatalog/zh-Hans.json", std::ios::binary);
 		const std::string bytes{std::istreambuf_iterator<char>(input), {}};
 		const auto entries = Windows::Data::Json::JsonObject::Parse(to_hstring(bytes)).GetNamedArray(L"effects");
 		assert(entries.Size() == 164); // Includes five xBR and two new NVIDIA VFX effects.
@@ -181,19 +181,19 @@ int main(int argc, char**) {
 		assert(detailScroll.VerticalScrollBarVisibility() == ScrollBarVisibility::Auto);
 		assert(detailScroll.ZoomMode() == ZoomMode::Disabled);
 		assert(!measureDetails(L"入门", L"短说明", 820, 800));
-		assert(!Magpie::EffectPickerDetailsOverflow(135, 135));
-		assert(Magpie::EffectPickerDetailsOverflow(136, 135));
-		assert(!Magpie::EffectPickerDetailsOverflow(10, 0));
-		assert(Magpie::IsEffectPickerDetailsWheel(true, false, -120));
-		assert(!Magpie::IsEffectPickerDetailsWheel(false, false, -120));
-		assert(!Magpie::IsEffectPickerDetailsWheel(true, true, -120));
-		assert(!Magpie::IsEffectPickerDetailsWheel(true, false, 0));
-		assert(Magpie::EffectPickerDetailsWheelOffset(0, 200, -120) == 48);
-		assert(Magpie::EffectPickerDetailsWheelOffset(48, 200, 120) == 0);
-		assert(Magpie::EffectPickerDetailsWheelOffset(190, 200, -120) == 200);
-		assert(Magpie::EffectPickerDetailsWheelOffset(0, 200, 120) == 0);
-		assert(Magpie::EffectPickerDetailsWheelOffset(0, 0, -120) == 0);
-		assert(Magpie::EffectPickerDetailsWheelOffset(0, 200, -30) == 12);
+		assert(!GMagpie::EffectPickerDetailsOverflow(135, 135));
+		assert(GMagpie::EffectPickerDetailsOverflow(136, 135));
+		assert(!GMagpie::EffectPickerDetailsOverflow(10, 0));
+		assert(GMagpie::IsEffectPickerDetailsWheel(true, false, -120));
+		assert(!GMagpie::IsEffectPickerDetailsWheel(false, false, -120));
+		assert(!GMagpie::IsEffectPickerDetailsWheel(true, true, -120));
+		assert(!GMagpie::IsEffectPickerDetailsWheel(true, false, 0));
+		assert(GMagpie::EffectPickerDetailsWheelOffset(0, 200, -120) == 48);
+		assert(GMagpie::EffectPickerDetailsWheelOffset(48, 200, 120) == 0);
+		assert(GMagpie::EffectPickerDetailsWheelOffset(190, 200, -120) == 200);
+		assert(GMagpie::EffectPickerDetailsWheelOffset(0, 200, 120) == 0);
+		assert(GMagpie::EffectPickerDetailsWheelOffset(0, 0, -120) == 0);
+		assert(GMagpie::EffectPickerDetailsWheelOffset(0, 200, -30) == 12);
 		std::cout << "Fixed details: " << entries.Size() << " catalog entries at two widths, bottom-right overflow hint, short-content reset, Ctrl wheel routing and scroll boundaries passed.\n";
 		manager.Close();
 		std::cout << "Real XAML: old ItemsSource throws E_INVALIDARG; fixed choices accept four values; production layout passes at four sizes, with 800-DIP height and fixed 200-DIP details.\n";

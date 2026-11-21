@@ -13,11 +13,11 @@
 
 using namespace winrt;
 using namespace Windows::Foundation::Collections;
-using namespace Magpie;
+using namespace GMagpie;
 namespace Resources = Windows::ApplicationModel::Resources;
 
 // Separate hosts validate actual PRI text and real XAML collection binding.
-// Neither adapter loads the product App.xbf or starts Magpie/RTSS services.
+// Neither adapter loads the product App.xbf or starts GMagpie/RTSS services.
 struct ResourceLoader {
 #ifdef RTSS_ITEMS_SOURCE_TEST
 	hstring GetString(std::wstring_view key) const { return hstring(key); }

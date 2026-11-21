@@ -12,7 +12,7 @@
 #include <iostream>
 #include <map>
 
-using namespace Magpie;
+using namespace GMagpie;
 int main() {
 	std::vector<uint8_t> result;
 	const std::array<uint16_t, 4> white{ 0x3c00, 0x3c00, 0x3c00, 0x3800 };

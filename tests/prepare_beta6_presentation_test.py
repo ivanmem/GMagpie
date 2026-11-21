@@ -3,7 +3,7 @@ from pathlib import Path
 import sys
 
 repo = Path(__file__).resolve().parents[1]
-core = repo / 'src/Magpie.Core'
+core = repo / 'src/GMagpie.Core'
 
 def method(source, signature):
     start = source.index(signature)
@@ -37,7 +37,7 @@ struct TestClock {
 };
 struct Event { int signals=0; Event* get() { return this; } explicit operator bool() const { return true; } };
 static void SetEvent(Event* event) { ++event->signals; }
-namespace Magpie {
+namespace GMagpie {
 namespace FrameTrace {
 enum class Event { FgDequeued };
 inline constexpr bool Enabled() { return false; }
@@ -81,7 +81,7 @@ struct Renderer {
 
 suffix = r'''
 }
-using namespace Magpie;
+using namespace GMagpie;
 int main() {
     // One notification spans several deadlines, capacity/resource retries, and
     // completion. The fake clock makes duplicate accounting observable exactly.

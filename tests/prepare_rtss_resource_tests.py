@@ -8,8 +8,8 @@ parser = argparse.ArgumentParser()
 parser.add_argument("output", type=Path)
 args = parser.parse_args()
 repo = Path(__file__).resolve().parents[1]
-vm = (repo / "src/Magpie/ProfileViewModel.cpp").read_text(encoding="utf-8-sig")
-service = (repo / "src/Magpie/RtssService.h").read_text(encoding="utf-8-sig")
+vm = (repo / "src/GMagpie/ProfileViewModel.cpp").read_text(encoding="utf-8-sig")
+service = (repo / "src/GMagpie/RtssService.h").read_text(encoding="utf-8-sig")
 getters = []
 start = vm.index("IVector<hstring> ProfileViewModel::RtssStatusSegments() const {")
 end = vm.index("\n}", start) + 2
@@ -27,7 +27,7 @@ for signature in ("bool RtssFailed(",):
 enum = re.search(r"enum class RtssState \{.*?\};", service, re.S).group()
 status = re.search(r"struct RtssStatus \{.*?\n\};", service, re.S).group()
 states = re.findall(r"\b\w+\b", enum.split("{", 1)[1].split("}", 1)[0])
-resources = ET.parse(repo / "src/Magpie/Resources.language-en-US.resw").getroot()
+resources = ET.parse(repo / "src/GMagpie/Resources.language-en-US.resw").getroot()
 keys = [n.get("name") for n in resources.findall("data")
         if n.get("name").startswith("Rtss_") and "." not in n.get("name")]
 args.output.mkdir(parents=True, exist_ok=True)

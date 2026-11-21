@@ -1,5 +1,5 @@
 #Requires -Version 7.0
-param([string]$OutputDirectory = (Join-Path $env:TEMP ('Magpie-OutputCadence-' + [guid]::NewGuid())))
+param([string]$OutputDirectory = (Join-Path $env:TEMP ('GMagpie-OutputCadence-' + [guid]::NewGuid())))
 $ErrorActionPreference = 'Stop'
 $cadenceRepo = Split-Path $PSScriptRoot -Parent
 $OutputDirectory = [IO.Path]::GetFullPath($OutputDirectory)
@@ -18,7 +18,7 @@ foreach ($cadenceTest in @(
     @{ Source = "$OutputDirectory/output_refresh_selection.cpp"; Name = 'refresh-selection' },
     @{ Source = "$OutputDirectory/output_refresh_reflex.cpp"; Name = 'refresh-reflex' }
 )) {
-    & cl.exe /nologo /std:c++20 /EHsc /utf-8 /MT /O2 /W4 /WX "/I$cadenceRepo/src/Magpie.Core" `
+    & cl.exe /nologo /std:c++20 /EHsc /utf-8 /MT /O2 /W4 /WX "/I$cadenceRepo/src/GMagpie.Core" `
         $cadenceTest.Source "/Fe:$OutputDirectory/$($cadenceTest.Name).exe" "/Fo:$OutputDirectory/$($cadenceTest.Name).obj"
     if ($LASTEXITCODE) { throw "Cadence test compilation failed: $($cadenceTest.Name)" }
     & "$OutputDirectory/$($cadenceTest.Name).exe"

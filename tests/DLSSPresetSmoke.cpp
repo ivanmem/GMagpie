@@ -19,7 +19,7 @@
 
 // Test-only cache-root injection. All loader verification/loading code below is
 // production source; Windows KnownFolder resolution alone is redirected so the
-// probe never writes the installed Magpie cache or config.
+// probe never writes the installed GMagpie cache or config.
 static HRESULT SmokeKnownFolderPath(REFKNOWNFOLDERID, DWORD, HANDLE, PWSTR* result) {
     const auto path = std::filesystem::current_path().parent_path().parent_path();
     std::filesystem::create_directories(path);
@@ -37,7 +37,7 @@ static HRESULT SmokeKnownFolderPath(REFKNOWNFOLDERID, DWORD, HANDLE, PWSTR* resu
 #include "DlssgSm86Runtime.cpp"
 #undef SHGetKnownFolderPath
 
-using namespace Magpie;
+using namespace GMagpie;
 static void Require(bool good, const char* stage) {
     if (!good) { Logger::Get().Flush(); std::cerr << "FAIL stage=" << stage << std::endl; throw std::runtime_error(stage); }
 }

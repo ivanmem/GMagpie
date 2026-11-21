@@ -17,7 +17,7 @@
 #include "DLSSNRTemporalState.h"
 #include "DLSSNRColorReference.h"
 using Microsoft::WRL::ComPtr;
-using namespace Magpie;
+using namespace GMagpie;
 constexpr unsigned W = 16, H = 16;
 using Pixel = std::array<float,4>;
 using Image = std::vector<Pixel>;

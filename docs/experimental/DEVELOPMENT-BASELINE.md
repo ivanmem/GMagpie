@@ -1,6 +1,6 @@
 # 当前开发基线
 
-核对日期：2026-11-06（Asia/Shanghai）。开发入口为主检出 `source/` 的 `experimental`，当前本地发布候选为 **Magpie Experimental v0.6.12**。
+核对日期：2026-11-06（Asia/Shanghai）。开发入口为主检出 `source/` 的 `experimental`，当前本地发布候选为 **GMagpie Experimental v0.6.12**。
 
 DLSSNR 处理模式仅保留逐帧／隔帧。旧配置中的异步逐帧自动回退为逐帧，异步隔帧自动回退为隔帧，保留已保存的有效更新间隔、模型、输入比例。独立帧同步节奏 Async 继续保留。
 

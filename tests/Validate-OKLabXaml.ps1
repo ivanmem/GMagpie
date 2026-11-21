@@ -13,20 +13,20 @@ $repo = Split-Path $PSScriptRoot -Parent
 $CachedRepoDirectory = [IO.Path]::GetFullPath($CachedRepoDirectory)
 $CachedIntermediateRoot = [IO.Path]::GetFullPath($CachedIntermediateRoot)
 $output = if ($OutputDirectory) { [IO.Path]::GetFullPath($OutputDirectory) } else { Join-Path $repo 'obj/tests/source' }
-if (!$PagePath) { $PagePath = Join-Path $repo 'src/Magpie/ScalingModesPage.xaml' }
-if (!$HeaderPaths) { $HeaderPaths = @(Join-Path $repo 'src/Magpie/ScalingModesPage.h') }
+if (!$PagePath) { $PagePath = Join-Path $repo 'src/GMagpie/ScalingModesPage.xaml' }
+if (!$HeaderPaths) { $HeaderPaths = @(Join-Path $repo 'src/GMagpie/ScalingModesPage.h') }
 $xamlOutput = Join-Path $output 'Xaml'
 New-Item -ItemType Directory -Path $xamlOutput -Force | Out-Null
 $vswhere = Join-Path ${env:ProgramFiles(x86)} 'Microsoft Visual Studio/Installer/vswhere.exe'
 $vs = & $vswhere -latest -products * -requires Microsoft.Component.MSBuild -property installationPath | Select-Object -First 1
 Import-Module (Join-Path $vs 'Common7/Tools/Microsoft.VisualStudio.DevShell.dll')
 Enter-VsDevShell -VsInstallPath $vs -SkipAutomaticLocation -DevCmdArguments '-arch=x64 -host_arch=x64' | Out-Null
-$cached = Join-Path $CachedIntermediateRoot 'x64/Release/Magpie'
+$cached = Join-Path $CachedIntermediateRoot 'x64/Release/GMagpie'
 if (!$MetadataPath) {
 if (!(Test-Path (Join-Path $output 'Unmerged/App.winmd'))) {
     throw 'Fresh source metadata is required; generate obj/tests/source/Unmerged metadata first or specify MetadataPath.'
 }
-$rsp = Get-Content -LiteralPath (Join-Path $cached 'Magpie.vcxproj.mdmerge.rsp') -Raw
+$rsp = Get-Content -LiteralPath (Join-Path $cached 'GMagpie.vcxproj.mdmerge.rsp') -Raw
 # Reuse reference directories only; all metadata inputs/outputs are isolated.
 $rsp = [regex]::Replace($rsp, '-i\s+"[^"]+App.winmd"', ('-i "' + (Join-Path $output 'Unmerged/App.winmd') + '"'))
 $rsp = [regex]::Replace($rsp, '-i\s+"[^"]+XamlMetaDataProvider.winmd"', ('-i "' + (Join-Path $output 'Unmerged/XamlMetaDataProvider.winmd') + '"'))
@@ -35,7 +35,7 @@ $response = Join-Path $output 'merge.rsp'
 [IO.File]::WriteAllText($response, $rsp)
 & mdmerge.exe "@$response" *> (Join-Path $output 'merge.log')
 if ($LASTEXITCODE) { throw 'Isolated metadata merge failed' }
-$MetadataPath = Join-Path $output 'Merged/Magpie.winmd'
+$MetadataPath = Join-Path $output 'Merged/GMagpie.winmd'
 }
 $project = @'
 <Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
@@ -49,14 +49,14 @@ $project = @'
     @HEADERS@
   </ItemGroup>
   <Target Name="Verify">
-    <CompileXaml LanguageSourceExtension=".cpp" Language="CppWinRT" RootNamespace="Magpie"
-      XamlPages="@(Pages)" ProjectName="Magpie" ProjectPath="@PROJECT@"
+    <CompileXaml LanguageSourceExtension=".cpp" Language="CppWinRT" RootNamespace="GMagpie"
+      XamlPages="@(Pages)" ProjectName="GMagpie" ProjectPath="@PROJECT@"
       IsPass1="True" CompileMode="RealBuildPass1" OutputType="winexe"
       OutputPath="@OUTPUT@" ReferenceAssemblies="@(References)" ReferenceAssemblyPaths="@REFPATH@" CppWinRTLocalAssembly="@(Local)"
       WindowsSdkPath="@SDK@" TargetPlatformMinVersion="10.0.19041.0" SavedStateFile="@STATE@"
       EnableTypeInfoReflection="false" ForceSharedStateShutdown="false" />
-    <CompileXaml LanguageSourceExtension=".cpp" Language="CppWinRT" RootNamespace="Magpie"
-      XamlPages="@(Pages)" ProjectName="Magpie" ProjectPath="@PROJECT@"
+    <CompileXaml LanguageSourceExtension=".cpp" Language="CppWinRT" RootNamespace="GMagpie"
+      XamlPages="@(Pages)" ProjectName="GMagpie" ProjectPath="@PROJECT@"
       IsPass1="False" CompileMode="RealBuildPass2" OutputType="winexe" LocalAssembly="@LOCAL@"
       ClIncludeFiles="@(Headers)" CIncludeDirectories="@INCLUDES@" PlatformXmlDir="@PLATFORM@" XamlComponentResourceLocation="@LOCATION@"
       OutputPath="@OUTPUT@" ReferenceAssemblies="@(References)" ReferenceAssemblyPaths="@REFPATH@" CppWinRTLocalAssembly="@(Local)"
@@ -69,13 +69,13 @@ $sdkVersion = $env:WindowsSDKVersion.TrimEnd('\')
 $paths = @{
     TASK = Join-Path $env:WindowsSdkDir "bin/$sdkVersion/XamlCompiler/Microsoft.Windows.UI.Xaml.Build.Tasks.dll"
     PAGE = [IO.Path]::GetFullPath($PagePath)
-    PROJECT = Join-Path $repo 'src/Magpie/Magpie.vcxproj'
+    PROJECT = Join-Path $repo 'src/GMagpie/GMagpie.vcxproj'
     SDKREFS = Join-Path $env:WindowsSdkDir "References/$sdkVersion"
     REFPATH = Join-Path $env:WINDIR 'Microsoft.NET/Framework64/v4.0.30319'
     WINUI = Join-Path $CachedRepoDirectory 'packages/Microsoft.UI.Xaml.2.8.7/lib/uap10.0/Microsoft.UI.Xaml.winmd'
     WEBVIEW = Join-Path $CachedRepoDirectory 'packages/Microsoft.Web.WebView2.1.0.4078.44/lib/Microsoft.Web.WebView2.Core.winmd'
     LOCAL = [IO.Path]::GetFullPath($MetadataPath)
-    INCLUDES = (Split-Path $PagePath -Parent) + ';' + (Join-Path $repo 'src/Magpie')
+    INCLUDES = (Split-Path $PagePath -Parent) + ';' + (Join-Path $repo 'src/GMagpie')
     PLATFORM = Join-Path $env:WindowsSdkDir "Platforms/UAP/$sdkVersion/"
     LOCATION = $ComponentResourceLocation
     OUTPUT = $xamlOutput + '\'

@@ -1,4 +1,4 @@
-# Magpie 0.6.10 Beta8
+# GMagpie 0.6.10 Beta8
 
 日期：2026-10-13。本地测试版本，继承 Beta7 `a90c7da2` 及 Beta6 的全部已合入内容。
 

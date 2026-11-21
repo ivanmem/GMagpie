@@ -6,16 +6,16 @@
 #include <memory>
 #include <ranges>
 #include <string>
-#include "../src/Magpie/ParameterItems.h"
+#include "../src/GMagpie/ParameterItems.h"
 
-namespace Magpie {
+namespace GMagpie {
 struct ScalingModeParameter {
 	unsigned index; bool visible=true; double value=0;
 	unsigned Index() const {return index;}
 	bool IsVisible() const {return visible;}
 };
 }
-using namespace Magpie;
+using namespace GMagpie;
 template<class T> using com_ptr=std::shared_ptr<T>;
 template<class T,class... A> auto make_self(A&&... a){return std::make_shared<T>(std::forward<A>(a)...);}
 template<class T> T* get_self(T& value){return &value;}

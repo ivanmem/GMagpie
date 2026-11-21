@@ -10,7 +10,7 @@
 #include "DLSSNRParameters.h"
 #include "EffectParameterRestart.h"
 
-namespace Magpie {
+namespace GMagpie {
 struct MotionVectorRequest { int method = 0; };
 struct DlssnrExperimentProtocol { bool enabled = false; float scale = 1; };
 struct EffectOption { std::map<std::string, float> parameters; };
@@ -22,7 +22,7 @@ inline MotionVectorRequest ParseDlssOpticalFlowRequest(const EffectOption& optio
 }
 
 int main() {
-	using namespace Magpie;
+	using namespace GMagpie;
 	// Raw runtime options already use current values. Stored maps are migrated
 	// once at the persistence boundary, with the marker surviving every copy.
 	static_assert(int(DLSSNRProcessingMode::EveryFrame) == 0);

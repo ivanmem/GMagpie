@@ -13,7 +13,7 @@
 #include "DLSSNRParameters.h"
 #include "DLSSNRSparseState.h"
 
-namespace Magpie {
+namespace GMagpie {
 struct MotionVectorRequest { int method = 0; bool operator==(const MotionVectorRequest&) const = default; };
 struct DlssnrExperimentProtocol { bool enabled = false; float scale = 1; };
 struct EffectOption { std::map<std::string, float> parameters; };
@@ -52,7 +52,7 @@ struct DLSSNRFilter {
 }
 
 int main() {
-	using namespace Magpie;
+	using namespace GMagpie;
 	DLSSNRFilter filter;
 	EffectOption option{{{"enableInputResolutionScaling", 1.f}, {"multiPass", 3.f}, {"pass2_intensity", .7f}}};
 	for (int i = 1; i <= 3; ++i) filter._passSettings.push_back(ParseDLSSNRSettings(DLSSNRPassOption(option, i)));

@@ -7,7 +7,7 @@
 static const UINT WM_MAGPIE_SCALINGCHANGED =
 	RegisterWindowMessage(CommonSharedConstants::WM_MAGPIE_SCALINGCHANGED);
 // 用于与主程序交互。wParam 的值:
-// 0: Magpie 通知 TouchHelper 退出
+// 0: GMagpie 通知 TouchHelper 退出
 static const UINT WM_MAGPIE_TOUCHHELPER =
 	RegisterWindowMessage(CommonSharedConstants::WM_MAGPIE_TOUCHHELPER);
 
@@ -55,10 +55,10 @@ int App::Run() noexcept {
 			DispatchMessage(&msg);
 		}
 
-		// 等待新消息或 Magpie 退出
+		// 等待新消息或 GMagpie 退出
 		if (MsgWaitForMultipleObjectsEx(1, _hMagpieMutex.addressof(),
 			INFINITE, QS_ALLINPUT, MWMO_INPUTAVAILABLE) == WAIT_OBJECT_0) {
-			Logger::Get().Info("Magpie 已退出");
+			Logger::Get().Info("GMagpie 已退出");
 			_hMagpieMutex.ReleaseMutex();
 			_Uninitialize();
 			return 0;
@@ -84,7 +84,7 @@ bool App::_CheckMagpieRunning() noexcept {
 	}
 
 	if (wil::handle_wait(_hMagpieMutex.get(), 0)) {
-		Logger::Get().Error("Magpie 未运行");
+		Logger::Get().Error("GMagpie 未运行");
 		_hMagpieMutex.ReleaseMutex();
 		return false;
 	}
@@ -180,7 +180,7 @@ LRESULT App::_MessageHandler(UINT msg, WPARAM wParam, LPARAM lParam) noexcept {
 		ChangeWindowMessageFilterEx(_hwndMsg.get(), WM_MAGPIE_SCALINGCHANGED, MSGFLT_ADD, nullptr);
 		ChangeWindowMessageFilterEx(_hwndMsg.get(), WM_MAGPIE_TOUCHHELPER, MSGFLT_ADD, nullptr);
 
-		// 检查 Magpie 是否正在缩放，注意如果缩放窗口尚未显示视为没有缩放，此时
+		// 检查 GMagpie 是否正在缩放，注意如果缩放窗口尚未显示视为没有缩放，此时
 		// 缩放窗口正在初始化，会在完成后广播 WM_MAGPIE_SCALINGCHANGED 消息
 		HWND hwndFound = FindWindow(CommonSharedConstants::SCALING_WINDOW_CLASS_NAME, nullptr);
 		if (hwndFound && IsWindowVisible(hwndFound)) {
@@ -214,21 +214,21 @@ LRESULT App::_MessageHandler(UINT msg, WPARAM wParam, LPARAM lParam) noexcept {
 
 void App::_UpdateInputTransform(bool onTimer) noexcept {
 	if (_hwndScaling) {
-		LONG srcLeft = (LONG)(INT_PTR)GetProp(_hwndScaling, L"Magpie.SrcTouchLeft");
+		LONG srcLeft = (LONG)(INT_PTR)GetProp(_hwndScaling, L"GMagpie.SrcTouchLeft");
 		// 特殊值表示应禁用触控输入变换
 		if (srcLeft != std::numeric_limits<LONG>::min()) {
 			RECT srcRect{
 				.left = srcLeft,
-				.top = (LONG)(INT_PTR)GetProp(_hwndScaling, L"Magpie.SrcTouchTop"),
-				.right = (LONG)(INT_PTR)GetProp(_hwndScaling, L"Magpie.SrcTouchRight"),
-				.bottom = (LONG)(INT_PTR)GetProp(_hwndScaling, L"Magpie.SrcTouchBottom")
+				.top = (LONG)(INT_PTR)GetProp(_hwndScaling, L"GMagpie.SrcTouchTop"),
+				.right = (LONG)(INT_PTR)GetProp(_hwndScaling, L"GMagpie.SrcTouchRight"),
+				.bottom = (LONG)(INT_PTR)GetProp(_hwndScaling, L"GMagpie.SrcTouchBottom")
 			};
 
 			RECT destRect{
-				.left = (LONG)(INT_PTR)GetProp(_hwndScaling, L"Magpie.DestTouchLeft"),
-				.top = (LONG)(INT_PTR)GetProp(_hwndScaling, L"Magpie.DestTouchTop"),
-				.right = (LONG)(INT_PTR)GetProp(_hwndScaling, L"Magpie.DestTouchRight"),
-				.bottom = (LONG)(INT_PTR)GetProp(_hwndScaling, L"Magpie.DestTouchBottom")
+				.left = (LONG)(INT_PTR)GetProp(_hwndScaling, L"GMagpie.DestTouchLeft"),
+				.top = (LONG)(INT_PTR)GetProp(_hwndScaling, L"GMagpie.DestTouchTop"),
+				.right = (LONG)(INT_PTR)GetProp(_hwndScaling, L"GMagpie.DestTouchRight"),
+				.bottom = (LONG)(INT_PTR)GetProp(_hwndScaling, L"GMagpie.DestTouchBottom")
 			};
 
 			if (MagSetInputTransform(TRUE, &srcRect, &destRect)) {

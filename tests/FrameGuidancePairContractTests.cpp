@@ -3,7 +3,7 @@
 #include <cassert>
 #include <iostream>
 
-using namespace Magpie;
+using namespace GMagpie;
 
 int main() {
 	const FrameGuidanceExtent extent{1280,720};

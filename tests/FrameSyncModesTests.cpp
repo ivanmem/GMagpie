@@ -3,7 +3,7 @@
 #include <iostream>
 #include <limits>
 
-using namespace Magpie;
+using namespace GMagpie;
 
 int main() {
 	FrameSyncSettings defaults;

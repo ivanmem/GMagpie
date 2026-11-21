@@ -1,4 +1,4 @@
-// Isolated visible XAML-island probe. Never loads Magpie, services or config.
+// Isolated visible XAML-island probe. Never loads GMagpie, services or config.
 #define NOMINMAX
 #include <windows.h>
 #undef GetCurrentTime
@@ -14,7 +14,7 @@
 #include <winrt/Microsoft.UI.Xaml.Controls.h>
 #include <winrt/Microsoft.UI.Xaml.XamlTypeInfo.h>
 #endif
-#include "../src/Magpie/EffectChoiceItems.h"
+#include "../src/GMagpie/EffectChoiceItems.h"
 #include <iostream>
 #include <chrono>
 #include <string>
@@ -80,7 +80,7 @@ int main(int argc, char** argv) {
         wc.hInstance = GetModuleHandle(nullptr);
         wc.lpszClassName = L"MagpieFlyoutProbe";
         RegisterClass(&wc);
-        HWND host = CreateWindowEx(0, wc.lpszClassName, L"Magpie isolated parameter flyout probe",
+        HWND host = CreateWindowEx(0, wc.lpszClassName, L"GMagpie isolated parameter flyout probe",
             WS_OVERLAPPEDWINDOW, 100, 100, 850, 700, nullptr, nullptr, wc.hInstance, nullptr);
         DesktopWindowXamlSource source;
         auto native = source.as<IDesktopWindowXamlSourceNative2>();
@@ -103,8 +103,8 @@ int main(int argc, char** argv) {
         ComboBox category, quality;
         category.HorizontalAlignment(HorizontalAlignment::Stretch);
         quality.HorizontalAlignment(HorizontalAlignment::Stretch);
-        category.ItemsSource(Magpie::MakeEffectChoiceItems({L"Super resolution", L"Restoration", L"Streaming", L"Denoising", L"Deblur"}));
-        auto choices = Magpie::MakeEffectChoiceItems({L"Low", L"Medium", L"High", L"Ultra"});
+        category.ItemsSource(GMagpie::MakeEffectChoiceItems({L"Super resolution", L"Restoration", L"Streaming", L"Denoising", L"Deblur"}));
+        auto choices = GMagpie::MakeEffectChoiceItems({L"Low", L"Medium", L"High", L"Ultra"});
         quality.ItemsSource(choices);
         category.SelectedIndex(0); quality.SelectedIndex(1);
         TextBlock categoryLabel, qualityLabel;

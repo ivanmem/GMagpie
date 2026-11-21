@@ -1,4 +1,4 @@
-Magpie provides several capture methods. They have their pros and cons in different scenarios. For general purposes, it's recommended to use Graphics Capture, as it provides the best compatibility and smoothness.
+GMagpie provides several capture methods. They have their pros and cons in different scenarios. For general purposes, it's recommended to use Graphics Capture, as it provides the best compatibility and smoothness.
 
 | | Graphics Capture | Desktop Duplication | GDI | DwmSharedSurface |
 | :---: | :---: | :---: | :---: |:---: |

@@ -11,9 +11,9 @@ Build in a new output directory, using the current Core library:
 
 ```powershell
 pwsh -NoProfile -File tests/Run-DLSSNRFlowRejectionProbe.ps1 `
-  -BuildRoot 'C:\Magpie\release\v0.6.12-beta3' `
-  -CoreLibrary 'C:\Magpie\build\Magpie.Core.lib' `
-  -Output 'C:\Magpie\probe-output' `
+  -BuildRoot 'C:\GMagpie\release\v0.6.12-beta3' `
+  -CoreLibrary 'C:\GMagpie\build\GMagpie.Core.lib' `
+  -Output 'C:\GMagpie\probe-output' `
   -CompileOnly
 ```
 

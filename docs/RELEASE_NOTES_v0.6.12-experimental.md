@@ -1,4 +1,4 @@
-# Magpie Experimental v0.6.12
+# GMagpie Experimental v0.6.12
 
 本版新增 OKLab Image Adjustment 调色效果器、DLSSNR 模型与性能选项，改进参数编辑、帧率统计、捕获和 VRR 呈现。
 
@@ -40,7 +40,7 @@ VRR 仍为实验功能，默认关闭。更改捕获、节奏或 VRR 设置后�
 
 ## 安装、升级与回退
 
-首次安装和从旧版升级均使用完整主包 **`Magpie-Experimental-x64.zip`**。先备份设置并从托盘完全退出旧版，将整个 ZIP 解压到新目录，再运行其中的 `Magpie.exe`。
+首次安装和从旧版升级均使用完整主包 **`GMagpie-Experimental-x64.zip`**。先备份设置并从托盘完全退出旧版，将整个 ZIP 解压到新目录，再运行其中的 `GMagpie.exe`。
 
 使用过本地 Beta 配置时，DLSSNR 的异步逐帧自动回退为逐帧，异步隔帧自动回退为隔帧；保留有效更新间隔、模型预设和输入比例。“帧率与刷新”中的独立 **Async** 节奏继续保留。
 
@@ -50,18 +50,18 @@ VRR 仍为实验功能，默认关闭。更改捕获、节奏或 VRR 设置后�
 
 | 文件 | 用途与使用方式 |
 | --- | --- |
-| `Magpie-Experimental-x64.zip` | 可独立安装的完整主包，包含配套程序、资源与运行库。主包沿用 310.9.16 社区兼容 DLSSNR，供 RTX 20／30／40 系列使用。 |
-| `DLSSNR-DLL-Options.zip` | 沿用 NVIDIA 原版 RTX 50 与社区兼容 RTX 20／30／40 两个选项。切换前退出 Magpie 并备份原 DLL，将所选 `nvngx_dlssnr.dll` 放到 `Magpie.exe` 旁；具体步骤见包内说明。 |
+| `GMagpie-Experimental-x64.zip` | 可独立安装的完整主包，包含配套程序、资源与运行库。主包沿用 310.9.16 社区兼容 DLSSNR，供 RTX 20／30／40 系列使用。 |
+| `DLSSNR-DLL-Options.zip` | 沿用 NVIDIA 原版 RTX 50 与社区兼容 RTX 20／30／40 两个选项。切换前退出 GMagpie 并备份原 DLL，将所选 `nvngx_dlssnr.dll` 放到 `GMagpie.exe` 旁；具体步骤见包内说明。 |
 | `NGX_OTA_Switch.bat` | 可选的 NVIDIA NGX OTA 更新管理工具，需要管理员权限；Restore default 恢复默认设置。常规安装无需运行。 |
 
 ## 致谢
 
 - 感谢 [Len-huan](https://github.com/Len-huan) 在 [issue #73](https://github.com/SAOG0721/Magpie/issues/73) 中提出 DLSSNR 权重预设建议并提供相关分析。
-- 感谢 [yejincheng420](https://github.com/yejincheng420) 在其 [Magpie 分支](https://github.com/yejincheng420/Magpie/tree/turing-ampere) 中分享隔帧处理的基础思路。
+- 感谢 [yejincheng420](https://github.com/yejincheng420) 在其 [GMagpie 分支](https://github.com/yejincheng420/Magpie/tree/turing-ampere) 中分享隔帧处理的基础思路。
 
 ---
 
-# Magpie Experimental v0.6.12 User Guide
+# GMagpie Experimental v0.6.12 User Guide
 
 This version adds the OKLab Image Adjustment effect and DLSSNR model/performance controls, and improves parameter editing, frame-rate accounting, capture and VRR presentation.
 
@@ -96,28 +96,28 @@ Lower input scales reduce processing work and can lose detail. Longer alternatin
 
 - Improve WGC capture intervals and waiting, reducing polling for static pictures. Improve capture/output recovery after focus changes, occlusion/minimization and size changes, along with DWM capture-boundary handling.
 - Fix presentation stalls caused by some cursor repositioning and cursor-shape updates, and improve restoration of cursor position and confinement when scaling stops.
-- On supported **Graphics Capture (WGC) + DLSSNR + Front Edge + VRR output paths without frame generation**, Magpie can resubmit the most recently completed picture at the target cadence after roughly two target frame periods without a new content submission. VRR must be enabled, and tearing support must be available on the active output path.
+- On supported **Graphics Capture (WGC) + DLSSNR + Front Edge + VRR output paths without frame generation**, GMagpie can resubmit the most recently completed picture at the target cadence after roughly two target frame periods without a new content submission. VRR must be enabled, and tearing support must be available on the active output path.
 - Pending new pictures and processing already in progress take priority. These refreshes stop after roughly **250 ms** without a new content submission. They reuse a completed picture without rerunning DLSSNR; new-content FPS still depends on the source application, capture and effect processing.
 
 VRR remains experimental and defaults to Off. Restart scaling after changing capture, pacing or VRR settings. Frame intervals vary with the source application, driver, display and settings. See the packaged `FRAME_SYNC_GUIDE.md` for refresh controls.
 
 ## Installation, upgrades and rollback
 
-Use the complete **`Magpie-Experimental-x64.zip`** for a first installation or an upgrade from an older version. Back up settings and fully exit the previous version from the tray, extract the entire ZIP into a new folder, then run its `Magpie.exe`.
+Use the complete **`GMagpie-Experimental-x64.zip`** for a first installation or an upgrade from an older version. Back up settings and fully exit the previous version from the tray, extract the entire ZIP into a new folder, then run its `GMagpie.exe`.
 
 For configurations from local Betas, DLSSNR Async Every Frame automatically falls back to Every Frame, and Async Alternating Frames to Alternating Frames. Valid update intervals, model presets and input scales are retained. The separate **Async** pacing option under Frame rate and refresh remains available.
 
-Keep the previous program folder and a pre-upgrade settings backup. To roll back, fully exit the current version, restore the previous settings and run Magpie from the older folder.
+Keep the previous program folder and a pre-upgrade settings backup. To roll back, fully exit the current version, restore the previous settings and run GMagpie from the older folder.
 
 ## Assets
 
 | File | Purpose and use |
 | --- | --- |
-| `Magpie-Experimental-x64.zip` | The complete, standalone installation package with matching program, resources and runtime files. It retains the 310.9.16 community compatibility DLSSNR for RTX 20 / 30 / 40 series. |
-| `DLSSNR-DLL-Options.zip` | Retains the NVIDIA original for RTX 50 and the community version for RTX 20 / 30 / 40. Exit Magpie and back up the existing DLL before placing the chosen `nvngx_dlssnr.dll` beside `Magpie.exe`. See the included instructions for details. |
+| `GMagpie-Experimental-x64.zip` | The complete, standalone installation package with matching program, resources and runtime files. It retains the 310.9.16 community compatibility DLSSNR for RTX 20 / 30 / 40 series. |
+| `DLSSNR-DLL-Options.zip` | Retains the NVIDIA original for RTX 50 and the community version for RTX 20 / 30 / 40. Exit GMagpie and back up the existing DLL before placing the chosen `nvngx_dlssnr.dll` beside `GMagpie.exe`. See the included instructions for details. |
 | `NGX_OTA_Switch.bat` | Optional NVIDIA NGX OTA update-management tool requiring administrator privileges. Restore default restores the default settings. Normal installation does not require this tool. |
 
 ## Acknowledgments
 
 - Thanks to [Len-huan](https://github.com/Len-huan) for proposing DLSSNR weight presets and providing supporting analysis in [issue #73](https://github.com/SAOG0721/Magpie/issues/73).
-- Thanks to [yejincheng420](https://github.com/yejincheng420) for sharing the foundational idea behind alternating-frame processing in their [Magpie fork](https://github.com/yejincheng420/Magpie/tree/turing-ampere).
+- Thanks to [yejincheng420](https://github.com/yejincheng420) for sharing the foundational idea behind alternating-frame processing in their [GMagpie fork](https://github.com/yejincheng420/Magpie/tree/turing-ampere).

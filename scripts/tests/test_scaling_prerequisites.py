@@ -3,9 +3,9 @@ from pathlib import Path
 import sys
 
 root = Path(__file__).resolve().parents[2]
-window = (root / 'src/Magpie.Core/ScalingWindow.cpp').read_text(encoding='utf-8-sig')
-service = (root / 'src/Magpie/ScalingService.cpp').read_text(encoding='utf-8-sig')
-options = (root / 'src/Magpie.Core/include/ScalingOptions.h').read_text(encoding='utf-8-sig')
+window = (root / 'src/GMagpie.Core/ScalingWindow.cpp').read_text(encoding='utf-8-sig')
+service = (root / 'src/GMagpie/ScalingService.cpp').read_text(encoding='utf-8-sig')
+options = (root / 'src/GMagpie.Core/include/ScalingOptions.h').read_text(encoding='utf-8-sig')
 
 
 def block(text, marker):

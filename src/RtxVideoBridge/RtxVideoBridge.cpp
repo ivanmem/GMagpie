@@ -6,7 +6,7 @@
 
 namespace {
 // Private copy of the RTX Video SDK loader. DLSS keeps its own newer NGX
-// loader in Magpie.exe. Magpie calls only our plain ABI, not the SDK exports.
+// loader in GMagpie.exe. GMagpie calls only our plain ABI, not the SDK exports.
 ID3D11Device* activeDevice = nullptr;
 unsigned users = 0;
 bool faulted = false;

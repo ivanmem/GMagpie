@@ -8,7 +8,7 @@ import json
 import sys
 from pathlib import Path
 
-candidates = sorted((Path.home() / "AppData/Local/Magpie/config").glob("*/config.json"))
+candidates = sorted((Path.home() / "AppData/Local/GMagpie/config").glob("*/config.json"))
 if not candidates:
     print("no configuration file found - nothing persisted yet")
     sys.exit(0)

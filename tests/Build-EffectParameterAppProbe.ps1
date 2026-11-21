@@ -23,12 +23,12 @@ $vswhere = Join-Path ${env:ProgramFiles(x86)} 'Microsoft Visual Studio/Installer
 $vs = & $vswhere -latest -products * -requires Microsoft.Component.MSBuild -property installationPath | Select-Object -First 1
 Import-Module (Join-Path $vs 'Common7/Tools/Microsoft.VisualStudio.DevShell.dll')
 Enter-VsDevShell -VsInstallPath $vs -SkipAutomaticLocation -DevCmdArguments '-arch=x64 -host_arch=x64' | Out-Null
-$commands = Get-Content -LiteralPath (Join-Path $IntermediateDirectory 'Magpie.tlog/CL.command.1.tlog') -Raw
-$includes = @("/I$SourceRoot/src/Magpie", "/I$PSScriptRoot", "/I$IntermediateDirectory/Generated Files")
+$commands = Get-Content -LiteralPath (Join-Path $IntermediateDirectory 'GMagpie.tlog/CL.command.1.tlog') -Raw
+$includes = @("/I$SourceRoot/src/GMagpie", "/I$PSScriptRoot", "/I$IntermediateDirectory/Generated Files")
 foreach ($match in [regex]::Matches($commands, '(?i)/(?:external:)?I(?:"(?<quoted>[^"]+)"|(?<bare>[^\s]+))')) {
     $include = $match.Groups['quoted'].Value
     if (!$include) { $include = $match.Groups['bare'].Value }
-    if (![IO.Path]::IsPathRooted($include)) { $include = Join-Path (Join-Path $SourceRoot 'src/Magpie') $include }
+    if (![IO.Path]::IsPathRooted($include)) { $include = Join-Path (Join-Path $SourceRoot 'src/GMagpie') $include }
     $includes += "/I$include"
 }
 $defines = @()
@@ -42,10 +42,10 @@ $defines = @($defines | Select-Object -Unique)
 & cl.exe /nologo /c /std:c++20 /EHsc /utf-8 /MT /O2 /bigobj /W4 /WX @defines @includes (Join-Path $generated 'App.cpp') "/Fo:$generated/App.obj"
 if ($LASTEXITCODE) { throw 'Isolated App.cpp compile failed' }
 if ($RebuildParameterPage) {
-    & cl.exe /nologo /c /std:c++20 /EHsc /utf-8 /MT /O2 /bigobj /W4 /WX @defines @includes (Join-Path $SourceRoot 'src/Magpie/ScalingModesPage.cpp') "/Fo:$generated/ScalingModesPage.obj"
+    & cl.exe /nologo /c /std:c++20 /EHsc /utf-8 /MT /O2 /bigobj /W4 /WX @defines @includes (Join-Path $SourceRoot 'src/GMagpie/ScalingModesPage.cpp') "/Fo:$generated/ScalingModesPage.obj"
     if ($LASTEXITCODE) { throw 'Isolated parameter page compile failed' }
 }
-$linkText = ((Get-Content -LiteralPath (Join-Path $IntermediateDirectory 'Magpie.tlog/link.command.1.tlog') | Where-Object { $_ -and !$_.StartsWith('^') }) -join "`n")
+$linkText = ((Get-Content -LiteralPath (Join-Path $IntermediateDirectory 'GMagpie.tlog/link.command.1.tlog') | Where-Object { $_ -and !$_.StartsWith('^') }) -join "`n")
 $appObjects = [regex]::Matches($linkText, '(?i)"[^"\r\n]*[/\\]APP\.OBJ"')
 if ($appObjects.Count -ne 1) { throw 'Expected one App.obj input in candidate linker log' }
 $linkText = $linkText.Replace($appObjects[0].Value, ('"' + (Join-Path $generated 'App.obj') + '"'))
@@ -57,10 +57,10 @@ if ($RebuildParameterPage) {
 if ($CoreLibrary) {
     $CoreLibrary = (Resolve-Path -LiteralPath $CoreLibrary).Path
     $coreInputs = [regex]::Matches($linkText, '(?i)"[^"\r\n]*[/\\]MAGPIE\.CORE\.LIB"')
-    if ($coreInputs.Count -ne 1) { throw 'Expected one Magpie.Core.lib input in candidate linker log' }
+    if ($coreInputs.Count -ne 1) { throw 'Expected one GMagpie.Core.lib input in candidate linker log' }
     $linkText = $linkText.Replace($coreInputs[0].Value, ('"' + $CoreLibrary + '"'))
 }
-foreach ($entry in @(@('OUT','Magpie.exe'), @('PDB','Magpie.pdb'), @('MAP','Magpie.map'), @('IMPLIB','Magpie.lib'), @('WINMDFILE','Magpie.winmd'), @('LTCGOUT','Magpie.iobj'), @('MANIFESTFILE','Magpie.manifest'), @('PGD','Magpie.pgd'), @('ILK','Magpie.ilk'))) {
+foreach ($entry in @(@('OUT','GMagpie.exe'), @('PDB','GMagpie.pdb'), @('MAP','GMagpie.map'), @('IMPLIB','GMagpie.lib'), @('WINMDFILE','GMagpie.winmd'), @('LTCGOUT','GMagpie.iobj'), @('MANIFESTFILE','GMagpie.manifest'), @('PGD','GMagpie.pgd'), @('ILK','GMagpie.ilk'))) {
     $flag = $entry[0]; $path = Join-Path $OutputDirectory $entry[1]
     $pattern = '(?i)/' + $flag + ':(?:"[^"]*"|[^\s]+)'
     $replacement = '/' + $flag + ':"' + $path + '"'
@@ -68,7 +68,7 @@ foreach ($entry in @(@('OUT','Magpie.exe'), @('PDB','Magpie.pdb'), @('MAP','Magp
 }
 $rsp = Join-Path $generated 'link.rsp'
 [IO.File]::WriteAllText($rsp, $linkText)
-Push-Location (Join-Path $SourceRoot 'src/Magpie')
+Push-Location (Join-Path $SourceRoot 'src/GMagpie')
 try {
     & link.exe ('@' + $rsp)
     if ($LASTEXITCODE) { throw 'Isolated probe link failed' }
@@ -109,13 +109,13 @@ if ($Run) {
     # mode checks target PID twice and never sends keyboard input.
     $runs = if ($Probe -eq 'choices') { 2 } else { 1 }
     for ($attempt = 1; $attempt -le $runs; ++$attempt) {
-        $process = Start-Process -FilePath (Join-Path $OutputDirectory 'Magpie.exe') -WorkingDirectory $OutputDirectory -WindowStyle Hidden -PassThru
+        $process = Start-Process -FilePath (Join-Path $OutputDirectory 'GMagpie.exe') -WorkingDirectory $OutputDirectory -WindowStyle Hidden -PassThru
         if (!$process.WaitForExit(60000)) {
             Stop-Process -Id $process.Id
             throw 'Probe exceeded 60 seconds; stopped only the child process started here.'
         }
         if ($process.ExitCode) { throw "Probe exit code $($process.ExitCode); inspect its own log." }
-        $log = Get-Content -LiteralPath (Join-Path $OutputDirectory 'logs/Magpie.log') -Raw
+        $log = Get-Content -LiteralPath (Join-Path $OutputDirectory 'logs/GMagpie.log') -Raw
         if ($log -notmatch 'ParameterFlyoutAppProbe PASS:') { throw 'Probe did not record a successful run.' }
         if ($Probe -eq 'choices') {
             $saved = Get-Content -LiteralPath (Join-Path $configDirectory 'config.json') -Raw | ConvertFrom-Json

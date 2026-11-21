@@ -1,16 +1,16 @@
-# Magpie Experimental v0.5.6
+# GMagpie Experimental v0.5.6
 
 这是面向 NVIDIA RTX 用户的 x64 实验版本，主要更新 DLSS Super Resolution、DLSS Frame Generation 和 DLSSNR 的实验接入。
 
 ## 主要变化
 
-- 新增 `DLSS SR_Experimental` 非 Jitter 路径，可选择输入 Magpie 从捕获画面估算的运动矢量和深度。
+- 新增 `DLSS SR_Experimental` 非 Jitter 路径，可选择输入 GMagpie 从捕获画面估算的运动矢量和深度。
 - 新增 `DLSS FG_Experimental` 2x/3x/4x，并可复用同一组 Frame Guidance。
 - DLSS SR 和 DLSS FG 的 `Use Motion Vectors` 默认开启；`Use Estimated Depth (Experimental)` 默认关闭。
 - Jitter DLSS SR 路径保持原样；XeSS Frame Generation 本次没有接入新的 Guidance。
 - DLSSNR 使用同分辨率 SDR AI 滤镜路径，并通过日志中的 `DLSSNR STATUS` 报告创建和 Evaluate 状态。
 
-Magpie 无法取得游戏引擎原生运动矢量、深度或 UI 分离信息。本版本使用从捕获色彩帧估算的数据，因此画质、延迟和稳定性不能等同于游戏原生 DLSS 接入。
+GMagpie 无法取得游戏引擎原生运动矢量、深度或 UI 分离信息。本版本使用从捕获色彩帧估算的数据，因此画质、延迟和稳定性不能等同于游戏原生 DLSS 接入。
 
 ## DLSSNR 运行库
 

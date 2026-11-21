@@ -21,7 +21,7 @@
 #include "DLSSNRMultiPass.h"
 #undef private
 
-using namespace Magpie;
+using namespace GMagpie;
 ID3D12Device* testedDevice = nullptr;
 bool DebugMessages() {
 	if (!testedDevice) return true;

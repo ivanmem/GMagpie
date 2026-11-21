@@ -10,8 +10,8 @@
 #include "LocalizationService.h"
 #include <winrt/Windows.UI.Xaml.Input.h>
 
-namespace winrt::Magpie::implementation {
-using namespace ::Magpie;
+namespace winrt::GMagpie::implementation {
+using namespace ::GMagpie;
 
 template<class F> void VisitChoiceProbeTree(const DependencyObject& node, const F& visit) {
     visit(node);
@@ -25,7 +25,7 @@ static void RequireChoiceProbe(bool condition, const char* message) {
 
 static void CheckChoiceProbeLocalization(const ComboBox& combo, std::string_view name) {
     const std::wstring_view language(LocalizationService::Get().Language());
-    const auto parameter = combo.DataContext().as<winrt::Magpie::ScalingModeParameter>();
+    const auto parameter = combo.DataContext().as<winrt::GMagpie::ScalingModeParameter>();
     const bool interval = name == "sparseUpdateInterval";
     std::vector<hstring> expected;
     hstring expectedLabel, expectedTooltip;
@@ -101,7 +101,7 @@ static void CheckChoiceProbeLabels(const DependencyObject& root) {
     unsigned companions = 0, choiceTooltips = 0;
     VisitChoiceProbeTree(root, [&](const auto& node) {
         const auto element = node.template try_as<FrameworkElement>();
-        const auto parameter = element ? element.DataContext().template try_as<winrt::Magpie::ScalingModeParameter>() : nullptr;
+        const auto parameter = element ? element.DataContext().template try_as<winrt::GMagpie::ScalingModeParameter>() : nullptr;
         if (!parameter) return;
         const auto checkbox = node.template try_as<CheckBox>();
         hstring expectedTooltip;
@@ -283,7 +283,7 @@ static fire_and_forget RunParameterFlyoutAppProbe() {
         co_await WaitForChoiceProbe([] {
             bool realized = false;
             VisitChoiceProbeTree(App::Get().RootPage().as<DependencyObject>(), [&](const auto& node) {
-                if (auto expander = node.template try_as<winrt::Magpie::SettingsExpander>()) {
+                if (auto expander = node.template try_as<winrt::GMagpie::SettingsExpander>()) {
                     realized = true; expander.IsExpanded(true);
                 }
             });
@@ -295,7 +295,7 @@ static fire_and_forget RunParameterFlyoutAppProbe() {
                 const auto button = node.template try_as<Button>();
                 const auto flyout = button ? button.Flyout().template try_as<Controls::Flyout>() : nullptr;
                 const auto content = flyout ? flyout.Content().template try_as<ContentControl>() : nullptr;
-                if (content && content.Content().template try_as<winrt::Magpie::EffectParametersViewModel>()) {
+                if (content && content.Content().template try_as<winrt::GMagpie::EffectParametersViewModel>()) {
                     anchor = button; parent = flyout;
                 }
             });
@@ -321,7 +321,7 @@ static fire_and_forget RunParameterFlyoutAppProbe() {
             VisitChoiceProbeTree(parent.Content().as<DependencyObject>(), [&](const auto& node) {
                 const auto control = node.template try_as<decltype(tag)>();
                 if (!control) return;
-                const auto parameter = control.DataContext().template try_as<winrt::Magpie::ScalingModeParameter>();
+                const auto parameter = control.DataContext().template try_as<winrt::GMagpie::ScalingModeParameter>();
                 if (parameter && info.params.at(get_self<ScalingModeParameter>(parameter)->Index()).name == name) found = control;
             });
             return found;
@@ -331,7 +331,7 @@ static fire_and_forget RunParameterFlyoutAppProbe() {
             VisitChoiceProbeTree(parent.Content().as<DependencyObject>(), [&](const auto& node) {
                 const auto checkbox = node.template try_as<CheckBox>();
                 if (checkbox && checkbox.Name() == L"ParameterCompanion") {
-                    const auto model = checkbox.DataContext().template try_as<winrt::Magpie::ScalingModeParameter>();
+                    const auto model = checkbox.DataContext().template try_as<winrt::GMagpie::ScalingModeParameter>();
                     if (model && info.params.at(get_self<ScalingModeParameter>(model)->Index()).name == "residualShowAdvanced") advanced = checkbox;
                 }
             });
@@ -343,7 +343,7 @@ static fire_and_forget RunParameterFlyoutAppProbe() {
             VisitChoiceProbeTree(parent.Content().as<DependencyObject>(), [&](const auto& node) {
                 if (!node.template try_as<ComboBox>() && !node.template try_as<Slider>()) return;
                 const auto control = node.template as<FrameworkElement>();
-                const auto parameter = control.DataContext().template try_as<winrt::Magpie::ScalingModeParameter>();
+                const auto parameter = control.DataContext().template try_as<winrt::GMagpie::ScalingModeParameter>();
                 if (!parameter || !parameter.IsVisible()) return;
                 const auto& name = info.params.at(get_self<ScalingModeParameter>(parameter)->Index()).name;
                 if (IsDLSSNRPerformanceParameter(name)) order.push_back(name);
@@ -365,7 +365,7 @@ static fire_and_forget RunParameterFlyoutAppProbe() {
             unsigned choices = 0, sliders = 0;
             VisitChoiceProbeTree(parent.Content().as<DependencyObject>(), [&](const auto& node) {
                 const auto element = node.template try_as<FrameworkElement>();
-                const auto parameter = element ? element.DataContext().template try_as<winrt::Magpie::ScalingModeParameter>() : nullptr;
+                const auto parameter = element ? element.DataContext().template try_as<winrt::GMagpie::ScalingModeParameter>() : nullptr;
                 if (!parameter) return;
                 if (node.template try_as<ComboBox>()) { ++choices; RequireChoiceProbe(parameter.IsChoice(), "Non-choice dropdown was instantiated"); }
                 if (node.template try_as<Slider>()) { ++sliders; RequireChoiceProbe(parameter.IsFloat(), "Non-numeric slider was instantiated"); }
@@ -423,7 +423,7 @@ static fire_and_forget RunParameterFlyoutAppProbe() {
                 if (std::string_view(name) == "processingMode") {
                     const auto resolution = findControl("resolutionControl", ComboBox{nullptr});
                     const auto parameter = get_self<ScalingModeParameter>(
-                        resolution.DataContext().as<winrt::Magpie::ScalingModeParameter>());
+                        resolution.DataContext().as<winrt::GMagpie::ScalingModeParameter>());
                     RequireChoiceProbe(parameter->IsChoiceAllowed(0) && parameter->IsChoiceAllowed(1),
                         "Processing mode restricted independent resolution choices");
                     auto interval = findControl("sparseUpdateInterval", ComboBox{nullptr});
@@ -538,4 +538,4 @@ static fire_and_forget RunParameterFlyoutAppProbe() {
     App::Get().MainWindow().Destroy();
     PostQuitMessage(passed ? 0 : 1);
 }
-} // namespace winrt::Magpie::implementation
+} // namespace winrt::GMagpie::implementation

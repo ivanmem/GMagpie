@@ -1,6 +1,6 @@
 # Frame Guidance / DLSSNR 测试矩阵
 
-每次测试记录 Magpie commit/工作区、GPU、驱动、分辨率、捕获方式、光流方法/质量和日志路径。截图或 DDS 使用 `日期-场景-method-quality-frameId` 命名。
+每次测试记录 GMagpie commit/工作区、GPU、驱动、分辨率、捕获方式、光流方法/质量和日志路径。截图或 DDS 使用 `日期-场景-method-quality-frameId` 命名。
 
 | 组别 | 方法/质量 | 预期 Provider | 关键检查 |
 | --- | --- | --- | --- |

@@ -12,7 +12,7 @@ Enter-VsDevShell -VsInstallPath $vs -SkipAutomaticLocation -DevCmdArguments '-ar
 if ($LASTEXITCODE) { throw 'OKLab metadata is stale' }
 if (!$ProductionShaderDirectory) { $ProductionShaderDirectory = Join-Path $repo 'obj/tests/oklab-compiler' }
 if (!(Test-Path (Join-Path $ProductionShaderDirectory 'fp32-pass2.cso'))) { throw 'Run Run-OKLabCompilerTests.ps1 first to produce the actual effect compiler shaders.' }
-& cl.exe /nologo /std:c++20 /EHsc /utf-8 /MT /O2 /W4 /DNOMINMAX "/I$repo/src/Magpie.Core/include" "/I$repo/src/Magpie.Core" "$repo/tests/OKLabTests.cpp" "/Fe:$output/OKLabTests.exe" "/Fo:$output/OKLabTests.obj" /link d3d11.lib d3dcompiler.lib
+& cl.exe /nologo /std:c++20 /EHsc /utf-8 /MT /O2 /W4 /DNOMINMAX "/I$repo/src/GMagpie.Core/include" "/I$repo/src/GMagpie.Core" "$repo/tests/OKLabTests.cpp" "/Fe:$output/OKLabTests.exe" "/Fo:$output/OKLabTests.obj" /link d3d11.lib d3dcompiler.lib
 if ($LASTEXITCODE) { throw 'OKLab test compilation failed' }
 & "$output/OKLabTests.exe" $ProductionShaderDirectory
 if ($LASTEXITCODE) { throw 'OKLab tests failed' }

@@ -22,6 +22,6 @@
 - 显示器信息读取失败时提前退出；全屏效果模式在允许最大化缩放时通过，未允许时提前拦截。
 - 静态检查生产调用顺序：源检查与错误返回先于 `CreateWindowEx`、Renderer 初始化；新判断位于裁剪前。
 
-在 Visual Studio x64 开发命令行中，可先用 Python 脚本生成测试，再使用 `/std:c++20 /EHsc /I src/Magpie.Core/include` 编译生成的 `windowed_source_preflight.cpp`。
+在 Visual Studio x64 开发命令行中，可先用 Python 脚本生成测试，再使用 `/std:c++20 /EHsc /I src/GMagpie.Core/include` 编译生成的 `windowed_source_preflight.cpp`。
 
 这些是 CPU 回归和物理坐标用例，不能代替真实多显示器/DPI、游戏和 GPU 画面的验收。本项修改只提供入口保护，不代表已经查明或修复 0.6.6 → 0.6.7 的 GPU 黑屏回归根因。

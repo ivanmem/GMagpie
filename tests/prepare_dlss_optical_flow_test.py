@@ -18,17 +18,17 @@ def function(path, signature):
     return source[start:end]
 
 
-parts = ['namespace Magpie {']
-parts.extend(function('src/Magpie.Core/OpticalFlowSettings.h', signature) for signature in [
+parts = ['namespace GMagpie {']
+parts.extend(function('src/GMagpie.Core/OpticalFlowSettings.h', signature) for signature in [
     'inline MotionVectorRequest ParseOpticalFlowRequest(',
     'inline MotionVectorRequest ParseDlssOpticalFlowRequest('])
 for path, signatures in [
-    ('src/Magpie.Core/DLSSNRFilter.cpp', [
+    ('src/GMagpie.Core/DLSSNRFilter.cpp', [
         'FrameGuidanceRequirements\nDLSSNRFilter::GetFrameGuidanceRequirements()',
         'EffectParameterRestartReason DLSSNRFilter::GetParameterRestartReason(']),
-    ('src/Magpie.Core/DLSSFrameGenerator.cpp', [
+    ('src/GMagpie.Core/DLSSFrameGenerator.cpp', [
         'FrameGuidanceRequirements\nDLSSFrameGenerator::GetFrameGuidanceRequirements()']),
-    ('src/Magpie.Core/FrameGuidanceDiagnostics.cpp', [
+    ('src/GMagpie.Core/FrameGuidanceDiagnostics.cpp', [
         'FrameGuidanceRequirements\nFrameGuidanceDiagnostics::GetFrameGuidanceRequirements()',
         'EffectParameterApplyMode FrameGuidanceDiagnostics::GetParameterApplyMode(',
         'EffectParameterRestartReason FrameGuidanceDiagnostics::GetParameterRestartReason(',

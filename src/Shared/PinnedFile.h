@@ -7,7 +7,7 @@
 #include <string_view>
 #pragma comment(lib, "bcrypt.lib")
 
-namespace Magpie::PinnedFile {
+namespace GMagpie::PinnedFile {
 
 // No executable mapping: verify bytes before allowing a third-party load.
 // Callers can retain this handle to deny changes while the file is in use.

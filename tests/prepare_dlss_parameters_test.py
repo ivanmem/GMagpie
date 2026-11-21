@@ -19,8 +19,8 @@ def descriptor(path, name, function):
     fields.setdefault("STEP", "1")
     numbers = [fields["DEFAULT"], lo, hi, fields["STEP"]]
     if kind == "float": numbers = [v + ".f" for v in numbers]
-    result = f"inline Magpie::EffectParameterDesc {function}() {{ Magpie::EffectParameterDesc p; p.name=\"{name}\";\n"
-    result += f"p.constant = Magpie::EffectConstant<{kind}>{{{','.join(numbers)}}};\n"
+    result = f"inline GMagpie::EffectParameterDesc {function}() {{ GMagpie::EffectParameterDesc p; p.name=\"{name}\";\n"
+    result += f"p.constant = GMagpie::EffectConstant<{kind}>{{{','.join(numbers)}}};\n"
     if options: result += "p.choices={" + ",".join(f'{{{v},"{label}"}}' for v, label in options) + "};\n"
     return result + "return p; }\n"
 
@@ -30,9 +30,9 @@ code += descriptor("src/Effects/DLSSNR/DLSSNR_AI_Filter.hlsl", "processingMode",
 code += descriptor("src/Effects/DLSSNR/DLSSNR_AI_Filter.hlsl", "sparseUpdateInterval", "NrIntervalDescriptor")
 (out / "dlss_parameter_descriptors.h").write_text(code, encoding="utf-8")
 
-factory = (repo / "src/Magpie.Core/NativeEffectBackendFactory.cpp").read_text(encoding="utf-8-sig")
+factory = (repo / "src/GMagpie.Core/NativeEffectBackendFactory.cpp").read_text(encoding="utf-8-sig")
 assert factory.count(".renderPreset = ParseDLSSSRPreset(option)") == 2  # SDR and HDR
 assert ".renderPreset = 10 // Preserve the hidden legacy adapter's J contract." in factory
-renderer = (repo / "src/Magpie.Core/Renderer.cpp").read_text(encoding="utf-8-sig")
+renderer = (repo / "src/GMagpie.Core/Renderer.cpp").read_text(encoding="utf-8-sig")
 assert "return DLSSNRParameterChangesCurrentOutput(name, activePasses);" in renderer
 print("Shipped SR/NR descriptors and SDR/HDR/legacy/renderer wiring checked.")

@@ -1,5 +1,5 @@
 #Requires -Version 7.0
-param([string]$PackageRoot, [string]$OutputDirectory = (Join-Path $env:TEMP 'Magpie-Coordination-Syntax'))
+param([string]$PackageRoot, [string]$OutputDirectory = (Join-Path $env:TEMP 'GMagpie-Coordination-Syntax'))
 $ErrorActionPreference = 'Stop'
 $syntaxRepo = Split-Path $PSScriptRoot -Parent
 if (!$PackageRoot) {
@@ -12,7 +12,7 @@ $syntaxVs = & $syntaxVswhere -latest -products * -requires Microsoft.VisualStudi
 if (!$syntaxVs) { throw 'Visual Studio C++ tools not found.' }
 Import-Module (Join-Path $syntaxVs 'Common7/Tools/Microsoft.VisualStudio.DevShell.dll')
 Enter-VsDevShell -VsInstallPath $syntaxVs -SkipAutomaticLocation -DevCmdArguments '-arch=x64 -host_arch=x64' | Out-Null
-$syntaxIncludes = @("$syntaxRepo/src/Magpie.Core", "$syntaxRepo/src/Magpie.Core/include", "$syntaxRepo/src/Shared")
+$syntaxIncludes = @("$syntaxRepo/src/GMagpie.Core", "$syntaxRepo/src/GMagpie.Core/include", "$syntaxRepo/src/Shared")
 $syntaxWil = Get-ChildItem -LiteralPath $PackageRoot -Directory -Filter 'Microsoft.Windows.ImplementationLibrary.*' |
     Where-Object { Test-Path -LiteralPath (Join-Path $_.FullName 'include/wil/resource.h') } | Select-Object -First 1
 if (!$syntaxWil) { throw 'Existing WIL headers not found; this check does not restore packages.' }
@@ -32,7 +32,7 @@ $syntaxLog = Join-Path $OutputDirectory 'syntax.log'
 Set-Content -LiteralPath $syntaxLog -Value 'MSVC /Zs only; no object, library, executable, package or deployment.'
 foreach ($syntaxSource in @('Win32Helper.cpp', 'NvidiaForegroundCompatibility.cpp', 'ScalingWindow.cpp', 'ScalingRuntime.cpp', 'Renderer.cpp', 'GraphicsCaptureFrameSource.cpp', 'SrcTracker.cpp', 'ParameterInputHost.cpp', 'CursorManager.cpp')) {
     Write-Host "Checking $syntaxSource"
-    $syntaxResult = & cl.exe @syntaxFlags "$syntaxRepo/src/Magpie.Core/$syntaxSource" 2>&1
+    $syntaxResult = & cl.exe @syntaxFlags "$syntaxRepo/src/GMagpie.Core/$syntaxSource" 2>&1
     $syntaxCode = $LASTEXITCODE
     $syntaxResult | Tee-Object -FilePath $syntaxLog -Append
     if ($syntaxCode) { throw "Production syntax check failed: $syntaxSource" }

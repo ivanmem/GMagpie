@@ -1,13 +1,13 @@
 """Generate a CPU harness using production layout code and the project's Dear ImGui.
 
-Compile with MSVC, Magpie.Core/include and the installed ImGui include/library.
+Compile with MSVC, GMagpie.Core/include and the installed ImGui include/library.
 No native window or GPU is created. Pass an output directory as the argument.
 """
 from pathlib import Path
 import sys
 
 root = Path(__file__).resolve().parents[2]
-drawer = (root / 'src/Magpie.Core/OverlayDrawer.cpp').read_text(encoding='utf-8-sig')
+drawer = (root / 'src/GMagpie.Core/OverlayDrawer.cpp').read_text(encoding='utf-8-sig')
 panel = drawer.split('bool OverlayDrawer::_DrawEffectParameters(', 1)[1]
 prepare = panel.split('const ImGuiViewport* parameterViewport =', 1)[1].split('\n\tconst std::string title', 1)[0]
 prepare = 'const ImGuiViewport* parameterViewport =' + prepare
@@ -23,7 +23,7 @@ harness = r'''
 #include <limits>
 #include <string>
 #include <unordered_map>
-using namespace Magpie;
+using namespace GMagpie;
 constexpr float EFFECT_PARAMETERS_MIN_WIDTH = 360, EFFECT_PARAMETERS_MIN_HEIGHT = 400;
 const char* EFFECT_PARAMETERS_WINDOW_ID = "effectParameters";
 struct Options { std::unordered_map<std::string, OverlayWindowOption> windows; };

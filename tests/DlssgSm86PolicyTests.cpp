@@ -1,6 +1,6 @@
 // Standalone contract test, to be compiled in the later build session.
-#include "../src/Magpie.Core/include/DlssgSm86Policy.h"
-using namespace Magpie::DlssgSm86Policy;
+#include "../src/GMagpie.Core/include/DlssgSm86Policy.h"
+using namespace GMagpie::DlssgSm86Policy;
 static_assert(SelectRoute(7, 5) == Route::NativeFamily);
 static_assert(SelectRoute(8, 6) == Route::NativeFamily);
 static_assert(SelectRoute(8, 9) == Route::NewerPtx);
@@ -24,12 +24,12 @@ static_assert(EffectiveMultiplier(4, 4) == 4);
 static_assert(EffectiveMultiplier(UINT32_MAX, 4) == 4);
 static_assert(EffectiveMultiplier(4, 2) == 2);
 static_assert(EffectiveMultiplier(4, 1) == 1);
-#include "../src/Magpie.Core/include/DLSSFGParameters.h"
+#include "../src/GMagpie.Core/include/DLSSFGParameters.h"
 #include <cassert>
 #include <limits>
 #include <string>
 #include <vector>
-using namespace Magpie;
+using namespace GMagpie;
 int main() {
     for (float bad : {-1.f, 4.f, 1.5f, std::numeric_limits<float>::quiet_NaN(),
         std::numeric_limits<float>::infinity()})

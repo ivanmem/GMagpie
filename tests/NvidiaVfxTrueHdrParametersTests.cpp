@@ -7,7 +7,7 @@
 
 struct Effect { std::map<std::string, float> parameters; };
 int main() {
-	using namespace Magpie;
+	using namespace GMagpie;
 	Effect option;
 	const auto original = *ReadNvidiaVfxTrueHdrTunables(option);
 	assert((original.values == std::array<uint32_t, 5>{100, 100, 50, 1000, 0}));

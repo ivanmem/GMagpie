@@ -16,7 +16,7 @@
 #include <utility>
 #include <memory>
 
-namespace Magpie {
+namespace GMagpie {
 static const HWND fakeCapture = HWND(uintptr_t(1)), fakeRoot = HWND(uintptr_t(2)), fakeOutput = HWND(uintptr_t(3)), other = HWND(uintptr_t(4));
 static const HWND fakeMainUI = HWND(uintptr_t(5)), parameter = HWND(uintptr_t(6)), fakePopup = HWND(uintptr_t(7));
 struct NativeWindow { DWORD pid, tid; uintptr_t atom; HWND root; bool visible = true, enabled = true, iconic = false; HWND owner = nullptr; };
@@ -129,7 +129,7 @@ static BOOL FakeModuleInformation(HANDLE, HMODULE module, MODULEINFO* info, DWOR
 #define K32GetModuleInformation FakeModuleInformation
 }
 #include "include/SourceWindowRelations.h"
-namespace Magpie {
+namespace GMagpie {
 struct SourceWindowIdentity { HWND capture, root; DWORD capturePid, captureTid; uintptr_t captureClass;
 	DWORD rootPid, rootTid; uintptr_t rootClass; };
 using ForegroundFunction = HWND(WINAPI*)();
@@ -197,7 +197,7 @@ static ForegroundCompatibilitySnapshot Session() {
 }
 }
 int main() {
-	using namespace Magpie;
+	using namespace GMagpie;
 	initializeResult = MH_ERROR_MEMORY_PROTECT;
 	assert(!InstallHook() && !hookInitialized && !createCalls && !enableCalls);
 	initializeResult = MH_ERROR_ALREADY_INITIALIZED; createResult = MH_ERROR_ALREADY_CREATED;

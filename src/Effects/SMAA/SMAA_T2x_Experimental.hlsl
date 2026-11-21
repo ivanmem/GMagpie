@@ -1,5 +1,5 @@
-// Captured-frame approximation of SMAA T2x for Magpie.
-// The official jitter pattern and subsample indices are used, but Magpie cannot
+// Captured-frame approximation of SMAA T2x for GMagpie.
+// The official jitter pattern and subsample indices are used, but GMagpie cannot
 // jitter the original game's geometry or obtain motion vectors.
 
 //!MAGPIE EFFECT

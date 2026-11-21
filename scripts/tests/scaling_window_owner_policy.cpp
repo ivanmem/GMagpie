@@ -64,7 +64,7 @@ static HWINEVENTHOOK HookForTest(DWORD first, DWORD last, HMODULE module, WINEVE
 #undef GetWindow
 #undef SetWindowLongPtrW
 #include "CaptureTargetLifetime.h"
-using namespace Magpie;
+using namespace GMagpie;
 struct NvidiaForegroundCompatibility {
     static void Poll() {}
     static void Retire() {}
@@ -151,7 +151,7 @@ static bool _Show() { ++shows; return _EstablishWindowCoordination() && showSucc
 #include "ScalingWindowOwnerReport.inc"
 
 static HWND Window(HWND parent=nullptr, HWND owner=nullptr) {
-    HWND h=CreateWindowExW(WS_EX_NOACTIVATE,L"STATIC",L"Magpie window coordination test",
+    HWND h=CreateWindowExW(WS_EX_NOACTIVATE,L"STATIC",L"GMagpie window coordination test",
         parent ? WS_CHILD : WS_POPUP, -32000,-32000,32,32,parent?parent:owner,nullptr,GetModuleHandleW(nullptr),nullptr);
     assert(h); return h;
 }
@@ -435,7 +435,7 @@ int main() {
     EnableWindow(source,FALSE); assert(!_sourceCoordinator.NeedsTopmost(true,false));
     EnableWindow(source,TRUE); assert(_sourceCoordinator.NeedsTopmost(true,false));
     assert(!_sourceCoordinator.NeedsTopmost(true,true));
-    HWND topmostSource=CreateWindowExW(WS_EX_NOACTIVATE|WS_EX_TOPMOST,L"STATIC",L"Magpie topmost source",
+    HWND topmostSource=CreateWindowExW(WS_EX_NOACTIVATE|WS_EX_TOPMOST,L"STATIC",L"GMagpie topmost source",
         WS_POPUP,-32000,-32000,32,32,nullptr,nullptr,GetModuleHandleW(nullptr),nullptr);
     assert(topmostSource && (GetWindowLongPtrW(topmostSource,GWL_EXSTYLE)&WS_EX_TOPMOST));
     SourceWindowCoordinator topmostCoordinator; assert(topmostCoordinator.Prepare(topmostSource));

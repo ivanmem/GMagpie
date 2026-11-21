@@ -2,7 +2,7 @@
 #include <cassert>
 #include <iostream>
 
-using namespace Magpie;
+using namespace GMagpie;
 using namespace std::chrono_literals;
 
 int main() {

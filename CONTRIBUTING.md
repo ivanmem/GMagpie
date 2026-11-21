@@ -4,7 +4,7 @@ When adding an effect or changing its capabilities, update both languages of the
 
 **First of all, thank you for spending your valuable time on this project!**
 
-Magpie is a personal project, initially inspired by IntegerScaler and Lossless Scaling. However, the project has become much more powerful than its predecessors. Due to the limited capability and energy of the developers, we welcome any form of contribution to this project! Magpie follows the [All Contributors](https://github.com/all-contributors/all-contributors) protocol. No matter in what form you contributed to the project (e.g. code, document, test, etc.), the developer will add you to the contributors list as long as you contributed enough.
+GMagpie is a personal project, initially inspired by IntegerScaler and Lossless Scaling. However, the project has become much more powerful than its predecessors. Due to the limited capability and energy of the developers, we welcome any form of contribution to this project! GMagpie follows the [All Contributors](https://github.com/all-contributors/all-contributors) protocol. No matter in what form you contributed to the project (e.g. code, document, test, etc.), the developer will add you to the contributors list as long as you contributed enough.
 
 If you are new here, we strongly recommend you to read [this article](https://opensourceway.community/open-source-guide/how-to-contribute/) (it's in Chinese).
 
@@ -16,7 +16,7 @@ Below are some types of contributions you might want to make:
 
 ### I encountered an error 🐞
 
-Magpie hasn't been thoroughly tested, so errors are inevitable. We hope you can let us know about the errors, which helps everyone having the same problems.
+GMagpie hasn't been thoroughly tested, so errors are inevitable. We hope you can let us know about the errors, which helps everyone having the same problems.
 
 Please start by searching the errors in Issues and Discussions to avoid duplicate questions. Please publish a [Issue (bug report)](https://github.com/Blinue/Magpie/issues/new?assignees=&labels=bug&template=01_bug.yaml). Here are some best practices to help the developers to quickly locate the error:
 
@@ -35,11 +35,11 @@ Please search in [Issue](https://github.com/Blinue/Magpie/issues) first for your
 
 ### I'd like to contribute code 💻
 
-Contributing code is the more direct way to help Magpie. You may fix bugs, add new features, or correct formatting issues. You are not limited by the magnitude of the contribution. Every line is important!
+Contributing code is the more direct way to help GMagpie. You may fix bugs, add new features, or correct formatting issues. You are not limited by the magnitude of the contribution. Every line is important!
 
-Like all other open source projects, you need to initiate pull requests to contribute codes for Magpie. The developers may ask you to make some modifications. Your pull request may be closed if you fail to respond in a timely manner. You should merge your commits into the dev branch.
+Like all other open source projects, you need to initiate pull requests to contribute codes for GMagpie. The developers may ask you to make some modifications. Your pull request may be closed if you fail to respond in a timely manner. You should merge your commits into the dev branch.
 
-**Note: once you contribute code to Magpie, you are agreeing to transfer the copyright of that code to the current copyright owner of Magpie.** This allows developers to make important decisions (like changing the license) without getting consent from every single contributor. The developers promise that the only changes in license will be shifting to newer versions of GPL. If you'd like to keep your copyrights, you will have to quit contributing and to apply the changes only to your forks.
+**Note: once you contribute code to GMagpie, you are agreeing to transfer the copyright of that code to the current copyright owner of GMagpie.** This allows developers to make important decisions (like changing the license) without getting consent from every single contributor. The developers promise that the only changes in license will be shifting to newer versions of GPL. If you'd like to keep your copyrights, you will have to quit contributing and to apply the changes only to your forks.
 
 You need to follow the following rules when contributing code:
 
@@ -83,14 +83,14 @@ You need to follow the following rules when contributing code:
 
 ### I'd like to contribute translations 🌍
 
-We are using Weblate for localization work. If you'd like to help translate Magpie into more languages, please visit https://hosted.weblate.org/projects/magpie.
+We are using Weblate for localization work. If you'd like to help translate GMagpie into more languages, please visit https://hosted.weblate.org/projects/magpie.
 
 ### I'd like to contribute to the documentations 📖
 
-Because of the laziness of the developers, the documentation of Magpie is constantly missing or out of date. Contributions to documentation are more than welcome! The MagPie wiki is automatically published from the docs folder in the `main` branch, so editing the documentation follows the same procedures of contributing code.
+Because of the laziness of the developers, the documentation of GMagpie is constantly missing or out of date. Contributions to documentation are more than welcome! The MagPie wiki is automatically published from the docs folder in the `main` branch, so editing the documentation follows the same procedures of contributing code.
 
 Please merge to the `main` branch if you are improving the documentations of existing features. Otherwise merge to the `dev` branch. All changes in the `dev` branch will be merged to the `main` branch when new versions are released, this will also trigger the wiki will to be updated as well.
 
-### I'd like to fund Magpie 💰
+### I'd like to fund GMagpie 💰
 
-The developers spend a lot of time every week to implement new features without getting paid. Currently there is no way to fund Magpie. Starring, forking, and advertising are the best ways to support us!
+The developers spend a lot of time every week to implement new features without getting paid. Currently there is no way to fund GMagpie. Starring, forking, and advertising are the best ways to support us!

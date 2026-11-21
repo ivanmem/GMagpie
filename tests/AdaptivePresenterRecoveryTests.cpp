@@ -12,7 +12,7 @@
 #include <optional>
 #include <string>
 #include <vector>
-using namespace Magpie;
+using namespace GMagpie;
 using RealClock = std::chrono::steady_clock;
 struct TestClock {
     using time_point = RealClock::time_point;

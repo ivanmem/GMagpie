@@ -1,4 +1,4 @@
-# Magpie 0.6.5 r7 local
+# GMagpie 0.6.5 r7 local
 
 在 r6 local 基础上调整光流共享、补帧队列与性能显示。
 
@@ -15,7 +15,7 @@
 
 完整消费者清单、SDK 依据、改进说明与验收项目见 [光流与 FG review](experimental/reviews/20260905-v0.6.5-r7-motion-sharing-fg-REVIEW.md)。构建及产物校验见 [实施记录](experimental/todos/20260905-v0.6.5-r7-TODO.md)。
 
-按用户要求，未启动 Magpie，未使用 computer-use；GPU 兼容性、画质、呈现节奏由用户实机验收。HDR 仍留到后续版本。
+按用户要求，未启动 GMagpie，未使用 computer-use；GPU 兼容性、画质、呈现节奏由用户实机验收。HDR 仍留到后续版本。
 
 ## English
 

@@ -37,14 +37,14 @@
 
 | 当前事实 | 对时域路线的影响 | 代码或说明 |
 | --- | --- | --- |
-| 每层使用独立 `DLSSNRFilter`，拥有各自 NGX 特征、队列、资源和历史 | 模型内历史已经按层隔离；外部稳定器是新增的一套历史 | [Multi Pass 后端](../../../src/Magpie.Core/DLSSNRMultiPass.h) |
+| 每层使用独立 `DLSSNRFilter`，拥有各自 NGX 特征、队列、资源和历史 | 模型内历史已经按层隔离；外部稳定器是新增的一套历史 | [Multi Pass 后端](../../../src/GMagpie.Core/DLSSNRMultiPass.h) |
 | 层间纹理使用完整效果器输出尺寸，每层处理上一层的完整输出 | 当前不是“仅降采样一次，所有 NR 在低分辨率连续运行” | [Multi Pass 行为说明](../effects/DLSSNR-MULTIPASS.md) |
-| 开启 SDR 输入分辨率调整时，每层先 Lanczos-2 抗混叠降采样，再 NR，再控制残差，最后 Catmull-Rom 升采样并回叠 | 每层的降采样、颜色控制和裁切都会参与下一层输入；重构时不能宣称天然等价 | [DLSSNRFilter.cpp](../../../src/Magpie.Core/DLSSNRFilter.cpp) 中 `PrepareInput`、`PrepareResidual`、`CompositeResidual` |
+| 开启 SDR 输入分辨率调整时，每层先 Lanczos-2 抗混叠降采样，再 NR，再控制残差，最后 Catmull-Rom 升采样并回叠 | 每层的降采样、颜色控制和裁切都会参与下一层输入；重构时不能宣称天然等价 | [DLSSNRFilter.cpp](../../../src/GMagpie.Core/DLSSNRFilter.cpp) 中 `PrepareInput`、`PrepareResidual`、`CompositeResidual` |
 | 共享 Detail Control 在各层分别生效，层内含亮度方向硬分类、HSL 调整和范围裁切 | 单纯先求和再控制、先滤波再分类，通常会改变行为 | 同文件 `ApplyResidualControls` |
-| 光流来源是共享捕获帧，方向为当前到上一帧，单位为源像素；没有真实引擎深度 | 可以用颜色帧验证重投影，但不能把零深度当作遮挡证据 | [FrameGuidanceTypes.h](../../../src/Magpie.Core/FrameGuidanceTypes.h) |
-| AMDOF 普通有效帧的 `DenseConfidence` 固定为 `0.65` | 该数值不能当作逐像素匹配质量，外部滤波器需要自己的历史有效性判定 | [AmdOpticalFlowProvider.cpp](../../../src/Magpie.Core/AmdOpticalFlowProvider.cpp) 中 `Densify` |
+| 光流来源是共享捕获帧，方向为当前到上一帧，单位为源像素；没有真实引擎深度 | 可以用颜色帧验证重投影，但不能把零深度当作遮挡证据 | [FrameGuidanceTypes.h](../../../src/GMagpie.Core/FrameGuidanceTypes.h) |
+| AMDOF 普通有效帧的 `DenseConfidence` 固定为 `0.65` | 该数值不能当作逐像素匹配质量，外部滤波器需要自己的历史有效性判定 | [AmdOpticalFlowProvider.cpp](../../../src/GMagpie.Core/AmdOpticalFlowProvider.cpp) 中 `Densify` |
 | AMDOF Performance 已在宽高各半的输入上估计光流 | 不能再次把“改为半分辨率”计入尚未实现的优化收益；有效块粒度已变粗 | 同文件 `opticalFlowExtent` |
-| AMDOF 在 `BeginFrame` 内向 D3D11 上下文插入完成等待，后续 NR 在其后准备输入 | 独立 D3D12 队列不代表与 NR 已经有效重叠 | 同文件 `BeginFrame`；[Renderer.cpp](../../../src/Magpie.Core/Renderer.cpp) |
+| AMDOF 在 `BeginFrame` 内向 D3D11 上下文插入完成等待，后续 NR 在其后准备输入 | 独立 D3D12 队列不代表与 NR 已经有效重叠 | 同文件 `BeginFrame`；[Renderer.cpp](../../../src/GMagpie.Core/Renderer.cpp) |
 | 重复捕获帧会复用结果；上游参数变化用输入修订号触发重算 | 时域历史必须按真实新帧更新，参数重算不能当作额外时间样本 | `DLSSNRFilter::Draw`、`DLSSNRMultiPass::ApplyLiveParameters` |
 | 当前 FP16 HDR 路径不启用内部降分辨率残差重建 | 建议先验证 SDR；HDR 的残差空间、阈值和输出限制另行设计 | `DLSSNRFilter::Initialize` |
 
@@ -145,7 +145,7 @@ else:
 
 这是最有希望作为通用主体的路线。运动向量只是历史位置的候选，验证必须独立存在。尤其不能只用 `abs(currentResidual - historyResidual)` 拒绝历史，否则需要抑制的 NR 自身波动会被误判成“应立即显示的新内容”。
 
-时空降噪器已有“重投影、历史限制、自适应累积”的成熟构件；但针对阴影／反射的深度和法线规则，需要替换成 Magpie 能实际取得的颜色和运动证据。[AMD FidelityFX Denoiser 文档](https://gpuopen.com/manuals/fidelityfx_sdk/techniques/denoiser/)
+时空降噪器已有“重投影、历史限制、自适应累积”的成熟构件；但针对阴影／反射的深度和法线规则，需要替换成 GMagpie 能实际取得的颜色和运动证据。[AMD FidelityFX Denoiser 文档](https://gpuopen.com/manuals/fidelityfx_sdk/techniques/denoiser/)
 
 #### B.1 单独生成判断用颜色引导图
 
@@ -199,7 +199,7 @@ wHistory = 1 - 1 / N
 
 另一个有价值的增量位于重投影采样阶段：双线性历史采样可能先把前景和背景混在一起，再通过颜色验证。传统 AMD 反射实现有按几何有效性排除 2×2 采样点、重新归一化插值权重的路径。[AMD 固定版本重投影源码](https://github.com/GPUOpen-LibrariesAndSDKs/FidelityFX-SDK/blob/c6efa6bf7f2027b3ec94f28578bb5965eabb9e55/sdk/include/FidelityFX/gpu/denoiser/ffx_denoiser_reflections_reproject.h)
 
-Magpie 可尝试对四个候选历史位置分别检查有效域和颜色引导相容性，用双线性权重乘以各点接受度，再对有效点归一化；支持量不足时回退当前残差。**依据是颜色的近似判断，不能宣称具有 AMD 深度／法线验证的遮挡能力。** 部分点被排除会偏移有效采样位置，也可能切掉真实渐变；不得在很小的剩余权重上强行归一化放大一个不可靠点。
+GMagpie 可尝试对四个候选历史位置分别检查有效域和颜色引导相容性，用双线性权重乘以各点接受度，再对有效点归一化；支持量不足时回退当前残差。**依据是颜色的近似判断，不能宣称具有 AMD 深度／法线验证的遮挡能力。** 部分点被排除会偏移有效采样位置，也可能切掉真实渐变；不得在很小的剩余权重上强行归一化放大一个不可靠点。
 
 此项只在 B.1/B.2 后仍观察到运动边缘的跨物体泄漏时加入，并与直接拒绝整份历史比较。也可供 G 联合升采样复用。额外读取和分支需要计时，首版不同时叠加邻域搜索去寻找“颜色最像”的历史，以免在重复纹理中选错对象。
 
@@ -269,7 +269,7 @@ FSR2 展示了联合时域重建的通用方向，同时要求相应的运动、
 
 ### H. 改变降采样相位再累积
 
-Magpie 有完整分辨率颜色帧，可以每帧以不同位置进行实际降采样，再将所得残差按已知相位放回原分辨率历史。只修改 SDK jitter 参数而不改变实际采样，不具备这一作用。
+GMagpie 有完整分辨率颜色帧，可以每帧以不同位置进行实际降采样，再将所得残差按已知相位放回原分辨率历史。只修改 SDK jitter 参数而不改变实际采样，不具备这一作用。
 
 这可能减少固定网格造成的偏差，但 NR 对不同相位的响应是非线性的；不能保证这些输出只是同一个修正场的平移采样。还需要处理 NR 内部历史与相位变化的兼容性。若每层各自改变相位，串联误差会更难区分。
 
@@ -368,7 +368,7 @@ uvPrev = uvCurrent + mvSourcePixels / float2(Ws, Hs)
 
 双线性反复搬运历史会累积子像素模糊，即使 MV 正确也要测试细线及棋盘格持续平移。更高阶插值可能减少模糊，同时引入过冲或振铃；不能靠换采样核承诺消除闪烁。这里主要影响 NR 修正细节，因为基准图每帧仍来自当前帧。
 
-Magpie 捕获输入可能已经做过游戏 TAA/DLSS 并包含 HUD，不能假设拿到 UI 合成前的画面。屏幕固定文字和移动场景可在同一邻域产生不同运动；从最终颜色估计光流不能保证拆开二者。没有可信 UI 掩码时应纳入测试和局部保守回退；已有 NR UI correction 不自动提供可供外部稳定器使用的逐像素掩码。外部历史也会叠加输入与模型原有的响应滞后。[TAA 综述](https://research.nvidia.com/labs/rtr/publication/yang2020survey/)将历史验证与样本累积分开讨论，本方案也应分别观察两者的失真。
+GMagpie 捕获输入可能已经做过游戏 TAA/DLSS 并包含 HUD，不能假设拿到 UI 合成前的画面。屏幕固定文字和移动场景可在同一邻域产生不同运动；从最终颜色估计光流不能保证拆开二者。没有可信 UI 掩码时应纳入测试和局部保守回退；已有 NR UI correction 不自动提供可供外部稳定器使用的逐像素掩码。外部历史也会叠加输入与模型原有的响应滞后。[TAA 综述](https://research.nvidia.com/labs/rtr/publication/yang2020survey/)将历史验证与样本累积分开讨论，本方案也应分别观察两者的失真。
 
 ## 8. 与当前 Multi Pass 的三种接入方式
 
@@ -506,7 +506,7 @@ I → D → NR1 → NR2 → NR3 → 提取残差 → 稳定／升采样 → 加�
 | 方差裁剪压弱孤立点、前后向流网格不同、EMA 长度含义 | 原有共同要求的重要细化 | 补入 7.1～7.3，增加可重复的数值反例 |
 | 重投影模糊、NaN/Inf、拒绝分支初始化、完整 reset、HUD | 与已有生命周期和质量要求部分重复 | 补齐 7.4、7.6 和第 10 节验收，避免只给口头规则 |
 | AMD 的反射虚拟点、法线／深度／粗糙度验证，阴影专用规则 | 缺少所需输入，且处理信号与有符号 NR 残差不同 | 不作为当前可直接接入路线；只借鉴构件 |
-| Frostpunk 2 的 CVar 与 UE/AMD 整套降噪器 | 配置开关不提供算法实现，固定版本与输入契约不同 | 不据此修改 Magpie 或替换 NR；保留固定版本源码参考 |
+| Frostpunk 2 的 CVar 与 UE/AMD 整套降噪器 | 配置开关不提供算法实现，固定版本与输入契约不同 | 不据此修改 GMagpie 或替换 NR；保留固定版本源码参考 |
 
 本次新增价值主要在于使 B 更具体、让历史保护可以被反例检验，以及补出运动边缘的采样增强。它没有证明一条全新算法优于现有八条路线，也没有改变“先稳定残差，再评估联合升采样”的实施顺序。
 

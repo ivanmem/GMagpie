@@ -6,7 +6,7 @@
 
 | 条件 | 检查与下一步 |
 | --- | --- |
-| 空效果组、重复补帧、NGX 已故障 | 核心入口先检查；添加效果、保留一个补帧效果，或完整重启 Magpie |
+| 空效果组、重复补帧、NGX 已故障 | 核心入口先检查；添加效果、保留一个补帧效果，或完整重启 GMagpie |
 | 缺失效果器或配置恢复产生的失效项 | 应用入口在触控辅助进程、窗口和 GPU 初始化前拦截；打开对应效果组，恢复效果文件或移除失效项后添加替代效果 |
 | 窗口模式与 3D 游戏模式 / Desktop Duplication 冲突 | 在核心入口检查；应用层也在启动触控辅助进程前检查组合 |
 | 全屏或最大化源窗口 | 窗口模式始终拦截；全屏效果模式仅在未允许最大化缩放时拦截。以未裁剪源窗口与源显示器边界判断，在布局及移动源窗口前结束 |
@@ -19,7 +19,7 @@
 
 启动前错误也保存检查步骤与系统错误码，显示对应的配置入口和下一步操作。
 
-增强版配置独立写入用户目录 `Magpie\config\v4e\config.json`，便携模式为程序目录 `config\v4e\config.json`。原版 v4 只读迁移；正常加载和完整修复静默，坏条目在效果组中保留并提示。GPU／驱动初始化失败不会触发配置重置。
+增强版配置独立写入用户目录 `GMagpie\config\v4e\config.json`，便携模式为程序目录 `config\v4e\config.json`。原版 v4 只读迁移；正常加载和完整修复静默，坏条目在效果组中保留并提示。GPU／驱动初始化失败不会触发配置重置。
 
 ## 验证边界
 
@@ -30,8 +30,8 @@
 
 ## 固定部署约定
 
-当前使用分支 `0.6.7`，版本标识 `0.6.7-local`，运行包固定为工作区 `release/v0.6.7-local/Magpie-Experimental-x64/`。
+当前使用分支 `0.6.7`，版本标识 `0.6.7-local`，运行包固定为工作区 `release/v0.6.7-local/GMagpie-Experimental-x64/`。
 
 后续修复和更新覆盖此目录。只有维护者明确要求时才创建 `0.6.7-local-r1` 等新目录。
 
-使用 `scripts/Deploy-Local067.ps1` 构建并部署完整包。可用 `-BuildEnvironmentProps` 指定本机构建环境文件。脚本先检查 Magpie 已退出，直接在 `release/v0.6.7-local/Magpie-Experimental-x64/` 构建；中间文件、Conan 配置和 WinUI 缓存位于同版本 `obj/`，不另建 `.build`。保留运行包内的配置、日志、自定义效果器与诊断资料。提交前可用 `-BuildOnly` 验证，最终从已提交源码构建并更新清单。构建日志在 `release/v0.6.7-local/build.log`，`deployment-state.json` 标明当前阶段；完成部署的清单记录实际源码提交与文件哈希。未由当前构建生成的旧文件不自动清理，删除功能或运行库时需按旧清单另行核对。
+使用 `scripts/Deploy-Local067.ps1` 构建并部署完整包。可用 `-BuildEnvironmentProps` 指定本机构建环境文件。脚本先检查 GMagpie 已退出，直接在 `release/v0.6.7-local/GMagpie-Experimental-x64/` 构建；中间文件、Conan 配置和 WinUI 缓存位于同版本 `obj/`，不另建 `.build`。保留运行包内的配置、日志、自定义效果器与诊断资料。提交前可用 `-BuildOnly` 验证，最终从已提交源码构建并更新清单。构建日志在 `release/v0.6.7-local/build.log`，`deployment-state.json` 标明当前阶段；完成部署的清单记录实际源码提交与文件哈希。未由当前构建生成的旧文件不自动清理，删除功能或运行库时需按旧清单另行核对。

@@ -7,7 +7,7 @@
 #include <map>
 #include <limits>
 #include <string>
-using namespace Magpie;
+using namespace GMagpie;
 
 using Resolution = DLSSNRAdaptiveResolution::Resolution;
 using Reason = DLSSNRAdaptiveResolution::Reason;

@@ -14,8 +14,8 @@ if ($LASTEXITCODE) { throw 'Extract source transition paths failed' }
 & python "$PSScriptRoot/prepare_beta6_presentation_test.py" $beta6Output
 if ($LASTEXITCODE) { throw 'Extract FIFO renderer failed' }
 foreach ($beta6Test in @('source_state_paths', 'beta6_presentation')) {
-    & cl.exe /nologo /std:c++20 /EHsc /utf-8 /MT /O2 "/I$beta6Repo/src/Magpie.Core" `
-        "/I$beta6Repo/src/Magpie.Core/include" `
+    & cl.exe /nologo /std:c++20 /EHsc /utf-8 /MT /O2 "/I$beta6Repo/src/GMagpie.Core" `
+        "/I$beta6Repo/src/GMagpie.Core/include" `
         "$beta6Output/$beta6Test.cpp" "/Fe:$beta6Output/$beta6Test.exe" "/Fo:$beta6Output/$beta6Test.obj" user32.lib
     if ($LASTEXITCODE) { throw "Compile failed: $beta6Test" }
     & "$beta6Output/$beta6Test.exe"

@@ -42,7 +42,7 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  * POSSIBILITY OF SUCH DAMAGE.
  *
- * Magpie Effect v4 port based on libretro/glsl-shaders commit
+ * GMagpie Effect v4 port based on libretro/glsl-shaders commit
  * f8e23ff880668f0f0e837a05a316534d82a7f31b:
  * xbr/shaders/xbr-hybrid/2xbr-hybrid-v5-gamma.glsl
  */

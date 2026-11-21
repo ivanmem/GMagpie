@@ -7,7 +7,7 @@
 #include <fmt/format.h>
 #include <rapidjson/writer.h>
 #include <rapidjson/stringbuffer.h>
-#include "../src/Magpie/JsonHelper.h"
+#include "../src/GMagpie/JsonHelper.h"
 #include <algorithm>
 #include <cassert>
 #include <cstdint>
@@ -87,7 +87,7 @@ struct srwlock {
 using winrt::com_ptr;
 template<class T> using SmallVector = std::vector<T>;
 
-namespace Magpie {
+namespace GMagpie {
 #include "GraphicsCardIdProduction.inc"
 struct Profile { GraphicsCardId graphicsCardId; };
 #include "AdapterConfigProduction.inc"
@@ -126,7 +126,7 @@ struct AppSettings {
 };
 struct AdapterInfo { uint32_t idx, vendorId, deviceId; std::wstring description; };
 }
-using namespace Magpie;
+using namespace GMagpie;
 struct FakeFactory {
     FakeAdapter warp{.vendor=0x1414, .device=0x8c};
     HRESULT registerStatus = S_OK, warpStatus = S_OK;

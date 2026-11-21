@@ -10,7 +10,7 @@
 #include "StepTimer.h"
 #undef private
 #undef MP_ENABLE_FRAME_TRACE
-#include "../src/Magpie.Core/StepTimer.cpp"
+#include "../src/GMagpie.Core/StepTimer.cpp"
 
 void TestInterruptibleWaits() {
     using namespace std::chrono;
@@ -18,7 +18,7 @@ void TestInterruptibleWaits() {
     // Create this thread's queue without opening a window.
     PeekMessageW(&message,nullptr,0,0,PM_NOREMOVE);
     for (bool strict : {false,true}) {
-        Magpie::StepTimer timer;
+        GMagpie::StepTimer timer;
         timer.Initialize(0,{},strict);
         wil::unique_handle source(CreateEventW(nullptr,TRUE,TRUE,nullptr));
         assert(source);
@@ -55,7 +55,7 @@ void TestInterruptibleWaits() {
 
 int main() {
     using namespace std::chrono;
-    Magpie::StepTimer timer;
+    GMagpie::StepTimer timer;
     timer.Initialize(0, {});
     // PrepareForRender samples steady_clock internally. A future anchor keeps
     // that wall clock from closing our injected one-second test window early.

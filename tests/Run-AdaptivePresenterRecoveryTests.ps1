@@ -1,5 +1,5 @@
 #Requires -Version 7.0
-param([string]$OutputDirectory = (Join-Path $env:TEMP ('Magpie-PresenterRecovery-' + [guid]::NewGuid())))
+param([string]$OutputDirectory = (Join-Path $env:TEMP ('GMagpie-PresenterRecovery-' + [guid]::NewGuid())))
 $ErrorActionPreference = 'Stop'
 $recoveryRepo = Split-Path $PSScriptRoot -Parent
 $recoveryOutput = [IO.Path]::GetFullPath($OutputDirectory)
@@ -11,7 +11,7 @@ Enter-VsDevShell -VsInstallPath $recoveryVs -SkipAutomaticLocation -DevCmdArgume
 & python "$PSScriptRoot/prepare_adaptive_presenter_recovery_test.py" $recoveryOutput
 if ($LASTEXITCODE) { throw 'Presenter recovery production extraction failed.' }
 foreach ($recoveryTest in @('recovery', 'early-detach', 'bound-buffer', 'no-retry', 'no-static-redraw')) {
-    & cl.exe /nologo /std:c++20 /EHsc /utf-8 /MT /O2 /W4 /WX /DNOMINMAX "/I$recoveryRepo/src/Magpie.Core" `
+    & cl.exe /nologo /std:c++20 /EHsc /utf-8 /MT /O2 /W4 /WX /DNOMINMAX "/I$recoveryRepo/src/GMagpie.Core" `
         "$recoveryOutput/$recoveryTest.cpp" "/Fe:$recoveryOutput/$recoveryTest.exe" "/Fo:$recoveryOutput/$recoveryTest.obj"
     if ($LASTEXITCODE) { throw "Presenter recovery test compilation failed: $recoveryTest" }
     & "$recoveryOutput/$recoveryTest.exe"

@@ -14,10 +14,10 @@ shader='src/Effects/OKLabImageAdjustment.hlsl'
 evidence=[
     'src/Effects/OKLab/Color.hlsli','src/Effects/OKLab/Adjust.hlsli',
     'src/Effects/OKLab/Tables.hlsli','src/Effects/OKLab/Statistics.hlsli','src/Effects/OKLab/Adapt.hlsli',
-    'src/Magpie.Core/OKLabRuntime.h','src/Magpie.Core/include/OKLabParameters.h',
-    'src/Magpie.Core/include/OKLabLut.h','src/Magpie/OKLabConfig.h','src/Magpie.Core/EffectDrawer.cpp',
-    'src/Magpie.Core/Renderer.cpp','src/Magpie.Core/Renderer.OKLab.cpp',
-    'src/Magpie/EffectParametersViewModel.OKLab.cpp','src/Magpie.Core/OKLabOverlayEditor.h',
+    'src/GMagpie.Core/OKLabRuntime.h','src/GMagpie.Core/include/OKLabParameters.h',
+    'src/GMagpie.Core/include/OKLabLut.h','src/GMagpie/OKLabConfig.h','src/GMagpie.Core/EffectDrawer.cpp',
+    'src/GMagpie.Core/Renderer.cpp','src/GMagpie.Core/Renderer.OKLab.cpp',
+    'src/GMagpie/EffectParametersViewModel.OKLab.cpp','src/GMagpie.Core/OKLabOverlayEditor.h',
 ]
 def sha(path):
     return hashlib.sha256((root/path).read_bytes().replace(b'\r\n',b'\n')).hexdigest()
@@ -52,8 +52,8 @@ review['effects']=[e for e in review['effects'] if e['id']!='OKLabImageAdjustmen
 index=next(i for i,e in enumerate(review['effects']) if e['id']=='ImageAdjustment')+1
 review['effects'].insert(index,entry)
 review_path.write_text(json.dumps(review,ensure_ascii=False,indent=2)+'\n',encoding='utf-8')
-host_paths={'src/Magpie.Core/Renderer.cpp','src/Magpie.Core/EffectDrawer.cpp',
-            'src/Magpie.Core/OverlayDrawer.cpp','src/Magpie/EffectParametersViewModel.cpp'}
+host_paths={'src/GMagpie.Core/Renderer.cpp','src/GMagpie.Core/EffectDrawer.cpp',
+            'src/GMagpie.Core/OverlayDrawer.cpp','src/GMagpie/EffectParametersViewModel.cpp'}
 # Reviewed integration changes are guarded by the new effect ID (and the
 # existing settings-save helper was moved without changing its debounce).
 # Update only these shared source witnesses, preserving every old effect's copy.

@@ -23,7 +23,7 @@ options, benchmark_args = parser.parse_known_args()
 repo = Path(__file__).resolve().parents[1]
 root = options.build_root.resolve()
 output = options.output.resolve()
-runtime = next((root / folder for folder in ("build", "Magpie-Experimental-x64", "runtime")
+runtime = next((root / folder for folder in ("build", "GMagpie-Experimental-x64", "runtime")
                 if (root / folder / "nvngx_dlssnr.dll").is_file()), None)
 if runtime is None:
     parser.error("Runtime DLL directory missing")
@@ -33,7 +33,7 @@ output.mkdir(parents=True, exist_ok=True)
 for file in runtime.glob("*.dll"):
     shutil.copy2(file, output / file.name)
 
-source = (repo / "src/Magpie.Core/DLSSNRFilter.cpp").read_text(encoding="utf-8-sig")
+source = (repo / "src/GMagpie.Core/DLSSNRFilter.cpp").read_text(encoding="utf-8-sig")
 instrumented_functions = {
     "PrepareInput": "input_prepare",
     "PrepareReducedGuidance": "guidance_reduce",
@@ -60,7 +60,7 @@ if source.count(prepared_copy) != 1:
     raise RuntimeError("Prepared input copy instrumentation point changed")
 source = source.replace(prepared_copy, '{ CostBenchmark::Region costPreparedCopy("prepared_input_copy", impl.context11, impl.width, impl.height); ' + prepared_copy + ' }')
 (output / "DLSSNRCostBenchmarkFilter.generated.cpp").write_text(source, encoding="utf-8")
-performance=(repo / "src/Magpie.Core/DLSSNRPerformance.inl").read_text(encoding="utf-8-sig")
+performance=(repo / "src/GMagpie.Core/DLSSNRPerformance.inl").read_text(encoding="utf-8-sig")
 publication='bool DLSSNRFilter::PublishPerformanceResult() noexcept {'
 assert performance.count(publication)==1
 performance=performance.replace(publication,publication+'\n    CostBenchmark::Region costPublish("publish_result_span_including_wait", _impl->context11, _impl->width, _impl->height);\n    CostBenchmark::CpuRegion costPublishCpu("publish_result_cpu", _impl->width, _impl->height);')
@@ -90,29 +90,29 @@ def project_log(project, name):
     return next(root / folder / relative for folder in ("obj", "obj/x64/Release") if (root / folder / relative).is_file())
 def tlog(path):
     return "\n".join(line for line in path.read_text(encoding="utf-16").splitlines() if not line.startswith("^"))
-clargs = command_args(tlog(project_log("Magpie.Core", "CL.command.1.tlog")))
+clargs = command_args(tlog(project_log("GMagpie.Core", "CL.command.1.tlog")))
 includes = list(dict.fromkeys(arg for arg in clargs if arg.lower().startswith("/i")))
 definitions = list(dict.fromkeys(clargs[i + 1] for i, arg in enumerate(clargs) if arg == "/D" and clargs[i + 1] != "NDEBUG"))
 defs = [item for value in definitions for item in ("/D", value)]
 # D3D12 per-pass timestamps are already in the product backend. Enabling this
 # switch only adds CPU bookkeeping/log branches and is deliberately avoided.
-linkargs = command_args(tlog(project_log("Magpie", "link.command.1.tlog")))
+linkargs = command_args(tlog(project_log("GMagpie", "link.command.1.tlog")))
 libs = list(dict.fromkeys(arg for arg in linkargs if arg.lower().endswith(".lib") or arg.lower().startswith("/libpath:")))
 libs = [arg for arg in libs if Path(arg).name.lower() not in ("magpie.lib", "magpie.core.lib")]
 libs.append(str(options.core_library.resolve()))
 exe = output / "DLSSNRCostBenchmark.exe"
 command = ["cl.exe", "/nologo", "/std:c++20", "/EHsc", "/utf-8", "/MT", "/O2", "/bigobj",
-           "/I" + str(output), "/I" + str(repo / "src/Magpie.Core"), "/I" + str(repo / "src/Magpie.Core/include")]
+           "/I" + str(output), "/I" + str(repo / "src/GMagpie.Core"), "/I" + str(repo / "src/GMagpie.Core/include")]
 command += includes + defs + [str(repo / "tests/DLSSNRCostBenchmark.cpp"), "/Fe:" + str(exe),
     "/Fo:" + str(exe.with_suffix(".obj")), "/link", "/LTCG"]
 command += libs + ["d3d11.lib", "d3dcompiler.lib", "dxgi.lib", "d3d12.lib", "WindowsApp.lib"]
-result = subprocess.run(command, cwd=repo / "src/Magpie.Core")
+result = subprocess.run(command, cwd=repo / "src/GMagpie.Core")
 sha = lambda path: hashlib.sha256(path.read_bytes()).hexdigest()
 report = {"compileExitCode": result.returncode, "compileOnly": options.compile_only,
     "debugLayerRequested": False, "runtimeSource": str(runtime),
     "coreLibrary": str(options.core_library.resolve()), "coreLibrarySha256": sha(options.core_library),
     "sourceCommit": subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=repo, text=True).strip(),
-    "sourceSha256": {name:sha(repo / name) for name in ["src/Magpie.Core/DLSSNRFilter.cpp", "src/Magpie.Core/DLSSNRPerformance.inl",
+    "sourceSha256": {name:sha(repo / name) for name in ["src/GMagpie.Core/DLSSNRFilter.cpp", "src/GMagpie.Core/DLSSNRPerformance.inl",
         "tests/DLSSNRCostBenchmark.cpp", "tests/DLSSNRCostBenchmarkGpu.h", "tests/run_dlssnr_cost_benchmark.py"]},
     "generatedFilterSha256": sha(output / "DLSSNRCostBenchmarkFilter.generated.cpp"),
     "generatedPerformanceSha256": sha(output / "DLSSNRCostBenchmarkPerformance.generated.inl"),

@@ -9,7 +9,7 @@ Import-Module (Join-Path $vs 'Common7/Tools/Microsoft.VisualStudio.DevShell.dll'
 Enter-VsDevShell -VsInstallPath $vs -SkipAutomaticLocation -DevCmdArguments '-arch=x64 -host_arch=x64' | Out-Null
 New-Item -ItemType Directory -Path $output -Force | Out-Null
 $exe = Join-Path $output 'HdrComponentsTests.exe'
-& cl.exe /nologo /std:c++20 /EHsc /utf-8 /MT /DNOMINMAX "/I$repo/src/Magpie.Core/include" "/I$repo/src/Magpie.Core" `
+& cl.exe /nologo /std:c++20 /EHsc /utf-8 /MT /DNOMINMAX "/I$repo/src/GMagpie.Core/include" "/I$repo/src/GMagpie.Core" `
     (Join-Path $PSScriptRoot 'HdrComponentsTests.cpp') "/Fe:$exe" "/Fo:$output/HdrComponentsTests.obj"
 if ($LASTEXITCODE) { throw 'HDR component plan compilation failed' }
 & $exe

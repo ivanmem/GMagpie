@@ -1,4 +1,4 @@
-// Captured-frame, no-jitter approximation of SMAA 4x for Magpie.
+// Captured-frame, no-jitter approximation of SMAA 4x for GMagpie.
 // It cycles the official four subsample-index sets without shifting the image.
 // Native SMAA 4x also requires 2x MSAA scene subsamples, which are unavailable.
 

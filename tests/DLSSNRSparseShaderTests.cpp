@@ -15,9 +15,9 @@
 #include <string>
 #include <vector>
 #include <thread>
-#include "../src/Magpie.Core/include/DLSSNRSparseState.h"
-#include "../src/Magpie.Core/DLSSNRColorShader.h"
-#include "../src/Magpie.Core/DLSSNRSparseShader.h"
+#include "../src/GMagpie.Core/include/DLSSNRSparseState.h"
+#include "../src/GMagpie.Core/DLSSNRColorShader.h"
+#include "../src/GMagpie.Core/DLSSNRSparseShader.h"
 
 using Microsoft::WRL::ComPtr;
 constexpr UINT N=16, Center=8;
@@ -60,7 +60,7 @@ struct Harness {
 		D3D11_SAMPLER_DESC sample{}; sample.Filter=D3D11_FILTER_MIN_MAG_MIP_LINEAR;
 		sample.AddressU=sample.AddressV=sample.AddressW=D3D11_TEXTURE_ADDRESS_CLAMP; sample.MaxLOD=D3D11_FLOAT32_MAX;
 		Check(device->CreateSamplerState(&sample,&sampler));
-		const std::string source=std::string(Magpie::DLSSNR_COLOR_HLSL)+std::string(Magpie::DLSSNR_SPARSE_HLSL);
+		const std::string source=std::string(GMagpie::DLSSNR_COLOR_HLSL)+std::string(GMagpie::DLSSNR_SPARSE_HLSL);
 		for (const char* entry:{"MapMotion","ComposeResidual","FillResidual"}) {
 			ComPtr<ID3DBlob> code,error;
 			const auto hr=D3DCompile(source.data(),source.size(),"Sparse production WARP",nullptr,nullptr,
@@ -149,8 +149,8 @@ struct AsyncContribution {
 	ComPtr<ID3D11DeviceContext4> dc;
 	ComPtr<ID3D11Fence> fence;
 	ComPtr<ID3D11Buffer> staging;
-	Magpie::DLSSNRSparseObservationClock clock;
-	Magpie::DLSSNRSparseObservationClock::Result result;
+	GMagpie::DLSSNRSparseObservationClock clock;
+	GMagpie::DLSSNRSparseObservationClock::Result result;
 	uint64_t completion=0;
 	AsyncContribution(Harness& h) {
 		Check(h.device.As(&device)); Check(h.dc.As(&dc));

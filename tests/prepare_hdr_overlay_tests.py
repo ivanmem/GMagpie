@@ -5,7 +5,7 @@ import sys
 repo = Path(__file__).resolve().parents[1]
 out = Path(sys.argv[1])
 out.mkdir(parents=True, exist_ok=True)
-core = repo / 'src/Magpie.Core'
+core = repo / 'src/GMagpie.Core'
 backend = (core / 'ImGuiBackend.cpp').read_text(encoding='utf-8-sig')
 # Replace only application dependencies, not rendering code or state setup.
 backend = '\n'.join(line for line in backend.splitlines() if not line.startswith('#include'))

@@ -1,12 +1,12 @@
-# Project: Magpie Experimental (локальная копия)
+# Project: GMagpie Experimental (локальная копия)
 
-Неофициальный форк Blinue/Magpie: Windows-инструмент обработки содержимого окон.
+Неофициальный форк Blinue/GMagpie: Windows-инструмент обработки содержимого окон.
 Захватывает целевое окно, прогоняет через цепочку GPU-эффектов (апскейл, DLSS/FSR/XeSS,
 шарпинг, HDR) и выводит fullscreen/оконно. GPL-3.0.
 
 ## Стек и слои
-- `src/Magpie` — WinUI 3 (unpackaged) фронтенд: профили (ScalingModes JSON), хоткеи, `ScalingService`.
-- `src/Magpie.Core` — движок: `FrameSource*` (захват) → `EffectDrawer` (цепь) → `Presenter`; HDR-конвейер, ImGui-оверлей.
+- `src/GMagpie` — WinUI 3 (unpackaged) фронтенд: профили (ScalingModes JSON), хоткеи, `ScalingService`.
+- `src/GMagpie.Core` — движок: `FrameSource*` (захват) → `EffectDrawer` (цепь) → `Presenter`; HDR-конвейер, ImGui-оверлей.
 - `src/Effects` — HLSL-эффекты; имена = путь относительно папки без расширения (`Lanczos`, `NIS\NIS`).
 - `src/Shared` — общее (Win32Helper, Logger, Event…).
 

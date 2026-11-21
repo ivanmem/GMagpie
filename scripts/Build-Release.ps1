@@ -1,5 +1,5 @@
 ﻿param(
-    [string]$PackageName = "Magpie-Experimental-x64",
+    [string]$PackageName = "GMagpie-Experimental-x64",
     [string]$ReleaseDirectory,
     [string]$Configuration = "Release",
     [string]$Platform = "x64",
@@ -242,7 +242,7 @@ Write-Host "Release directory: $stagingDir"
 if ($PrepareRelease) { Write-Host "Release ZIP:       $zipPath" }
 
 function Stop-RunningMagpie {
-    $running = Get-Process -Name "Magpie" -ErrorAction SilentlyContinue
+    $running = Get-Process -Name "GMagpie" -ErrorAction SilentlyContinue
     if (!$running) { return }
 
     try {
@@ -253,30 +253,30 @@ function Stop-RunningMagpie {
         $elevated = Start-Process -FilePath "powershell.exe" -Verb RunAs -WindowStyle Hidden `
             -ArgumentList @("-NoProfile", "-Command", $command) -Wait -PassThru
         if ($elevated.ExitCode -ne 0) {
-            throw "Elevated Magpie shutdown failed with exit code $($elevated.ExitCode)."
+            throw "Elevated GMagpie shutdown failed with exit code $($elevated.ExitCode)."
         }
     }
 
     Start-Sleep -Milliseconds 250
-    if (Get-Process -Name "Magpie" -ErrorAction SilentlyContinue) {
-        throw "Magpie is still running after the shutdown attempt."
+    if (Get-Process -Name "GMagpie" -ErrorAction SilentlyContinue) {
+        throw "GMagpie is still running after the shutdown attempt."
     }
 }
 
-# Magpie and its PRI must come from the same complete build. Stop the running
+# GMagpie and its PRI must come from the same complete build. Stop the running
 # application before Rebuild so MSBuild never falls back to deploying a lone
 # replacement executable around a locked output directory.
 if ($RequireMagpieClosed -or !$PrepareRelease) {
     # Only the package being rebuilt must be closed. A different local release
     # may remain running while a new distribution is prepared in its own folder.
-    $targetExecutable = Join-Path $buildOutput 'Magpie.exe'
+    $targetExecutable = Join-Path $buildOutput 'GMagpie.exe'
     if (Test-Path -LiteralPath $targetExecutable) {
         try {
             $probe = [IO.File]::Open($targetExecutable, [IO.FileMode]::Open,
                 [IO.FileAccess]::ReadWrite, [IO.FileShare]::None)
             $probe.Dispose()
         } catch {
-            throw "Close the Magpie instance using $targetExecutable before rebuilding; no process was terminated."
+            throw "Close the GMagpie instance using $targetExecutable before rebuilding; no process was terminated."
         }
     }
 } else {
@@ -313,7 +313,7 @@ if (!$SkipBuild) {
     $multiToolTask = if ($MaxCompilerProcesses -gt 1) { "true" } else { "false" }
     $buildTarget = if ($PrepareRelease) { 'Rebuild' } else { 'Build' }
     $msbuildArgs = @(
-        "Magpie.slnx", "/m:$MaxCpuCount", "/nr:false", "/v:minimal", "/t:$buildTarget",
+        "GMagpie.slnx", "/m:$MaxCpuCount", "/nr:false", "/v:minimal", "/t:$buildTarget",
         "/p:Configuration=$Configuration", "/p:Platform=$Platform",
         "/p:MajorVersion=$($versionMatch.Groups[1].Value)",
         "/p:MinorVersion=$($versionMatch.Groups[2].Value)",
@@ -347,7 +347,7 @@ if (!$SkipBuild) {
 }
 
 $requiredRuntimePaths = @(
-    "Magpie.exe",
+    "GMagpie.exe",
     "resources.pri",
     "Microsoft.UI.Xaml.dll",
     "TouchHelper.exe",
@@ -369,12 +369,12 @@ if ($Platform -eq 'x64' -and $featureOptions['EnableDLSSNR'] -eq 'true') {
 }
 
 if ($IncludeSymbols) {
-    $requiredSymbolPaths = @("Magpie.pdb", "Magpie.map")
+    $requiredSymbolPaths = @("GMagpie.pdb", "GMagpie.map")
     $missingSymbolPaths = @($requiredSymbolPaths | Where-Object {
         !(Test-Path -LiteralPath (Join-Path $buildOutput $_))
     })
     if ($missingSymbolPaths.Count -ne 0) {
-        throw "Required Magpie symbols were not generated in $buildOutput. Missing: $($missingSymbolPaths -join ', ')"
+        throw "Required GMagpie symbols were not generated in $buildOutput. Missing: $($missingSymbolPaths -join ', ')"
     }
 
     $symbolFiles = @(Get-ChildItem -LiteralPath $buildOutput -File -Recurse | Where-Object {
@@ -400,19 +400,19 @@ if ($IncludeSymbols) {
 # The complete build is already in the package directory. Symbols were copied
 # above; remove only linker/debug artifacts from the distributable package.
 Get-ChildItem -LiteralPath $stagingDir -File | Where-Object {
-    $_.Extension -in ".pdb", ".map", ".lib", ".exp" -or $_.Name -eq "Magpie.next.exe"
+    $_.Extension -in ".pdb", ".map", ".lib", ".exp" -or $_.Name -eq "GMagpie.next.exe"
 } | Remove-Item -Force
 
 # Runtime state is retained for direct deployment and excluded from manifests
 # and archives below, including when explicitly preparing distribution files.
 
 Copy-Item -LiteralPath (Join-Path $sourceRoot "LICENSE") `
-    -Destination (Join-Path $stagingDir "LICENSE-Magpie.txt")
+    -Destination (Join-Path $stagingDir "LICENSE-GMagpie.txt")
 Copy-Item -LiteralPath (Join-Path $sourceRoot "docs\README-EXPERIMENTAL-RELEASE.txt") `
     -Destination (Join-Path $stagingDir "README-Experimental.txt")
 $packagedReadmePath = Join-Path $stagingDir "README-Experimental.txt"
 $packagedReadme = Get-Content -LiteralPath $packagedReadmePath -Raw -Encoding UTF8
-$packagedReadme = $packagedReadme -replace '^Magpie Experimental v[^ ]+ x64', "Magpie Experimental v$Version x64"
+$packagedReadme = $packagedReadme -replace '^GMagpie Experimental v[^ ]+ x64', "GMagpie Experimental v$Version x64"
 Set-Content -LiteralPath $packagedReadmePath -Value $packagedReadme -Encoding UTF8 -NoNewline
 Copy-Item -LiteralPath (Join-Path $sourceRoot "docs\THIRD_PARTY_AND_REDISTRIBUTION.md") `
     -Destination (Join-Path $stagingDir "THIRD-PARTY-NOTICES.md")

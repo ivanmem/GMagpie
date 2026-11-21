@@ -10,7 +10,7 @@ $vswhere = Join-Path ${env:ProgramFiles(x86)} 'Microsoft Visual Studio/Installer
 $vs = & $vswhere -latest -products * -requires Microsoft.Component.MSBuild -property installationPath | Select-Object -First 1
 Import-Module (Join-Path $vs 'Common7/Tools/Microsoft.VisualStudio.DevShell.dll')
 Enter-VsDevShell -VsInstallPath $vs -SkipAutomaticLocation -DevCmdArguments '-arch=x64 -host_arch=x64' | Out-Null
-& cl.exe /nologo /std:c++20 /EHsc /utf-8 /MT /O2 /W4 /WX "/I$Output" "/I$repo/src/Magpie.Core/include" "/I$repo/src/Magpie.Core" (Join-Path $PSScriptRoot 'PassThroughFrameHistoryTests.cpp') "/Fe:$Output/PassThroughFrameHistoryTests.exe" "/Fo:$Output/PassThroughFrameHistoryTests.obj"
+& cl.exe /nologo /std:c++20 /EHsc /utf-8 /MT /O2 /W4 /WX "/I$Output" "/I$repo/src/GMagpie.Core/include" "/I$repo/src/GMagpie.Core" (Join-Path $PSScriptRoot 'PassThroughFrameHistoryTests.cpp') "/Fe:$Output/PassThroughFrameHistoryTests.exe" "/Fo:$Output/PassThroughFrameHistoryTests.obj"
 if ($LASTEXITCODE) { throw 'Original-reference CPU test compilation failed.' }
 & (Join-Path $Output 'PassThroughFrameHistoryTests.exe')
 if ($LASTEXITCODE) { throw 'Original-reference CPU identity tests failed.' }

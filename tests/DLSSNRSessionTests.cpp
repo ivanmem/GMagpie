@@ -5,7 +5,7 @@
 #include "DlssNrStatus.h"
 #include <string_view>
 
-namespace Magpie {
+namespace GMagpie {
 struct Logger {
 	static Logger& Get() { static Logger value; return value; }
 	void Error(std::string_view) {}
@@ -38,7 +38,7 @@ inline bool InitializeSignedSnippetSession(DLSSNRFilter::Impl& impl, const std::
 }
 
 int main() {
-	using namespace Magpie;
+	using namespace GMagpie;
 	using Impl = DLSSNRFilter::Impl;
 	int device, otherDevice;
 	{

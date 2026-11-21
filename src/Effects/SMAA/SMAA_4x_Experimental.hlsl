@@ -1,4 +1,4 @@
-// Captured-frame approximation of SMAA 4x for Magpie.
+// Captured-frame approximation of SMAA 4x for GMagpie.
 // It cycles the official four net-jitter positions and subsample indices over
 // four captured frames. A true SMAA 4x integration also requires 2x MSAA scene
 // subsamples, which are unavailable from a captured desktop image.

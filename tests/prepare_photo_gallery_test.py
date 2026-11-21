@@ -26,10 +26,10 @@ def extract(source_path, start_anchor, end_anchor):
     return code[:cut + 1] + "\n"
 
 
-renderer = repo / "src/Magpie.Core/Renderer.cpp"
-gallery = repo / "src/Magpie/GalleryService.cpp"
-gallery_h = repo / "src/Magpie/GalleryService.h"
-app = repo / "src/Magpie/App.cpp"
+renderer = repo / "src/GMagpie.Core/Renderer.cpp"
+gallery = repo / "src/GMagpie/GalleryService.cpp"
+gallery_h = repo / "src/GMagpie/GalleryService.h"
+app = repo / "src/GMagpie/App.cpp"
 
 parts = [
     ("Renderer.cpp: how many effect stages a photo needs",
@@ -66,7 +66,7 @@ parts = [
      extract(gallery, "static int WheelPageSteps(",
              "void GalleryService::_OnMouseWheel(")),
     ("ScalingService.cpp: which part of the cursor's monitor the stage takes",
-     extract(repo / "src/Magpie/ScalingService.cpp", "static RECT PhotoStageRect(",
+     extract(repo / "src/GMagpie/ScalingService.cpp", "static RECT PhotoStageRect(",
              "void ScalingService::_PlacePhotoStageAtCursor(")),
     ("App.cpp: the --gallery lite-mode argument scan",
      extract(app, "static bool HasGalleryArgument(",

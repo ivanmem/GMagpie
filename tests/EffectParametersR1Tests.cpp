@@ -15,7 +15,7 @@ struct StoredEffect {
 };
 
 int main() {
-	using namespace Magpie;
+	using namespace GMagpie;
 	for (int family = 0; family < 2; ++family)
 		for (int tier = 0; tier < 4; ++tier) {
 			StoredEffect effect{std::wstring(RTX_VIDEO_IDS[family][tier]), {{L"other", 0.25f}}};

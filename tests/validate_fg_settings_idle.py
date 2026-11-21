@@ -44,7 +44,7 @@ for effect in ids:
     elif not effect.startswith("NvidiaVFX"):
         check("//!OPTION 0 None" in marker, "other FG None option is unchanged")
 for lang in ("en-US", "zh-Hans", "zh-Hant"):
-    tree = ET.fromstring(read(f"src/Magpie/Resources.language-{lang}.resw"))
+    tree = ET.fromstring(read(f"src/GMagpie/Resources.language-{lang}.resw"))
     keys = [n.get("name") for n in tree.findall("data")]
     check(len(keys) == len(set(keys)), f"unique resource keys {lang}")
     for effect in ids:
@@ -53,14 +53,14 @@ for lang in ("en-US", "zh-Hans", "zh-Hant"):
     for key in ("Overlay_FG_Waiting", "Overlay_FG_IdleSubmissions", "Overlay_FG_FrameRateHelp", "Overlay_FG_GeneratedRate"):
         check(key in keys, f"idle explanation {lang}/{key}")
 
-renderer = read("src/Magpie.Core/Renderer.cpp")
-capture = read("src/Magpie.Core/FrameSourceBase.cpp") + read("src/Magpie.Core/FrameSourceBase.h")
+renderer = read("src/GMagpie.Core/Renderer.cpp")
+capture = read("src/GMagpie.Core/FrameSourceBase.cpp") + read("src/GMagpie.Core/FrameSourceBase.h")
 check("DuplicateFrameDetectionOverride" not in capture + renderer, "no hidden FG capture override")
 check("options.duplicateFrameDetectionMode" in capture and "options.Is3DGameMode()" in capture, "common capture policy retained")
-for path in ("src/Magpie/ScalingModesService.cpp", "src/Magpie/ScalingMode.cpp", "src/Magpie/ScalingModeItem.cpp",
-             "src/Magpie/ScalingService.cpp", "src/Magpie.Core/ScalingWindow.cpp", "src/Magpie.Core/include/ScalingOptions.h"):
+for path in ("src/GMagpie/ScalingModesService.cpp", "src/GMagpie/ScalingMode.cpp", "src/GMagpie/ScalingModeItem.cpp",
+             "src/GMagpie/ScalingService.cpp", "src/GMagpie.Core/ScalingWindow.cpp", "src/GMagpie.Core/include/ScalingOptions.h"):
     check("NormalizeFrameGenerationParameters" in read(path), f"shared normalization entrance {path}")
-service = read("src/Magpie/ScalingModesService.cpp")
+service = read("src/GMagpie/ScalingModesService.cpp")
 check("if (loadingSettings) AppSettings::Get().MarkConfigMigrationNeeded();" in service, "migration participates in original-file backup")
 check("NormalizeFrameGenerationParameters" in body(service, "static void WriteScalingMode("), "export drops obsolete keys")
 check("Select Optical Flow Method: None" not in renderer and "incompatible->name" in renderer, "named error has no unsupported None bypass")
@@ -76,12 +76,12 @@ submit = body(renderer, "bool Renderer::_SubmitFrontendFrame()")
 check("if (idleRedraw) _presentationRate.RecordIdleSubmission();" in submit, "idle statistics have a separate channel")
 check("submitted && contentFrame && _hasFrameGeneration" in submit, "content statistics remain content-only")
 check("_stepTimer.Initialize(useFrameGeneration ? 0.0f : minFrameRate" in renderer and "_idleRedrawRate.store(useFrameGeneration" in renderer, "idle rate reaches frontend, not capture forcing")
-check("TimeUntilIdleRedraw" in read("src/Magpie.Core/ScalingRuntime.cpp"), "idle deadline wakes outer message pump")
+check("TimeUntilIdleRedraw" in read("src/GMagpie.Core/ScalingRuntime.cpp"), "idle deadline wakes outer message pump")
 check("(_hasFrameGeneration && !HasPendingContent()) || !_presenter->WaitForFrameCapacity(ms)" in renderer, "signalled capacity cannot spin idle loop")
-clock = read("src/Magpie.Core/IdlePresentationClock.h")
+clock = read("src/GMagpie.Core/IdlePresentationClock.h")
 check("milliseconds(500)" in clock, "ordinary 24/30 FPS gaps do not disable proxy FG")
 for name in ("FSR3FG", "XeSSFG"):
-    cpp = read(f"src/Magpie.Core/{name}Presenter.cpp")
+    cpp = read(f"src/GMagpie.Core/{name}Presenter.cpp")
     check(cpp.count(f"{name}Presenter::BeginIdleFrame(") == 2, f"SDK and disabled-build replay implementations {name}")
     end = body(cpp, f"bool {name}Presenter::EndFrame(")
     if name == "FSR3FG":
@@ -96,11 +96,11 @@ for name in ("FSR3FG", "XeSSFG"):
         begin = body(cpp, "bool XeSSFGPresenter::_BeginFrame(")
         check(begin.index('impl.Fail("XeLL resume failed")') < begin.index("xefgSwapChainSetEnabled") < begin.index('impl.Fail("XeLL idle configuration failed")'), "XeLL/FG transition ordering")
         check("xellSleep(impl.xell, impl.frameId)" in begin and "if (!idle) xellSleep" not in begin, "XeLL lifecycle survives disabled pacing")
-for f in ("src/BuildOptions.props", "src/Magpie.Core/Magpie.Core.vcxproj"):
+for f in ("src/BuildOptions.props", "src/GMagpie.Core/GMagpie.Core.vcxproj"):
     ET.fromstring(read(f))
     check("EnableAmdOpticalFlow" in read(f) and "EnableFSR3FrameGeneration" in read(f), f"build dependency {f}")
 package = read("scripts/Test-FSR3FGPackage.ps1")
-check("AMDOF capability v1: FSR3-FG required input" in package and "AMDOF capability v1: FSR3-FG required input" in read("src/Magpie.Core/AmdOpticalFlowProvider.cpp"), "package validates compiled provider capability")
+check("AMDOF capability v1: FSR3-FG required input" in package and "AMDOF capability v1: FSR3-FG required input" in read("src/GMagpie.Core/AmdOpticalFlowProvider.cpp"), "package validates compiled provider capability")
 build = read("scripts/Build-Release.ps1")
 check(build.index("FSR3 FG requires EnableAmdOpticalFlow=true") < build.index("function Find-MSBuild"), "invalid feature dependency fails before build/staging")
 print(f"FG settings/idle source audit: {checks} checks passed; C++/SDK/runtime acceptance deferred.")

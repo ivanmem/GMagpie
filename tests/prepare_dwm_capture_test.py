@@ -21,8 +21,8 @@ def function(source, signature):
 repo = Path(__file__).resolve().parents[1]
 output = Path(sys.argv[1]).resolve()
 output.mkdir(parents=True, exist_ok=True)
-source = (repo / "src/Magpie.Core/DwmSharedSurfaceFrameSource.cpp").read_text(encoding="utf-8-sig")
-header = (repo / "src/Magpie.Core/FrameSourceBase.h").read_text(encoding="utf-8-sig")
+source = (repo / "src/GMagpie.Core/DwmSharedSurfaceFrameSource.cpp").read_text(encoding="utf-8-sig")
+header = (repo / "src/GMagpie.Core/FrameSourceBase.h").read_text(encoding="utf-8-sig")
 update = function(source, "FrameSourceState DwmSharedSurfaceFrameSource::_Update()")
 state = re.search(r"enum class FrameSourceState\s*\{.*?\n\};", header, re.S)[0]
 

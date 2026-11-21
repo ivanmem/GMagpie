@@ -47,8 +47,8 @@ void Binding(ID3D11ShaderReflection* reflection,const char* name,unsigned slot) 
 int main(int argc,char** argv) {
 	if (argc!=3) return 2;
 	try {
-		Compile(Magpie::DLSSNR_TEMPORAL_SHADER,"main","DLSSNRTemporal","Settings",64);
-		Compile(std::string(Magpie::DLSSNR_TEMPORAL_REDUCE_SHADER),"main","DLSSNRTemporalReduce","Settings",64);
+		Compile(GMagpie::DLSSNR_TEMPORAL_SHADER,"main","DLSSNRTemporal","Settings",64);
+		Compile(std::string(GMagpie::DLSSNR_TEMPORAL_REDUCE_SHADER),"main","DLSSNRTemporalReduce","Settings",64);
 		const auto nv=Compile(Extract(argv[1],"DENSIFY_FLOW_HLSL"),"Densify","NVOFReverse","Params",32);
 		Binding(nv.Get(),"DenseReverseMotion",2); Binding(nv.Get(),"DenseReverseConfidence",3);
 		const auto adapt=Compile(Extract(argv[2],"ADAPT_GUIDANCE_HLSL"),"Adapt","FrozenGuidanceAdapter","Params",32);

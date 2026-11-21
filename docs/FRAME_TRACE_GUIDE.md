@@ -4,7 +4,7 @@
 
 ## 如何提供一次有效记录
 
-1. 退出其他 Magpie 实例，运行本目录的 `Magpie.exe`。
+1. 退出其他 GMagpie 实例，运行本目录的 `GMagpie.exe`。
 2. 正常启用效果组，沿用出现问题的设置。无需打开性能分析器，诊断记录会自动开始。
 3. 出现明显卡顿后，在方便时尽快停用效果组。每次停用后，会在本目录 `logs/frame-traces/` 导出一份 `trace-日期-时间-PID-序号.csv`。
 4. 提供这份 CSV，以及 `logs/magpie.log`、如有则一并提供 `magpie.1.log`。补充源程序、是否移动鼠标／切屏，以及视频自身帧率即可。
@@ -43,11 +43,11 @@ python .\Diagnostics\Analyze-FrameTrace.py .\logs\frame-traces\trace-实际文�
 
 ## 同一诊断版关闭采集作对照
 
-如果需要排除新增记录的影响，完全退出 Magpie 后，通过下面的 PowerShell 命令启动。环境变量只影响这个终端随后启动的进程，不修改配置文件：
+如果需要排除新增记录的影响，完全退出 GMagpie 后，通过下面的 PowerShell 命令启动。环境变量只影响这个终端随后启动的进程，不修改配置文件：
 
 ```powershell
 $env:MAGPIE_FRAME_TRACE = '0'
-Start-Process -FilePath .\Magpie.exe -WindowStyle Hidden
+Start-Process -FilePath .\GMagpie.exe -WindowStyle Hidden
 Remove-Item Env:MAGPIE_FRAME_TRACE
 ```
 

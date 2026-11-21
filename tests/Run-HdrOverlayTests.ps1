@@ -18,13 +18,13 @@ New-Item -ItemType Directory -Path $shaderOutput -Force | Out-Null
 $fxc = Join-Path $env:WindowsSdkDir "bin/$($env:WindowsSDKVersion.TrimEnd('\'))/x64/fxc.exe"
 foreach ($shader in @('ImGuiImplVS','ImGuiImplPS')) {
     $profile = if ($shader.EndsWith('VS')) { 'vs_5_0' } else { 'ps_5_0' }
-    & $fxc /nologo /WX /T $profile /E main /Vn $shader /Fh "$shaderOutput/$shader.h" "$repo/src/Magpie.Core/shaders/$shader.hlsl"
+    & $fxc /nologo /WX /T $profile /E main /Vn $shader /Fh "$shaderOutput/$shader.h" "$repo/src/GMagpie.Core/shaders/$shader.hlsl"
     if ($LASTEXITCODE) { throw "$shader compilation failed" }
 }
 & python "$PSScriptRoot/prepare_hdr_overlay_tests.py" $OutputDirectory
 if ($LASTEXITCODE) { throw 'Production extraction failed' }
 $common = @('/nologo','/std:c++20','/EHsc','/utf-8','/MT','/DNOMINMAX',
-    "/I$repo/src/Magpie.Core", "/I$repo/src/Magpie.Core/include", "/I$OutputDirectory", "/I$($imgui.FullName)/p/include")
+    "/I$repo/src/GMagpie.Core", "/I$repo/src/GMagpie.Core/include", "/I$OutputDirectory", "/I$($imgui.FullName)/p/include")
 foreach ($test in @('HdrComponentsTests','HdrOverlaySubmitTests','HdrOverlayWarpTests')) {
     $libs = if ($test -eq 'HdrOverlayWarpTests') { @("$($imgui.FullName)/p/lib/imgui.lib",'d3d11.lib','windowsapp.lib','imm32.lib') } else { @() }
     # Preserve the existing component fixture's warning level (integer map literals).
@@ -43,7 +43,7 @@ $packageRoot = Join-Path (Split-Path ([IO.Path]::GetFullPath($commonGit)) -Paren
 $wil = Get-ChildItem -LiteralPath $packageRoot -Directory -Filter 'Microsoft.Windows.ImplementationLibrary.*' |
     Where-Object { Test-Path -LiteralPath (Join-Path $_.FullName 'include/wil/resource.h') } | Select-Object -First 1
 if (!$wil) { throw 'Existing WIL headers not found.' }
-$includes = @("$repo/src/Magpie.Core", "$repo/src/Magpie.Core/include", "$repo/src/Shared", $OutputDirectory, "$($wil.FullName)/include")
+$includes = @("$repo/src/GMagpie.Core", "$repo/src/GMagpie.Core/include", "$repo/src/Shared", $OutputDirectory, "$($wil.FullName)/include")
 foreach ($cache in @((Join-Path $env:USERPROFILE '.conan2/p'),(Join-Path $env:USERPROFILE '.conan2/p/b'))) {
     foreach ($package in Get-ChildItem -LiteralPath $cache -Directory) {
         $include = Join-Path $package.FullName 'p/include'
@@ -55,7 +55,7 @@ $flags = @('/nologo','/Zs','/std:c++20','/EHsc','/utf-8','/bigobj','/W4','/WX',
     '/DWINRT_NO_MODULE_LOCK','/DWIL_USE_STL=1','/DWIL_SUPPRESS_EXCEPTIONS','/DSPDLOG_FMT_EXTERNAL','/DFMT_HEADER_ONLY')
 $flags += $includes | Select-Object -Unique | ForEach-Object { "/I$_" }
 foreach ($source in @('Renderer.cpp','OverlayDrawer.cpp','ImGuiImpl.cpp','ImGuiBackend.cpp')) {
-    & cl.exe @flags "$repo/src/Magpie.Core/$source"
+    & cl.exe @flags "$repo/src/GMagpie.Core/$source"
     if ($LASTEXITCODE) { throw "$source syntax validation failed" }
     Write-Output "PASS production /Zs /W4 /WX: $source"
 }

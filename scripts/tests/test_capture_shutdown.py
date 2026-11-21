@@ -1,7 +1,7 @@
 """Generate an MSVC CPU harness from the actual capture-error callback and ShowError.
 
 Run with Python and an output directory, then compile the generated C++ with
-cl /std:c++20 /EHsc /I src/Magpie.Core/include and run the executable.
+cl /std:c++20 /EHsc /I src/GMagpie.Core/include and run the executable.
 The Windows dispatcher/capture objects are fakes; callback bodies are extracted
 unchanged from production code so a missing guard fails the regression cases.
 """
@@ -9,7 +9,7 @@ from pathlib import Path
 import sys
 
 root = Path(__file__).resolve().parents[2]
-core = root / 'src/Magpie.Core'
+core = root / 'src/GMagpie.Core'
 renderer = (core / 'Renderer.cpp').read_text(encoding='utf-8-sig')
 window = (core / 'ScalingWindow.h').read_text(encoding='utf-8-sig')
 teardown = (core / 'ScalingWindow.cpp').read_text(encoding='utf-8-sig')
@@ -46,7 +46,7 @@ harness = r'''
 #include <string>
 #include <string_view>
 #include <thread>
-using namespace Magpie;
+using namespace GMagpie;
 enum class ScalingError { CaptureFailed };
 using HWND = int;
 struct OptionsState {

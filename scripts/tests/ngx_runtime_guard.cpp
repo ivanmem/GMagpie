@@ -5,7 +5,7 @@
 #include <vector>
 #include <string>
 
-using Magpie::NgxRuntimeGuard;
+using GMagpie::NgxRuntimeGuard;
 
 // Model the observed SDK failure: SEH exits while its critical section is held.
 static CRITICAL_SECTION sdkLock;

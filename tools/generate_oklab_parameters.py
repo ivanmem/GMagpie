@@ -242,7 +242,7 @@ def generated():
 #pragma once
 #include <array>
 #include <string_view>
-namespace Magpie::OKLab {
+namespace GMagpie::OKLab {
 struct Parameter { std::string_view name, group; float value, minimum, maximum; bool integer; };
 inline constexpr Parameter Parameters[] = {
 '''+ '\n'.join(defs)+ '\n};\n}\n'
@@ -261,7 +261,7 @@ inline constexpr Parameter Parameters[] = {
     tables+='    float bs[8]={'+','.join(f'bw{i}' for i in range(8))+'};\n'
     tables+='    return OKMixBands(original,hs,cs,ls,bs);\n}\n'
     return {'src/Effects/OKLabImageAdjustment.hlsl':header,
-            'src/Magpie.Core/include/OKLabParameterTable.h':cpp,
+            'src/GMagpie.Core/include/OKLabParameterTable.h':cpp,
             'src/Effects/OKLab/Tables.hlsli':tables}
 
 
@@ -277,7 +277,7 @@ def main():
             target.parent.mkdir(parents=True,exist_ok=True)
             target.write_text(text,encoding='utf-8')
     for locale,lang in [('en-US','en'),('zh-Hans','zh'),('zh-Hant','zh')]:
-        path=ROOT/f'src/Magpie/Resources.language-{locale}.resw'
+        path=ROOT/f'src/GMagpie/Resources.language-{locale}.resw'
         raw=path.read_text(encoding='utf-8-sig')
         data={f'EffectParam_OKLabImageAdjustment_Group_{en}': en if lang=='en' else zh for en,zh in GROUPS}
         data.update({f'OKLab_{key}':pair[0 if lang=='en' else 1] for key,pair in EDITOR_LABELS.items()})

@@ -11,16 +11,16 @@ def block(source, marker):
  while depth:
   depth+=(source[end]=='{')-(source[end]=='}');end+=1
  return source[start:end]
-nr=read('src/Magpie.Core/DLSSNRFilter.cpp')
-settings=block(read('src/Magpie.Core/DLSSNRFilter.h'),'struct DLSSNRSettings {')+';'
+nr=read('src/GMagpie.Core/DLSSNRFilter.cpp')
+settings=block(read('src/GMagpie.Core/DLSSNRFilter.h'),'struct DLSSNRSettings {')+';'
 parser=block(nr,'DLSSNRSettings ParseDLSSNRSettings(')
 clamp=block(nr,'float ClampFinite(')
 initialize=nr[nr.index('\t_settings = settings;',nr.index('bool DLSSNRFilter::Initialize(')):]
 initialize=initialize[:initialize.index('\t_ngxCore =')]
-normalization=block(read('src/Magpie/ScalingModesService.cpp'),'for (std::wstring_view name : {')
+normalization=block(read('src/GMagpie/ScalingModesService.cpp'),'for (std::wstring_view name : {')
 # That marker must name the three NR parameters, not an unrelated loop.
 assert all('L"'+key+'"' in normalization for key in ('intensity','localToneStrength','localStructureStrength'))
-display=block(read('src/Magpie.Core/OverlayDrawer.cpp'),'static std::string_view GetEffectDisplayName(')
+display=block(read('src/GMagpie.Core/OverlayDrawer.cpp'),'static std::string_view GetEffectDisplayName(')
 shader=read('src/Effects/DLSSNR/DLSSNR_AI_Filter.hlsl')
 for name in ('intensity','localToneStrength','localStructureStrength'):
  end=shader.index('float '+name+';');metadata=shader[shader.rfind('//!PARAMETER',0,end):end]
@@ -30,10 +30,10 @@ live=block(nr,'bool DLSSNRFilter::ApplyLiveParameters(')
 assert 'ParseDLSSNRSettings(' in live
 for name in ('intensity','localToneStrength','localStructureStrength'):
  assert '_settings.'+name+' = candidate.'+name in live
-about=read('src/Magpie/AboutPage.xaml');ET.fromstring(about)
-assert 'Blinue/Magpie' not in about
+about=read('src/GMagpie/AboutPage.xaml');ET.fromstring(about)
+assert 'Blinue/GMagpie' not in about
 assert 'Click="FAQ_Click"' in about and 'Click="ContributionGuidelines_Click"' in about
-about_cpp=read('src/Magpie/AboutPage.cpp')
+about_cpp=read('src/GMagpie/AboutPage.cpp')
 assert 'starts_with(L"zh")' in about_cpp
 for file in ('docs/FAQ.md','docs/FAQ%20(EN).md','CONTRIBUTING_ZH.md','CONTRIBUTING.md'):
  assert 'https://github.com/SAOG0721/Magpie/blob/experimental/'+file in about_cpp
@@ -86,7 +86,7 @@ int main() {
  auto defaults=ParseDLSSNRSettings({},false);
  assert(defaults.intensity==1 && defaults.localToneStrength==1 && defaults.localStructureStrength==1);
  assert(GetEffectDisplayName({"XeSSFG\\XeSS_FrameGeneration",""})=="XeSS_FrameGeneration");
- assert(Magpie::EffectHelper::GetDisplayName(L"XeSSFG\\XeSS_FrameGeneration")==L"XeSS_FrameGeneration");
+ assert(GMagpie::EffectHelper::GetDisplayName(L"XeSSFG\\XeSS_FrameGeneration")==L"XeSS_FrameGeneration");
  assert(GetEffectDisplayName({"Custom\\XeSS_ZeroMV","Custom label"})=="Custom label");
  assert(GetEffectDisplayName({"Custom\\XeSS_ZeroMV",""})=="XeSS_ZeroMV");
  std::cout<<"Beta3: NR 0-2 parse/init/import, invalid inputs, metadata/live routing, XeSS display aliases and localized About links passed.\n";

@@ -10,7 +10,7 @@ import sys
 repo = Path(__file__).resolve().parents[1]
 out = Path(sys.argv[1])
 out.mkdir(parents=True, exist_ok=True)
-s = (repo / 'src/Magpie.Core/Renderer.cpp').read_text(encoding='utf-8-sig')
+s = (repo / 'src/GMagpie.Core/Renderer.cpp').read_text(encoding='utf-8-sig')
 
 def block(source, marker):
     start = source.index(marker)
@@ -29,12 +29,12 @@ dispatch = block(render, '\n\tif (!stableBaseOnly) {')
 assert '_UpdateFrontendBase(sharedTextureSlot)' in dispatch
 dlss = block(s, 'DLSSFGFrameRenderResult Renderer::RenderDLSSFGFrame(')
 drop = block(dlss, 'if (droppedFrame) {')
-renderer_header = (repo / 'src/Magpie.Core/Renderer.h').read_text(encoding='utf-8-sig')
+renderer_header = (repo / 'src/GMagpie.Core/Renderer.h').read_text(encoding='utf-8-sig')
 capture_guards = '\n'.join(block(renderer_header, signature) for signature in (
     'bool _IsFrameSyncPublicationPending()', 'bool _FrameSyncBlocksCapture()'))
 assert 'if (_FrameSyncBlocksCapture()) continue;' in s
-nr = (repo / 'src/Magpie.Core/DLSSNRFilter.cpp').read_text(encoding='utf-8-sig')
-nr_header = (repo / 'src/Magpie.Core/DLSSNRFilter.h').read_text(encoding='utf-8-sig')
+nr = (repo / 'src/GMagpie.Core/DLSSNRFilter.cpp').read_text(encoding='utf-8-sig')
+nr_header = (repo / 'src/GMagpie.Core/DLSSNRFilter.h').read_text(encoding='utf-8-sig')
 settings = block(nr_header, 'struct DLSSNRSettings {') + ';'
 parse = block(nr, 'DLSSNRSettings ParseDLSSNRSettings(')
 effect = (repo / 'src/Effects/DLSSNR/DLSSNR_AI_Filter.hlsl').read_text(encoding='utf-8-sig')
@@ -56,7 +56,7 @@ prefix = r'''
 #include <string>
 #include <string_view>
 #include "DLSSNRPerformanceParameters.h"
-using namespace Magpie;
+using namespace GMagpie;
 using HRESULT = int;
 constexpr int WAIT_TIMEOUT = 258;
 bool FAILED(int x) { return x < 0; }

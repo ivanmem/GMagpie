@@ -19,7 +19,7 @@
 #include "hdr_surface_shader.h"
 
 using Microsoft::WRL::ComPtr;
-using namespace Magpie;
+using namespace GMagpie;
 using Pixel = std::array<float, 4>;
 constexpr UINT Width = 1025;
 

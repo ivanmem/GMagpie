@@ -1,4 +1,4 @@
-# Magpie Experimental 0.6.9 Beta1 fix1
+# GMagpie Experimental 0.6.9 Beta1 fix1
 
 部署到现有 Beta1 目录，保留原 Beta1 恢复副本。
 

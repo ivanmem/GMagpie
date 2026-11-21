@@ -1,4 +1,4 @@
-# Magpie Experimental v0.6.9 Beta2
+# GMagpie Experimental v0.6.9 Beta2
 
 2026-10-02 本地测试版。以下为相对 0.6.8 的 **0.6.9 累计更新清单**，包含全部 11 个功能分支以及 Beta1 fix1、fix2、fix3 的修正。Beta2 新增重点是统一帧率与刷新、效果组页面恢复、仅显示适配器筛选和 Reflex 标记边界。
 
@@ -94,8 +94,8 @@
 
 ## 安装、验证与已知边界
 
-- 完整解压 **Magpie-Experimental-x64.zip** 到新目录，完全退出旧 Magpie 后运行新目录的 `Magpie.exe`。本地部署目录为 `release/v0.6.9-beta2/Magpie-Experimental-x64/`，Beta1 保留供恢复。
-- 普通配置使用 `%LOCALAPPDATA%\Magpie\config\v4e\config.json`；便携配置使用程序目录内 `config\v4e\config.json`。启动前备份现有配置，回退时使用对应旧包和配置快照。
+- 完整解压 **GMagpie-Experimental-x64.zip** 到新目录，完全退出旧 GMagpie 后运行新目录的 `GMagpie.exe`。本地部署目录为 `release/v0.6.9-beta2/GMagpie-Experimental-x64/`，Beta1 保留供恢复。
+- 普通配置使用 `%LOCALAPPDATA%\GMagpie\config\v4e\config.json`；便携配置使用程序目录内 `config\v4e\config.json`。启动前备份现有配置，回退时使用对应旧包和配置快照。
 - 构建、自动回归、资源、包哈希及真实启动结果见 [Beta2 整合与部署记录](experimental/reviews/20261002-v0.6.9-beta2-integration.md)；功能存在与运行验收分别记录。
 - 光标最低刷新是补充目标，实际速率受显示与呈现通道约束；空闲重绘可能增加功耗，不提高源应用真实帧率。DLSS FG 共用呈现通道，XeSS 使用独立叠加层。
 - 历史测试在极小 DLSSNR 推理尺寸（如 32×18）观察到设备挂起，旧单层也可复现，最小尺寸边界仍未确定。遇到异常先关闭输入分辨率调整或提高推理尺寸。
@@ -106,7 +106,7 @@ Contributor: [liaanj](https://github.com/liaanj) 提供 PR #62 的仅显示间�
 
 ---
 
-# Magpie Experimental v0.6.9 Beta2
+# GMagpie Experimental v0.6.9 Beta2
 
 Local test release dated 2026-10-02. This is the **complete cumulative 0.6.9 change list relative to 0.6.8**, including all eleven feature branches and Beta1 fix1/fix2/fix3. Beta2 adds unified frame/refresh settings, the effect-group page repair, display-only adapter filtering and corrected Reflex marker boundaries.
 
@@ -202,8 +202,8 @@ Add **xBR 2x, 3x, 4x, NoBlend 3x and Hybrid 2x** for pixel art and low-resolutio
 
 ## Installation, verification and boundaries
 
-- Fully extract **Magpie-Experimental-x64.zip** into a new folder, exit old Magpie completely and run the new `Magpie.exe`. Local deployment: `release/v0.6.9-beta2/Magpie-Experimental-x64/`; Beta1 remains available for recovery.
-- Normal config: `%LOCALAPPDATA%\Magpie\config\v4e\config.json`; portable config: `config\v4e\config.json` inside the program folder. Back up existing settings before startup; recover with the matching old package/config snapshot.
+- Fully extract **GMagpie-Experimental-x64.zip** into a new folder, exit old GMagpie completely and run the new `GMagpie.exe`. Local deployment: `release/v0.6.9-beta2/GMagpie-Experimental-x64/`; Beta1 remains available for recovery.
+- Normal config: `%LOCALAPPDATA%\GMagpie\config\v4e\config.json`; portable config: `config\v4e\config.json` inside the program folder. Back up existing settings before startup; recover with the matching old package/config snapshot.
 - Build, automated regression, resources, package hashes and native startup results are recorded in the [Beta2 integration/deployment record](experimental/reviews/20261002-v0.6.9-beta2-integration.md), separately from feature implementation.
 - Cursor minimum is a supplemental target subject to display/presentation capacity. Idle redraw can increase power and does not increase source-application FPS. DLSS FG shares the presentation channel; XeSS uses its separate overlay layer.
 - Historical tests observed a device hang at tiny NR inference sizes such as 32×18, also on the earlier single-pass path; the minimum boundary remains unknown. Disable input scaling or increase inference size when troubleshooting.

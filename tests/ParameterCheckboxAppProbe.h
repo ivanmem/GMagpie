@@ -3,8 +3,8 @@
 #include "EffectParametersViewModel.h"
 #include "ScalingMode.h"
 #include "EffectDesc.h"
-namespace winrt::Magpie::implementation {
-using namespace ::Magpie;
+namespace winrt::GMagpie::implementation {
+using namespace ::GMagpie;
 template<class F> void VisitDiagnostic(const DependencyObject& node, const F& visit) {
     visit(node);
     for (int i=0; i<VisualTreeHelper::GetChildrenCount(node); ++i)
@@ -24,7 +24,7 @@ static unsigned CheckParameterCheckboxRows(const DependencyObject& root, bool ed
     VisitDiagnostic(root,[&](const auto& node){
         const auto row=node.template try_as<Grid>();
         if(!row || row.Name()!=L"ParameterCheckBoxRow")return;
-        const auto parameter=row.DataContext().template as<winrt::Magpie::ScalingModeParameter>();
+        const auto parameter=row.DataContext().template as<winrt::GMagpie::ScalingModeParameter>();
         CheckBox left{nullptr},right{nullptr};
         for(const auto& child:row.Children()) {
             const auto box=child?child.template try_as<CheckBox>():nullptr;
@@ -42,7 +42,7 @@ static unsigned CheckParameterCheckboxRows(const DependencyObject& root, bool ed
         ++rows;
     });
     if(editSingles) for(const auto& box:singles) {
-        const auto parameter=box.DataContext().as<winrt::Magpie::ScalingModeParameter>();
+        const auto parameter=box.DataContext().as<winrt::GMagpie::ScalingModeParameter>();
         const bool before=parameter.BooleanValue();
         const auto& name=EffectsService::Get().GetEffect(AppSettings::Get().ScalingModes().at(0).effects.at(0).name)->params.at(get_self<ScalingModeParameter>(parameter)->Index()).name;
         const auto key=std::wstring(to_hstring(name));
@@ -66,7 +66,7 @@ static fire_and_forget RunParameterFlyoutAppProbe() {
         co_await WaitDiagnostic([]{
             bool found=false;
             VisitDiagnostic(App::Get().RootPage().as<DependencyObject>(),[&](const auto& node){
-                if(auto e=node.template try_as<winrt::Magpie::SettingsExpander>()){e.IsExpanded(true);found=true;}
+                if(auto e=node.template try_as<winrt::GMagpie::SettingsExpander>()){e.IsExpanded(true);found=true;}
             }); return found;
         });
         Button anchor{nullptr}; Controls::Flyout flyout{nullptr};
@@ -75,12 +75,12 @@ static fire_and_forget RunParameterFlyoutAppProbe() {
                 const auto b=node.template try_as<Button>();
                 const auto f=b?b.Flyout().template try_as<Controls::Flyout>():nullptr;
                 const auto c=f?f.Content().template try_as<ContentControl>():nullptr;
-                if(c && c.Content().template try_as<winrt::Magpie::EffectParametersViewModel>()){anchor=b;flyout=f;}
+                if(c && c.Content().template try_as<winrt::GMagpie::EffectParametersViewModel>()){anchor=b;flyout=f;}
             }); return anchor && anchor.IsLoaded() && anchor.ActualWidth()>0;
         });
         wchar_t sectionText[16]{}; GetEnvironmentVariableW(L"MAGPIE_DIAG_SECTION",sectionText,16);
         const int section=_wtoi(sectionText);
-        const auto vm=flyout.Content().as<ContentControl>().Content().as<winrt::Magpie::EffectParametersViewModel>();
+        const auto vm=flyout.Content().as<ContentControl>().Content().as<winrt::GMagpie::EffectParametersViewModel>();
         const auto impl=get_self<EffectParametersViewModel>(vm);
         Logger::Get().Info(fmt::format("CheckboxProbe opening effect={} section={}",
             to_string(AppSettings::Get().ScalingModes().at(0).effects.at(0).name),section));

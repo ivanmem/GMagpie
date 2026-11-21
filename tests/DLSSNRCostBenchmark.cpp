@@ -16,7 +16,7 @@
 #include <set>
 #include <d3dcompiler.h>
 
-using namespace Magpie;
+using namespace GMagpie;
 using namespace CostBenchmark;
 void Require(bool value, const char* stage = "require") {
     if (!value) { std::cerr << "Benchmark failed: " << stage << '\n'; Logger::Get().Flush(); throw std::runtime_error(stage); }

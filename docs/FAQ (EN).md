@@ -1,19 +1,19 @@
 ## Duplicate-monitoring
 
-When displaying performance monitor like RTSS (Rivatuner Statistics Server), there might be 2 OSD layers displayed with Magpie scaling. This is caused by d3d, the screen capture method since v0.7.0. It will be captured by RTSS as well. You can fix this issue by adding it to the blacklist.
+When displaying performance monitor like RTSS (Rivatuner Statistics Server), there might be 2 OSD layers displayed with GMagpie scaling. This is caused by d3d, the screen capture method since v0.7.0. It will be captured by RTSS as well. You can fix this issue by adding it to the blacklist.
 
 ## The hot keys don't work, but "Scale after `x`s" works.
 
 1. Try changing the hot keys.
-2. Try running Magpie as Administrator.
+2. Try running GMagpie as Administrator.
 
 ## Lagging/latency
 
 Please check the [Performance optimization](https://github.com/Blinue/Magpie/wiki/Performance%20optimization) page.
 
-## Will using Magpie in multi-player games be detected as cheating?
+## Will using GMagpie in multi-player games be detected as cheating?
 
-Magpie is designed to be non-intrusive, so it is unlikely to be detected as a cheating tool. There have been no reports of bans for using Magpie. Nevertheless, you should be aware of the risks of using the software.
+GMagpie is designed to be non-intrusive, so it is unlikely to be detected as a cheating tool. There have been no reports of bans for using GMagpie. Nevertheless, you should be aware of the risks of using the software.
 
 ## What is "3D game mode"?
 
@@ -31,24 +31,24 @@ DirectFlip is a technology to reduce input lags, but it may cause trouble in som
 
 A lot of software checks whether there are games running under dedicated fullscreen mode before popping up windows. Turn on this option if you'd like to play in fullscreen without being disturbed,
 
-## What is the frame rate displayed in Magpie?
+## What is the frame rate displayed in GMagpie?
 
-The frame rate displayed by Magpie is that of its own rather than that of the game. Due to the non-intrusive nature, Magpie has no way to detect the frame rates of games themselves. We recommend you to use tools like RTSS to display the games' frame rates. Their add-on layers can usually be captured by Magpie as well.
+The frame rate displayed by GMagpie is that of its own rather than that of the game. Due to the non-intrusive nature, GMagpie has no way to detect the frame rates of games themselves. We recommend you to use tools like RTSS to display the games' frame rates. Their add-on layers can usually be captured by GMagpie as well.
 
-## Does Magpie support touch input?
+## Does GMagpie support touch input?
 
 Supported from v0.11, see [About touch support](About%20touch%20support.md) for details.
 
-### Does Magpie support frame generation?
+### Does GMagpie support frame generation?
 
 This enhanced version supports DLSS FG and XeSS FG/MFG through the Frame Generation & Frame Rate category; use one frame-generation implementation per group. Available multipliers depend on the GPU and driver. Optical flow defaults to off, with AMD or NVIDIA motion estimation selectable in effect parameters.
 
 This version also provides DLSS SR, FSR 2/3 and XeSS upscaling effects. External capture lacks native game depth and camera jitter, so image quality can differ from in-game integration. See the [frame synchronization guide](FRAME_SYNC_GUIDE.md) for frame-rate and low-latency settings.
 
-## What is the relationship between Magpie and Lossless Scaling?
+## What is the relationship between GMagpie and Lossless Scaling?
 
-[Lossless Scaling](https://store.steampowered.com/app/993090/Lossless_Scaling/) is a paid software on Steam that is similar to Magpie. When Magpie was released in February 2021, existing window scaling software (such as [IntegerScaler](https://tanalin.com/en/projects/integer-scaler/) and Lossless Scaling) only supported simple scaling algorithms like nearest-neighbor scaling and integer scaling. These programs relied on the [Magnification API](https://learn.microsoft.com/en-us/windows/win32/api/_magapi/) to function, which led to significant limitations.
+[Lossless Scaling](https://store.steampowered.com/app/993090/Lossless_Scaling/) is a paid software on Steam that is similar to GMagpie. When GMagpie was released in February 2021, existing window scaling software (such as [IntegerScaler](https://tanalin.com/en/projects/integer-scaler/) and Lossless Scaling) only supported simple scaling algorithms like nearest-neighbor scaling and integer scaling. These programs relied on the [Magnification API](https://learn.microsoft.com/en-us/windows/win32/api/_magapi/) to function, which led to significant limitations.
 
-To support advanced scaling algorithms, I developed and open-sourced Magpie, which implements scaling in a completely different way. Initially, Magpie only supported algorithms like Anime4K, Lanczos, and Adaptive Sharpen. However, based on user feedback, Magpie added support for FSR in [July 2021](https://github.com/Blinue/Magpie/commit/7f6c66f3b47ccd64da41d298faa7a8e185bd5299). Soon after, Lossless Scaling released version 1.4.0, which supported FSR in a similar way to Magpie.
+To support advanced scaling algorithms, I developed and open-sourced GMagpie, which implements scaling in a completely different way. Initially, GMagpie only supported algorithms like Anime4K, Lanczos, and Adaptive Sharpen. However, based on user feedback, GMagpie added support for FSR in [July 2021](https://github.com/Blinue/Magpie/commit/7f6c66f3b47ccd64da41d298faa7a8e185bd5299). Soon after, Lossless Scaling released version 1.4.0, which supported FSR in a similar way to GMagpie.
 
-Currently, Magpie and Lossless Scaling differ significantly. Magpie focuses on usability and supporting more scaling algorithms, while Lossless Scaling primarily aims to improve 3D game performance.
+Currently, GMagpie and Lossless Scaling differ significantly. GMagpie focuses on usability and supporting more scaling algorithms, while Lossless Scaling primarily aims to improve 3D game performance.

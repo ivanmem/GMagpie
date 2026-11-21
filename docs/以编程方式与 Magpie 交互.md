@@ -1,4 +1,4 @@
-Magpie 提供了和其他程序交互的机制。通过它们，你的应用可以和 Magpie 配合使用。
+GMagpie 提供了和其他程序交互的机制。通过它们，你的应用可以和 GMagpie 配合使用。
 
 [MagpieWatcher](https://github.com/Blinue/MagpieWatcher) 演示了如何使用这些机制。
 
@@ -23,7 +23,7 @@ UINT WM_MAGPIE_SCALINGCHANGED = RegisterWindowMessage(L"MagpieScalingChanged");
 
 ### 注意事项
 
-如果你的进程完整性级别 (Integration level) 比 Magpie 更高，由于用户界面特权隔离 (UIPI)，你将无法收到 Magpie 广播的消息。这种情况下请调用 [ChangeWindowMessageFilterEx](https://learn.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-changewindowmessagefilterex) 以允许接收 `MagpieScalingChanged` 消息。
+如果你的进程完整性级别 (Integration level) 比 GMagpie 更高，由于用户界面特权隔离 (UIPI)，你将无法收到 GMagpie 广播的消息。这种情况下请调用 [ChangeWindowMessageFilterEx](https://learn.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-changewindowmessagefilterex) 以允许接收 `MagpieScalingChanged` 消息。
 
 ```c++
 ChangeWindowMessageFilterEx(hYourWindow, WM_MAGPIE_SCALINGCHANGED, MSGFLT_ADD, nullptr);
@@ -31,7 +31,7 @@ ChangeWindowMessageFilterEx(hYourWindow, WM_MAGPIE_SCALINGCHANGED, MSGFLT_ADD, n
 
 ## 如何获取缩放窗口句柄
 
-你可以监听 `MagpieScalingChanged` 消息来获取缩放窗口句柄，也可以查找类名为`Window_Magpie_967EB565-6F73-4E94-AE53-00CC42592A22`的窗口以在缩放中途获取该句柄。Magpie 将确保此类名不会改变，且不会同时存在多个缩放窗口。
+你可以监听 `MagpieScalingChanged` 消息来获取缩放窗口句柄，也可以查找类名为`Window_Magpie_967EB565-6F73-4E94-AE53-00CC42592A22`的窗口以在缩放中途获取该句柄。GMagpie 将确保此类名不会改变，且不会同时存在多个缩放窗口。
 
 ```c++
 HWND hwndScaling = FindWindow(L"Window_Magpie_967EB565-6F73-4E94-AE53-00CC42592A22", nullptr);
@@ -57,26 +57,26 @@ if (message == WM_MAGPIE_SCALINGCHANGED) {
 
 缩放窗口的[窗口属性](https://learn.microsoft.com/en-us/windows/win32/winmsg/about-window-properties)中存储着缩放信息。目前支持以下属性：
 
-* `Magpie.Windowed`：是否处于窗口模式缩放
-* `Magpie.SrcHWND`: 源窗口句柄
-* `Magpie.SrcLeft`、`Magpie.SrcTop`、`Magpie.SrcRight`、`Magpie.SrcBottom`: 被缩放区域的边界
-* `Magpie.DestLeft`、`Magpie.DestTop`、`Magpie.DestRight`、`Magpie.DestBottom`: 缩放后区域矩形边界
+* `GMagpie.Windowed`：是否处于窗口模式缩放
+* `GMagpie.SrcHWND`: 源窗口句柄
+* `GMagpie.SrcLeft`、`GMagpie.SrcTop`、`GMagpie.SrcRight`、`GMagpie.SrcBottom`: 被缩放区域的边界
+* `GMagpie.DestLeft`、`GMagpie.DestTop`、`GMagpie.DestRight`、`GMagpie.DestBottom`: 缩放后区域矩形边界
 
 ```c++
-HWND hwndSrc = (HWND)GetProp(hwndScaling, L"Magpie.SrcHWND");
-bool isWindowed = (bool)GetProp(hwndScaling, L"Magpie.Windowed");
+HWND hwndSrc = (HWND)GetProp(hwndScaling, L"GMagpie.SrcHWND");
+bool isWindowed = (bool)GetProp(hwndScaling, L"GMagpie.Windowed");
 
 RECT srcRect;
-srcRect.left = (LONG)(INT_PTR)GetProp(hwndScaling, L"Magpie.SrcLeft");
-srcRect.top = (LONG)(INT_PTR)GetProp(hwndScaling, L"Magpie.SrcTop");
-srcRect.right = (LONG)(INT_PTR)GetProp(hwndScaling, L"Magpie.SrcRight");
-srcRect.bottom = (LONG)(INT_PTR)GetProp(hwndScaling, L"Magpie.SrcBottom");
+srcRect.left = (LONG)(INT_PTR)GetProp(hwndScaling, L"GMagpie.SrcLeft");
+srcRect.top = (LONG)(INT_PTR)GetProp(hwndScaling, L"GMagpie.SrcTop");
+srcRect.right = (LONG)(INT_PTR)GetProp(hwndScaling, L"GMagpie.SrcRight");
+srcRect.bottom = (LONG)(INT_PTR)GetProp(hwndScaling, L"GMagpie.SrcBottom");
 
 RECT destRect;
-destRect.left = (LONG)(INT_PTR)GetProp(hwndScaling, L"Magpie.DestLeft");
-destRect.top = (LONG)(INT_PTR)GetProp(hwndScaling, L"Magpie.DestTop");
-destRect.right = (LONG)(INT_PTR)GetProp(hwndScaling, L"Magpie.DestRight");
-destRect.bottom = (LONG)(INT_PTR)GetProp(hwndScaling, L"Magpie.DestBottom");
+destRect.left = (LONG)(INT_PTR)GetProp(hwndScaling, L"GMagpie.DestLeft");
+destRect.top = (LONG)(INT_PTR)GetProp(hwndScaling, L"GMagpie.DestTop");
+destRect.right = (LONG)(INT_PTR)GetProp(hwndScaling, L"GMagpie.DestRight");
+destRect.bottom = (LONG)(INT_PTR)GetProp(hwndScaling, L"GMagpie.DestBottom");
 ```
 
 ### 注意事项

@@ -82,10 +82,10 @@ static bool WaitForMagpieToExit() noexcept {
 		}
 	}
 
-	// 即使 mutex 已被释放，Magpie.exe 仍有可能正在后台执行清理工作
+	// 即使 mutex 已被释放，GMagpie.exe 仍有可能正在后台执行清理工作
 	// Wait for exclusive access without destroying the rollback baseline.
 	for (int i = 0; i < 1000; ++i) {
-		wil::unique_handle file(CreateFileW(L"Magpie.exe", GENERIC_READ | DELETE,
+		wil::unique_handle file(CreateFileW(L"GMagpie.exe", GENERIC_READ | DELETE,
 			0, nullptr, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, nullptr));
 		if (file) {
 			return true;
@@ -102,10 +102,10 @@ static bool VerifyCommunityPackage(const std::filesystem::path& root) {
 #ifdef MP_ENABLE_DLSS_FRAME_GENERATION
 	const bool required = true;
 #else
-	const bool required = std::filesystem::exists(root / Magpie::DlssgSm86Package::Directory);
+	const bool required = std::filesystem::exists(root / GMagpie::DlssgSm86Package::Directory);
 #endif
 	if (!required) return true;
-	if (!Magpie::DlssgSm86Package::Verify(root)) return false;
+	if (!GMagpie::DlssgSm86Package::Verify(root)) return false;
 	for (const auto* name : { L"version.dll", L"winmm.dll", L"dbghelp.dll", L"dinput8.dll", L"nvngx_dlssg.dll", L"dlssg_sm86.ini" }) {
 		if (std::filesystem::exists(root / name)) return false;
 	}
@@ -148,8 +148,8 @@ int APIENTRY wWinMain(
 	}
 
 	// 检查 Updater.exe 所处环境
-	if (!FileExists(L"Magpie.exe") || !FileExists(L"update\\Magpie.exe")) {
-		Logger::Get().Critical("未找到 Magpie.exe 或 update\\Magpie.exe");
+	if (!FileExists(L"GMagpie.exe") || !FileExists(L"update\\GMagpie.exe")) {
+		Logger::Get().Critical("未找到 GMagpie.exe 或 update\\GMagpie.exe");
 		return 1;
 	}
 	
@@ -163,16 +163,16 @@ int APIENTRY wWinMain(
 			return 1;
 		}
 		if (!WaitForMagpieToExit()) {
-			Logger::Get().Critical("等待 Magpie.exe 退出超时");
+			Logger::Get().Critical("等待 GMagpie.exe 退出超时");
 			return 1;
 		}
 		std::vector<std::filesystem::path> obsolete;
 		for (const wchar_t* file : oldFiles->files) obsolete.emplace_back(file);
 		if (std::filesystem::exists(std::filesystem::path(CommonSharedConstants::UPDATE_DIR) /
-			Magpie::DlssgSm86Package::Directory)) {
+			GMagpie::DlssgSm86Package::Directory)) {
 			// Exact old ownership only; UpdateTransaction retains rollback copies.
-			for (const auto& file : Magpie::DlssgSm86Package::LegacyFiles) {
-				if (Magpie::PinnedFile::Verify(file.name, file.size, file.sha256))
+			for (const auto& file : GMagpie::DlssgSm86Package::LegacyFiles) {
+				if (GMagpie::PinnedFile::Verify(file.name, file.size, file.sha256))
 					obsolete.emplace_back(file.name);
 			}
 		}
@@ -191,8 +191,8 @@ int APIENTRY wWinMain(
 			"; captured Win32 error: ", std::to_string(transaction.FailureCode()),
 			"; rollback directory: ", StrHelper::UTF16ToUTF8(transaction.Backup().wstring())));
 		Logger::Get().Critical(restored ?
-			"Update failed; rollback completed. Update and backup retained; Magpie will not launch" :
-			"Update failed and rollback incomplete. Update and backup retained; Magpie will not launch");
+			"Update failed; rollback completed. Update and backup retained; GMagpie will not launch" :
+			"Update failed and rollback incomplete. Update and backup retained; GMagpie will not launch");
 		return 1;
 	}
 	Logger::Get().Info(StrHelper::Concat("Update verified; rollback copy retained at ",
@@ -206,16 +206,16 @@ int APIENTRY wWinMain(
 		Logger::Get().ComError("RemoveDirectoryRecursiveNoThrow 失败", hr);
 	}
 
-	// 启动 Magpie
+	// 启动 GMagpie
 	SHELLEXECUTEINFO execInfo{
 		.cbSize = sizeof(execInfo),
 		.fMask = SEE_MASK_NOASYNC,
 		.lpVerb = L"open",
-		.lpFile = L"Magpie.exe",
+		.lpFile = L"GMagpie.exe",
 		.nShow = SW_SHOWNORMAL
 	};
 	if (ShellExecuteEx(&execInfo)) {
-		Logger::Get().Info("已启动 Magpie.exe");
+		Logger::Get().Info("已启动 GMagpie.exe");
 	} else {
 		Logger::Get().Win32Error("ShellExecuteEx 失败");
 	}

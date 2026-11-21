@@ -22,7 +22,7 @@ struct AppSettings {
 struct Win32Helper {
 	static bool ShellOpen(const wchar_t* path) { state.opened.emplace_back(path); return state.canOpen; }
 };
-struct CommonSharedConstants { static constexpr auto APP_RESOURCE_MAP_ID = L"Magpie/Resources"; };
+struct CommonSharedConstants { static constexpr auto APP_RESOURCE_MAP_ID = L"GMagpie/Resources"; };
 struct ResourceLoader {
 	static ResourceLoader GetForCurrentView(const wchar_t*) { return {}; }
 	std::wstring GetString(const wchar_t* key) const {
@@ -46,7 +46,7 @@ struct ScalingModesPage {
 
 int main() {
 	ScalingModesPage page;
-	for (const auto* path : { L"C:\\Fixture\\AppData\\Local\\Magpie\\config\\v4e",
+	for (const auto* path : { L"C:\\Fixture\\AppData\\Local\\GMagpie\\config\\v4e",
 		L"D:\\Portable fixture\\config\\v4e" }) {
 		for (const bool succeeds : {true, false}) {
 			state = {};

@@ -1,5 +1,5 @@
 #Requires -Version 7.0
-param([string]$OutputDirectory = (Join-Path $env:TEMP ('Magpie-VRRPerformance-' + [guid]::NewGuid())))
+param([string]$OutputDirectory = (Join-Path $env:TEMP ('GMagpie-VRRPerformance-' + [guid]::NewGuid())))
 $ErrorActionPreference = 'Stop'
 $vrrPerformanceRepo = Split-Path $PSScriptRoot -Parent
 $vrrPerformanceOutput = [IO.Path]::GetFullPath($OutputDirectory)
@@ -10,7 +10,7 @@ Import-Module (Join-Path $vrrPerformanceVs 'Common7/Tools/Microsoft.VisualStudio
 Enter-VsDevShell -VsInstallPath $vrrPerformanceVs -SkipAutomaticLocation -DevCmdArguments '-arch=x64 -host_arch=x64' | Out-Null
 & python "$PSScriptRoot/prepare_vrr_performance_test.py" $vrrPerformanceOutput
 if ($LASTEXITCODE) { throw 'VRR performance fixture generation failed.' }
-& cl.exe /nologo /std:c++20 /EHsc /utf-8 /MT /O2 /W4 /WX "/I$vrrPerformanceRepo/src/Magpie.Core" `
+& cl.exe /nologo /std:c++20 /EHsc /utf-8 /MT /O2 /W4 /WX "/I$vrrPerformanceRepo/src/GMagpie.Core" `
     "$vrrPerformanceOutput/VRRPerformanceTests.cpp" "/Fe:$vrrPerformanceOutput/VRRPerformanceTests.exe" "/Fo:$vrrPerformanceOutput/VRRPerformanceTests.obj"
 if ($LASTEXITCODE) { throw 'VRR performance fixture compilation failed.' }
 & "$vrrPerformanceOutput/VRRPerformanceTests.exe"

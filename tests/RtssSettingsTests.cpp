@@ -1,5 +1,5 @@
-#include "../src/Magpie/ProfileRtss.h"
-#include "../src/Magpie.Core/include/FramePacingOptions.h"
+#include "../src/GMagpie/ProfileRtss.h"
+#include "../src/GMagpie.Core/include/FramePacingOptions.h"
 #include <rapidjson/writer.h>
 #include <rapidjson/stringbuffer.h>
 #include <iostream>
@@ -7,7 +7,7 @@
 #include <stdexcept>
 #include <utility>
 
-using namespace Magpie;
+using namespace GMagpie;
 static int checks = 0;
 static void Check(bool value, const char* message) {
 	++checks;

@@ -95,7 +95,7 @@ DLL 文件版本不代表算法版本。通过 `ffxQueryDescGetVersions` 获取 
 
 硬件检查包括所选适配器 LUID、D3D12 FL12.0、SM6.2、typed UAV load/store、必要格式与实际共享资源创建。通过这些检查只表示满足初始化前提，不能推断画质、实时性能或全部显卡兼容性。
 
-工程会复制 loader、FG DLL、标记效果、`AMD-FSR-SDK-LICENSE.md`、`AMD-FSR-SDK-THIRD-PARTY.md` 和本说明 `FSR3FG-README.md`。`Build-Release.ps1` 的递归文件清单包含它们，启用该功能时会调用只读 `Test-FSR3FGPackage.ps1` 检查。升级/OTA 必须沿用完整包清单并验证实际安装，不能只复制 Magpie.exe。
+工程会复制 loader、FG DLL、标记效果、`AMD-FSR-SDK-LICENSE.md`、`AMD-FSR-SDK-THIRD-PARTY.md` 和本说明 `FSR3FG-README.md`。`Build-Release.ps1` 的递归文件清单包含它们，启用该功能时会调用只读 `Test-FSR3FGPackage.ps1` 检查。升级/OTA 必须沿用完整包清单并验证实际安装，不能只复制 GMagpie.exe。
 
 ## 错误与生命周期
 
@@ -111,6 +111,6 @@ Experimental FSR3 FrameGeneration, fixed 2x SDR. Beta7 includes the initial inte
 
 External motion is required: AMDOF Quality by default, with NVOF also available. Retired None/missing settings migrate to AMDOF Quality. Internal FSR optical flow remains active. Duplicate detection uses common settings. Enabled idle redraw replays cached output after about 0.5 seconds without new content; it does not advance capture/motion/FG history. R/s counts successful redraw submissions separately from content FPS. Synthetic depth and a virtual camera do not replace game geometry. Validate occlusion, fast motion, HUD/text, cost and latency. HDR, out-of-window cropping and unsupported distortion chains are rejected. Only one frame generator is allowed per group. This revision is not compiled or GPU-validated yet.
 
-Magpie's overlay is separate; baked game HUD is not. Native timestamps or a labeled capture-admission estimate drive temporal input; source discontinuities and clock-source changes reset history. SDK reset pass-throughs and dispatch counts are not evidence of successful interpolation or display events. Runtime failure stops scaling. If shutdown cannot prove resources retired, restart Magpie before using FSR FG again.
+GMagpie's overlay is separate; baked game HUD is not. Native timestamps or a labeled capture-admission estimate drive temporal input; source discontinuities and clock-source changes reset history. SDK reset pass-throughs and dispatch counts are not evidence of successful interpolation or display events. Runtime failure stops scaling. If shutdown cannot prove resources retired, restart GMagpie before using FSR FG again.
 
 References: [AMD FG API](https://gpuopen.com/manuals/fsr_sdk/techniques/frame-interpolation-api/), [swapchain](https://gpuopen.com/manuals/fsr_sdk/techniques/frame-interpolation-swap-chain/), [FSR 3.1.6](https://gpuopen.com/manuals/fsr_sdk/techniques/frame-interpolation/).

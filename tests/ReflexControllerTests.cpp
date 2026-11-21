@@ -9,7 +9,7 @@
 #include <string>
 #include <vector>
 
-using namespace Magpie;
+using namespace GMagpie;
 using namespace std::chrono_literals;
 
 static void Require(bool value, const char* message) {

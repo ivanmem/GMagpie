@@ -4,7 +4,7 @@
 #include <cstdio>
 #include <thread>
 
-using namespace Magpie;
+using namespace GMagpie;
 using namespace std::chrono;
 
 static void Run(D3D_DRIVER_TYPE type) {

@@ -55,7 +55,7 @@ jobs:
     - name: Store artifacts
       uses: actions/upload-artifact@v7
       with: 
-          name: Magpie-${{ steps.tag.outputs.tag }}-${{ matrix.platform }}
+          name: GMagpie-${{ steps.tag.outputs.tag }}-${{ matrix.platform }}
           path: publish/${{ matrix.platform }}
   release:
     runs-on: windows-latest

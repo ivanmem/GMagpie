@@ -5,9 +5,9 @@ import sys
 import subprocess
 
 root = Path(__file__).resolve().parents[2]
-settings = (root / 'src/Magpie/AppSettings.cpp').read_text(encoding='utf-8-sig')
-header = (root / 'src/Magpie/AppSettings.h').read_text(encoding='utf-8-sig')
-helper = (root / 'src/Magpie/JsonHelper.cpp').read_text(encoding='utf-8-sig')
+settings = (root / 'src/GMagpie/AppSettings.cpp').read_text(encoding='utf-8-sig')
+header = (root / 'src/GMagpie/AppSettings.h').read_text(encoding='utf-8-sig')
+helper = (root / 'src/GMagpie/JsonHelper.cpp').read_text(encoding='utf-8-sig')
 reader = helper[helper.index('bool JsonHelper::ReadBool('):helper.index('bool JsonHelper::ReadBoolFlag(')]
 
 harness = r'''

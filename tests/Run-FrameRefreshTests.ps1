@@ -1,5 +1,5 @@
 #Requires -Version 7.0
-param([string]$OutputDirectory = (Join-Path $env:TEMP ('Magpie-FrameRefresh-' + [guid]::NewGuid())))
+param([string]$OutputDirectory = (Join-Path $env:TEMP ('GMagpie-FrameRefresh-' + [guid]::NewGuid())))
 $ErrorActionPreference = 'Stop'
 $refreshRepo = Split-Path $PSScriptRoot -Parent
 $refreshOutput = [IO.Path]::GetFullPath($OutputDirectory)
@@ -11,21 +11,21 @@ Enter-VsDevShell -VsInstallPath $refreshVs -SkipAutomaticLocation -DevCmdArgumen
 $refreshRapid = Get-ChildItem -LiteralPath (Join-Path $env:USERPROFILE '.conan2/p') -Directory -Filter 'rapid*' |
     Where-Object { Test-Path -LiteralPath (Join-Path $_.FullName 'p/include/rapidjson/document.h') } | Select-Object -First 1
 if (!$refreshRapid) { throw 'Existing rapidjson dependency not found.' }
-& cl.exe /nologo /std:c++20 /EHsc /utf-8 /MT /O2 /W4 /WX /DNOMINMAX "/I$refreshRepo/src/Magpie.Core/include" "/I$($refreshRapid.FullName)/p/include" `
+& cl.exe /nologo /std:c++20 /EHsc /utf-8 /MT /O2 /W4 /WX /DNOMINMAX "/I$refreshRepo/src/GMagpie.Core/include" "/I$($refreshRapid.FullName)/p/include" `
     "$PSScriptRoot/FrameRefreshTests.cpp" "/Fe:$refreshOutput/FrameRefreshTests.exe" "/Fo:$refreshOutput/FrameRefreshTests.obj"
 if ($LASTEXITCODE) { throw 'Unified refresh test compilation failed.' }
 & "$refreshOutput/FrameRefreshTests.exe"
 if ($LASTEXITCODE) { throw 'Unified refresh tests failed.' }
 & python "$PSScriptRoot/prepare_frame_refresh_vm_test.py" $refreshOutput
 if ($LASTEXITCODE) { throw 'Production refresh view-model extraction failed.' }
-& cl.exe /nologo /std:c++20 /EHsc /utf-8 /MT /O2 /W4 /WX "/I$refreshRepo/src/Magpie.Core/include" "/I$refreshRepo/src/Magpie" `
+& cl.exe /nologo /std:c++20 /EHsc /utf-8 /MT /O2 /W4 /WX "/I$refreshRepo/src/GMagpie.Core/include" "/I$refreshRepo/src/GMagpie" `
     "$refreshOutput/frame_refresh_vm.cpp" "/Fe:$refreshOutput/FrameRefreshViewModelTests.exe" "/Fo:$refreshOutput/FrameRefreshViewModelTests.obj"
 if ($LASTEXITCODE) { throw 'Production refresh view-model compilation failed.' }
 & "$refreshOutput/FrameRefreshViewModelTests.exe"
 if ($LASTEXITCODE) { throw 'Production refresh view-model tests failed.' }
 & python "$PSScriptRoot/prepare_frame_refresh_mode_test.py" $refreshOutput
 if ($LASTEXITCODE) { throw 'Production global mode extraction failed.' }
-& cl.exe /nologo /std:c++20 /EHsc /utf-8 /MT /O2 /W4 /WX /DNOMINMAX "/I$refreshRepo/src/Magpie.Core/include" "/I$($refreshRapid.FullName)/p/include" `
+& cl.exe /nologo /std:c++20 /EHsc /utf-8 /MT /O2 /W4 /WX /DNOMINMAX "/I$refreshRepo/src/GMagpie.Core/include" "/I$($refreshRapid.FullName)/p/include" `
     "$refreshOutput/frame_refresh_mode.cpp" "/Fe:$refreshOutput/FrameRefreshModeTests.exe" "/Fo:$refreshOutput/FrameRefreshModeTests.obj"
 if ($LASTEXITCODE) { throw 'Production global mode compilation failed.' }
 & "$refreshOutput/FrameRefreshModeTests.exe"

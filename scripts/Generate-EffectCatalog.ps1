@@ -34,7 +34,7 @@ foreach ($language in @('zh-Hans', 'en-US')) {
     })
     $catalog = [ordered]@{ schemaVersion = 1; language = $language; categories = $categories; effects = $effects }
     $result = $catalog | ConvertTo-Json -Depth 8
-    $output = Join-Path $repoRoot "src/Magpie/EffectCatalog/$language.json"
+    $output = Join-Path $repoRoot "src/GMagpie/EffectCatalog/$language.json"
     if ($Check) {
         if (!(Test-Path -LiteralPath $output) -or (Get-Content -LiteralPath $output -Raw).TrimEnd() -cne $result.TrimEnd()) { throw "Effect catalog is stale: $language. Run scripts/Generate-EffectCatalog.ps1." }
     } else {
@@ -43,7 +43,7 @@ foreach ($language in @('zh-Hans', 'en-US')) {
     if ($language -eq 'zh-Hans') {
         # Keep the existing HDR component artifact synchronized with the same source.
         $hdr = [ordered]@{ category = $categories | Where-Object id -eq 'hdr-components'; effects = @($effects | Where-Object category -eq 'hdr-components') } | ConvertTo-Json -Depth 8
-        $hdrPath = Join-Path $repoRoot 'src/Magpie/EffectCatalog/hdr-components.json'
+        $hdrPath = Join-Path $repoRoot 'src/GMagpie/EffectCatalog/hdr-components.json'
         if ($Check) {
             if ((Get-Content -LiteralPath $hdrPath -Raw).TrimEnd() -cne $hdr.TrimEnd()) { throw 'HDR components are stale. Run scripts/Generate-EffectCatalog.ps1.' }
         } else {

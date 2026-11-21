@@ -12,7 +12,7 @@ order = list(dict.fromkeys(re.search(r'//!GROUP (.+)', block)[1] for block, name
 assert order == ['Detail Control', 'Advanced Adjustments', 'DLSSNR · Pass 1', 'DLSSNR · Pass 2', 'DLSSNR · Pass 3']
 assert all('\\n' not in re.search(r'//!LABEL (.+)', block)[1] for block, name in blocks)
 for language in ('en-US', 'zh-Hans', 'zh-Hant'):
-    root = ET.fromstring(read(f'src/Magpie/Resources.language-{language}.resw'))
+    root = ET.fromstring(read(f'src/GMagpie/Resources.language-{language}.resw'))
     values = {n.get('name'): n.findtext('value') for n in root.findall('data')}
     assert len(values) == len(root.findall('data')), language
     for block, name in blocks:
@@ -22,7 +22,7 @@ for language in ('en-US', 'zh-Hans', 'zh-Hant'):
         label = values[key+'_Label']
         assert '\n' not in label and not any(term in label for term in ('HSL','Oklab'))
     assert not any('residualColorMode' in key or 'residualShowProtection' in key for key in values)
-xaml = ET.fromstring(read('src/Magpie/ScalingModesPage.xaml'))
+xaml = ET.fromstring(read('src/GMagpie/ScalingModesPage.xaml'))
 ns = '{http://schemas.microsoft.com/winfx/2006/xaml/presentation}'
 flyout = next(n for n in xaml.iter(ns+'Flyout') if n.get('Opening')=='EffectParametersFlyout_Opening')
 assert flyout.get('ShouldConstrainToRootBounds') == 'False'
@@ -30,9 +30,9 @@ template = next(n for n in xaml.iter(ns+'DataTemplate') if n.get('{http://schema
 tips = list(template.iter(ns+'ToolTip'))
 assert len(tips)==4 and all(n.get('MaxWidth')=='360' for n in tips)
 assert all(n.find(ns+'TextBlock').get('TextWrapping')=='Wrap' for n in tips)
-rules = read('src/Magpie.Core/include/EffectParameterRules.h')
+rules = read('src/GMagpie.Core/include/EffectParameterRules.h')
 assert 'DLSSNRColorMode' not in rules and 'IsDLSSNRAdvancedParameter' in rules
-filter_source = read('src/Magpie.Core/DLSSNRFilter.cpp')
+filter_source = read('src/GMagpie.Core/DLSSNRFilter.cpp')
 assert 'RGBToHSL' not in filter_source and 'ApplyResidualControls' not in filter_source
 assert 'residualColorMode' not in filter_source
 print('PASS fix1 metadata: 41 compact labels, five ordered groups, 3-language descriptions, name-only wrapped XAML help, desktop popup and unique residual path.')

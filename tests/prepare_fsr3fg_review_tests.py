@@ -25,9 +25,9 @@ def block(text, signature):
     return text[start:end]
 
 
-paths = [root / 'src/Magpie.Core/FSR3FGPresenter.cpp',
-         root / 'src/Magpie.Core/Renderer.cpp',
-         root / 'src/Magpie.Core/FrameGuidanceService.cpp',
+paths = [root / 'src/GMagpie.Core/FSR3FGPresenter.cpp',
+         root / 'src/GMagpie.Core/Renderer.cpp',
+         root / 'src/GMagpie.Core/FrameGuidanceService.cpp',
          args.sdk_directory / 'Kits/FidelityFX/framegeneration/fsr3/dx12/FrameInterpolationSwapchainDX12.cpp']
 presenter, renderer, guidance, sdk = [p.read_text(encoding='utf-8-sig') for p in paths]
 wait = block(presenter, 'static bool WaitForFence(').replace('std::chrono::steady_clock', 'TestClock')
@@ -61,7 +61,7 @@ prefix = r'''
 #include "PresentationFrameRate.h"
 #include "EffectFrameState.h"
 #include "VRRPresentationPolicy.h"
-using namespace Magpie;
+using namespace GMagpie;
 static unsigned checks = 0;
 void Check(bool value, const char* message) {
     ++checks;
@@ -91,7 +91,7 @@ struct FakeLogger {
     void Warn(const char*) {}
 };
 using Logger = FakeLogger;
-namespace Magpie {
+namespace GMagpie {
 struct FSR3FGPresenter {
     struct Impl {
         FakeFence* fence12;

@@ -9,9 +9,9 @@ def method(text, signature):
         depth+=(text[end]=='{')-(text[end]=='}'); end+=1
     return text[start:end]
 def read(path): return (root/path).read_text(encoding='utf-8-sig')
-hook=method(read('src/Magpie/ShortcutService.cpp'), 'if ((wParam == WM_KEYDOWN || wParam == WM_SYSKEYDOWN) && info->vkCode == VK_TAB')
-service=method(read('src/Magpie/ScalingService.cpp'), 'void ScalingService::OnTaskSwitch()')
-runtime=method(read('src/Magpie.Core/ScalingRuntime.cpp'), 'bool ScalingRuntime::StopForTaskSwitch()')
+hook=method(read('src/GMagpie/ShortcutService.cpp'), 'if ((wParam == WM_KEYDOWN || wParam == WM_SYSKEYDOWN) && info->vkCode == VK_TAB')
+service=method(read('src/GMagpie/ScalingService.cpp'), 'void ScalingService::OnTaskSwitch()')
+runtime=method(read('src/GMagpie.Core/ScalingRuntime.cpp'), 'bool ScalingRuntime::StopForTaskSwitch()')
 harness=r'''
 #include <windows.h>
 #include <array>

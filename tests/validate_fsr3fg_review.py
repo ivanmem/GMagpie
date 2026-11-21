@@ -20,10 +20,10 @@ def check(value, message):
     assert value, message
 
 
-renderer = read('src/Magpie.Core/Renderer.cpp')
-presenter = read('src/Magpie.Core/FSR3FGPresenter.cpp')
-overlay = read('src/Magpie.Core/OverlayDrawer.cpp')
-base = read('src/Magpie.Core/PresenterBase.cpp')
+renderer = read('src/GMagpie.Core/Renderer.cpp')
+presenter = read('src/GMagpie.Core/FSR3FGPresenter.cpp')
+overlay = read('src/GMagpie.Core/OverlayDrawer.cpp')
+base = read('src/GMagpie.Core/PresenterBase.cpp')
 check('Present(_PresentSyncInterval(flags), flags)' in base, 'effective sync interval reaches real SDK entry')
 check('"syncInterval={} presentFlags=' in base, 'log reflects effective sync interval')
 check('bool FSR3FGPresenter::EndFrame(bool waitForGpu) noexcept {\n\t_lastSubmittedFrameCount.reset();' in presenter,
@@ -62,17 +62,17 @@ def errors(text):
     return re.findall(r'^\s*(\w+)\s*,?\s*$', re.sub(r'//[^\n]*', '', body), re.M)
 
 
-old = subprocess.check_output(['git', 'show', 'a90c7da2:src/Magpie.Core/include/ScalingOptions.h'], cwd=root).decode('utf-8-sig')
+old = subprocess.check_output(['git', 'show', 'a90c7da2:src/GMagpie.Core/include/ScalingOptions.h'], cwd=root).decode('utf-8-sig')
 old_errors = errors(old)
-new_errors = errors(read('src/Magpie.Core/include/ScalingOptions.h'))
+new_errors = errors(read('src/GMagpie.Core/include/ScalingOptions.h'))
 check(new_errors[:len(old_errors)] == old_errors, 'existing MP error numbers remain stable')
 check(new_errors[len(old_errors):len(old_errors) + 2] == ['FSR3FGEffectChainUnsupported', 'FSR3FGHdrUnsupported'], 'precise FSR3 errors retain their appended positions')
-service = read('src/Magpie/ErrorService.cpp')
+service = read('src/GMagpie/ErrorService.cpp')
 check('error == ScalingError::FSR3FGEffectChainUnsupported' in service and
       'fmt::runtime(std::wstring(_summary)), StrHelper::UTF8ToUTF16(context)' in service,
       'first-screen message includes the exact incompatible effect name')
 for language in ('en-US', 'zh-Hans', 'zh-Hant'):
-    entries = ET.fromstring(read(f'src/Magpie/Resources.language-{language}.resw')).findall('data')
+    entries = ET.fromstring(read(f'src/GMagpie/Resources.language-{language}.resw')).findall('data')
     values = {n.attrib['name']: n.findtext('value') for n in entries}
     check(len(entries) == len(values), f'unique resource keys: {language}')
     for key in ('SubmittedRateHelp', 'SubmittedRate', 'SubmittedGeneratedRate', 'InputCopyTiming', 'UnmeasuredTiming', 'MeasuredTotal'):

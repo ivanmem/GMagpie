@@ -22,7 +22,7 @@ if ($RuntimeDirectory -or $IntermediateRoot) {
     if ($LASTEXITCODE) { throw 'Generate WinUI activation manifest failed' }
     Copy-Item -LiteralPath (Join-Path $RuntimeDirectory 'Microsoft.UI.Xaml.dll') -Destination $OutputDirectory -Force
     Copy-Item -LiteralPath (Join-Path $IntermediateRoot 'x64/Release/x64/WinUI/Microsoft.UI.Xaml.pri') -Destination (Join-Path $OutputDirectory 'resources.pri') -Force
-    $compileArgs = @('/DMAGPIE_FLYOUT_PROBE_WINUI', "/I$IntermediateRoot/x64/Release/Magpie/Generated Files")
+    $compileArgs = @('/DMAGPIE_FLYOUT_PROBE_WINUI', "/I$IntermediateRoot/x64/Release/GMagpie/Generated Files")
     $linkArgs = @("/MANIFESTINPUT:$manifest")
 }
 & cl.exe /nologo /std:c++20 /EHsc /utf-8 /MT /DUNICODE /D_UNICODE @compileArgs (Join-Path $PSScriptRoot 'EffectParameterFlyoutProbe.cpp') "/Fe:$exe" "/Fo:$OutputDirectory/" /link WindowsApp.lib user32.lib /MANIFEST:EMBED "/MANIFESTINPUT:$PSScriptRoot/EffectChoiceItemsTests.manifest" @linkArgs

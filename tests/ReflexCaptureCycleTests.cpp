@@ -12,7 +12,7 @@
 #include <string_view>
 #include <utility>
 #include <vector>
-using namespace Magpie;
+using namespace GMagpie;
 
 static void Require(bool value, const char* message) {
     if (!value) throw std::runtime_error(message);
@@ -317,7 +317,7 @@ static void TestColdDriverStatusAndInterval() {
 }
 
 #ifdef MP_ENABLE_FRAME_TRACE
-namespace Magpie::FrameTrace {
+namespace GMagpie::FrameTrace {
 struct TraceEntry { Event event; int64_t start, end; uint64_t frame; int64_t status, result; };
 std::vector<TraceEntry> recorded;
 int64_t now = 100;

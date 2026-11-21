@@ -1,13 +1,13 @@
-<p align="center"><img src="./src/Magpie/Icons/SVG/Magpie Icon Full Disabled.svg" width="150" height="150" alt="Magpie"></p>
-<h1 align="center">Magpie Experimental</h1>
+<p align="center"><img src="./src/GMagpie/Icons/SVG/GMagpie Icon Full Disabled.svg" width="150" height="150" alt="GMagpie"></p>
+<h1 align="center">GMagpie Experimental</h1>
 
 🌍 **English** | [简体中文](./README_ZH.md)
 
-**Current release: [Magpie Experimental v0.6.11](https://github.com/SAOG0721/Magpie/releases/tag/v0.6.11-experimental)** · Pre-release · [Release notes](docs/RELEASE_NOTES_v0.6.11-experimental.md)
+**Current release: [GMagpie Experimental v0.6.11](https://github.com/SAOG0721/Magpie/releases/tag/v0.6.11-experimental)** · Pre-release · [Release notes](docs/RELEASE_NOTES_v0.6.11-experimental.md)
 
-Magpie Experimental is a Windows tool for processing window content and an unofficial fork of [Blinue/Magpie](https://github.com/Blinue/Magpie). Built on Magpie's window-scaling and effect system, it explores DLSS, XeSS, FSR, RTX Video and related technologies for games, video and other windowed content.
+GMagpie Experimental is a Windows tool for processing window content and an unofficial fork of [Blinue/GMagpie](https://github.com/Blinue/Magpie). Built on GMagpie's window-scaling and effect system, it explores DLSS, XeSS, FSR, RTX Video and related technologies for games, video and other windowed content.
 
-The application captures a target window, processes its images through a user-configured effect group, and displays the result fullscreen or in a window. The source application does not need to integrate these effects itself. This is not an official Magpie release; please report experimental-fork issues in this repository.
+The application captures a target window, processes its images through a user-configured effect group, and displays the result fullscreen or in a window. The source application does not need to integrate these effects itself. This is not an official GMagpie release; please report experimental-fork issues in this repository.
 
 ## Main Features
 
@@ -37,20 +37,20 @@ The same panel places the Front Edge Sync switch and target frame-rate slider (1
 
 The toolbar offers original/processed comparison, per-effect timings and frame-rate monitoring, screenshots and parameter editing, with customizable shortcuts. When frame generation is enabled, separate output and real-frame readings help you assess the result and processing cost.
 
-Front Edge Sync controls Magpie's frame submission pace, regulating real-frame input before FG when frame generation is active. Apply a matching frame-rate cap in the source application; synchronization waits may increase latency. See the [frame-sync guide](docs/FRAME_SYNC_GUIDE.md) for setup details.
+Front Edge Sync controls GMagpie's frame submission pace, regulating real-frame input before FG when frame generation is active. Apply a matching frame-rate cap in the source application; synchronization waits may increase latency. See the [frame-sync guide](docs/FRAME_SYNC_GUIDE.md) for setup details.
 
 ## Download and Install
 
-1. Choose a version from [GitHub Releases](https://github.com/SAOG0721/Magpie/releases), read its notes and download the main `Magpie-Experimental-x64.zip` package.
-2. Fully exit any running Magpie instance and extract the complete package into a new directory.
-3. Run `Magpie.exe`, select an effect group and target window, and use the shortcut shown on Home to enable the effects.
+1. Choose a version from [GitHub Releases](https://github.com/SAOG0721/Magpie/releases), read its notes and download the main `GMagpie-Experimental-x64.zip` package.
+2. Fully exit any running GMagpie instance and extract the complete package into a new directory.
+3. Run `GMagpie.exe`, select an effect group and target window, and use the shortcut shown on Home to enable the effects.
 
 Before upgrading, back up any settings and screenshots you want to keep outside the program directory, then follow that release's instructions for the old installation and configuration. The same notes explain optional runtimes, DLL choices and helper tools. GitHub's automatically generated source archives are for development, not ready-to-run application packages.
 
 ## Usage and Compatibility
 
 - The main release package targets Windows x64 and requires a DirectX 11-capable GPU; individual AI effects may have higher requirements.
-- Magpie processes complete window images without access to the game engine's full native motion vectors, depth, exposure or separated UI. Estimated optical flow can assist some effects, but this is not equivalent to native in-game DLSS/FSR/XeSS integration.
+- GMagpie processes complete window images without access to the game engine's full native motion vectors, depth, exposure or separated UI. Estimated optical flow can assist some effects, but this is not equivalent to native in-game DLSS/FSR/XeSS integration.
 - Image processing can affect text and UI along with the scene; temporal effects may also produce ghosting or other artifacts. Use Comparison to judge whether an effect suits the content.
 - Use one frame-generation effect per group and avoid combining it with other frame-generation systems. Generated FPS is not the game's real rendering rate and does not imply a proportional improvement in input responsiveness.
 
@@ -58,13 +58,13 @@ Before upgrading, back up any settings and screenshots you want to keep outside 
 
 Start with the suggestions and details in Home's recent-issue card, or open the log directory. When filing an [issue](https://github.com/SAOG0721/Magpie/issues), include the application version, GPU and driver, effect group, input/output resolution, reproduction steps and relevant logs.
 
-The [upstream Magpie FAQ](https://github.com/Blinue/Magpie/wiki/FAQ) also covers general usage questions. Please discuss this fork's experimental effects and compatibility issues in this repository.
+The [upstream GMagpie FAQ](https://github.com/Blinue/Magpie/wiki/FAQ) also covers general usage questions. Please discuss this fork's experimental effects and compatibility issues in this repository.
 
 ## Development and Documentation
 
 The next development cycle starts from the [development baseline](docs/experimental/DEVELOPMENT-BASELINE.md). Track its scope in [next-release notes](docs/RELEASE_NOTES_NEXT.md); the next version number and features are not yet assigned.
 
-The project includes the Magpie application, MagpieFX effects and experimental native effect backends. Optional proprietary backends are disabled by default in source builds and require separately supplied SDKs and runtimes. Configure local paths in the untracked `src/BuildOptions.props.user` file.
+The project includes the GMagpie application, MagpieFX effects and experimental native effect backends. Optional proprietary backends are disabled by default in source builds and require separately supplied SDKs and runtimes. Configure local paths in the untracked `src/BuildOptions.props.user` file.
 
 - [Third-party dependencies, licenses and build boundaries](docs/THIRD_PARTY_AND_REDISTRIBUTION.md)
 - [Experimental feature designs and development records](docs/experimental/README.md)
@@ -73,7 +73,7 @@ The project includes the Magpie application, MagpieFX effects and experimental n
 
 ## Contributions and Acknowledgments
 
-This project builds on [Blinue/Magpie](https://github.com/Blinue/Magpie) and its contributors' work. Thanks also to everyone contributing code, translations, design suggestions and testing feedback.
+This project builds on [Blinue/GMagpie](https://github.com/Blinue/Magpie) and its contributors' work. Thanks also to everyone contributing code, translations, design suggestions and testing feedback.
 
 - [HexBen123](https://github.com/HexBen123): early depth-estimation performance optimization and TensorRT integration guidance, plus the [DLSSNR parameter-localization proposal](https://github.com/SAOG0721/Magpie/pull/16).
 - [Kristijan1001](https://github.com/Kristijan1001): the [reference implementation for editing effect parameters while scaling](https://github.com/SAOG0721/Magpie/pull/4), which informed this project's parameter-panel design and implementation.
@@ -85,4 +85,4 @@ Contributions through Issues and Pull Requests are welcome. See [Contributors](h
 
 ## License
 
-Magpie-derived source code is licensed under [GPLv3](LICENSE). Third-party SDKs, models and runtimes have their own licenses; see the [third-party and redistribution notes](docs/THIRD_PARTY_AND_REDISTRIBUTION.md).
+GMagpie-derived source code is licensed under [GPLv3](LICENSE). Third-party SDKs, models and runtimes have their own licenses; see the [third-party and redistribution notes](docs/THIRD_PARTY_AND_REDISTRIBUTION.md).

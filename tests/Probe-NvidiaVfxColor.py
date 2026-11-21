@@ -1,4 +1,4 @@
-"""Opt-in synthetic D3D11/CUDA color probe. Does not build or launch Magpie.
+"""Opt-in synthetic D3D11/CUDA color probe. Does not build or launch GMagpie.
 
 Use a matched 1.3.0.0 runtime directory and an external JSON report path.
 Only synthetic bars are read back; no desktop/window content is captured.
@@ -104,7 +104,7 @@ pop = fn(cuda, 'cuCtxPopCurrent_v2', [C.POINTER(C.c_void_p)])
 ctx_release = fn(cuda, 'cuDevicePrimaryCtxRelease_v2', [C.c_int])
 bars = [(224, 24, 16, 255), (24, 224, 16, 255), (16, 24, 224, 255),
         (0, 0, 0, 255), (255, 255, 255, 255), (177, 73, 29, 255), (80, 80, 80, 255)]
-state = {'scope': 'Synthetic D3D11/NvCV/VSR on one GPU; not Magpie, capture, HDR or UI acceptance',
+state = {'scope': 'Synthetic D3D11/NvCV/VSR on one GPU; not GMagpie, capture, HDR or UI acceptance',
          'runtime': str(runtime), 'bridge': args.bridge, 'explicitEncoding': args.explicit_encoding,
          'dllSha256': {name: hashlib.sha256((runtime / name).read_bytes()).hexdigest() for name in libs}, 'cases': []}
 

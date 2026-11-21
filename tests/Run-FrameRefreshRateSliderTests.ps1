@@ -12,7 +12,7 @@ $imgui=Get-ChildItem -LiteralPath (Join-Path $env:USERPROFILE '.conan2/p/b') -Di
 if(!$imgui) { throw 'Existing ImGui dependency not found.' }
 & python (Join-Path $PSScriptRoot 'prepare_frame_refresh_rate_slider_test.py') $OutputDirectory
 if($LASTEXITCODE) { throw 'Production rate widget extraction failed.' }
-& cl.exe /nologo /std:c++20 /EHsc /utf-8 /MT /O2 /W4 /WX /DNOMINMAX "/I$($imgui.FullName)/p/include" "/I$repo/src/Magpie.Core/include" `
+& cl.exe /nologo /std:c++20 /EHsc /utf-8 /MT /O2 /W4 /WX /DNOMINMAX "/I$($imgui.FullName)/p/include" "/I$repo/src/GMagpie.Core/include" `
     "$OutputDirectory/FrameRefreshRateSliderTests.cpp" "$($imgui.FullName)/p/lib/imgui.lib" user32.lib imm32.lib `
     "/Fe:$OutputDirectory/FrameRefreshRateSliderTests.exe" "/Fo:$OutputDirectory/FrameRefreshRateSliderTests.obj"
 if($LASTEXITCODE) { throw 'Rate widget test compilation failed.' }

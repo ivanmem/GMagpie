@@ -9,7 +9,7 @@
 #include "EffectParameterRules.h"
 
 int main() {
-	using namespace Magpie;
+	using namespace GMagpie;
 	static_assert(int(DLSSNRProcessingMode::EveryFrame) == 0);
 	static_assert(int(DLSSNRProcessingMode::Alternating) == 1);
 	static_assert(int(DLSSNRProcessingMode::Pipeline) == 2);

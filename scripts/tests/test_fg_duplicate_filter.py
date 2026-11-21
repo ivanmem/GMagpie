@@ -10,11 +10,11 @@ import sys
 import xml.etree.ElementTree as ET
 
 root = Path(__file__).resolve().parents[2]
-source = (root / 'src/Magpie.Core/FrameSourceBase.cpp').read_text(encoding='utf-8-sig')
+source = (root / 'src/GMagpie.Core/FrameSourceBase.cpp').read_text(encoding='utf-8-sig')
 start = source.index('FrameSourceState FrameSourceBase::_FilterDuplicateFrame(')
 branch = source[source.index('{', start) + 1:source.index('\nColorDescription FrameSourceBase::')]
 branch = branch[:branch.rindex('\n}')]
-header = (root / 'src/Magpie.Core/FrameSourceBase.h').read_text(encoding='utf-8-sig')
+header = (root / 'src/GMagpie.Core/FrameSourceBase.h').read_text(encoding='utf-8-sig')
 reasons = re.search(r'enum class CaptureFrameReason.*?\n};', header, re.S)[0]
 
 for family, effect in [('DLSSFG', 'DLSS_FrameGeneration'), ('XeSSFG', 'XeSS_FrameGeneration'),
@@ -22,7 +22,7 @@ for family, effect in [('DLSSFG', 'DLSS_FrameGeneration'), ('XeSSFG', 'XeSS_Fram
     shader = (root / f'src/Effects/{family}/{effect}.hlsl').read_text(encoding='utf-8-sig')
     assert 'duplicateFrameFiltering' not in shader
     for language in ['en-US', 'zh-Hans', 'zh-Hant']:
-        resource = ET.parse(root / f'src/Magpie/Resources.language-{language}.resw')
+        resource = ET.parse(root / f'src/GMagpie/Resources.language-{language}.resw')
         key = f'EffectParam_{family}_{effect}_duplicateFrameFiltering_Label'
         assert not resource.findall(f'./data[@name="{key}"]')
 assert '_duplicateFrameDetectionOverride' not in source + header

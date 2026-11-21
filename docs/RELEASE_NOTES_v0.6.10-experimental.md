@@ -1,10 +1,10 @@
-# Magpie Experimental v0.6.10
+# GMagpie Experimental v0.6.10
 
 本版汇总 0.6.9 之后的更新：重新整理帧率与刷新设置，加入 RTSS 联动、实验性 VRR 和 FSR 3 补帧，更新 NVIDIA VFX、HDR 手动效果链及窗口兼容性。
 
 ## 功能更新
 
-### Magpie 本体易用性更新
+### GMagpie 本体易用性更新
 
 #### 帧率与刷新
 
@@ -15,8 +15,8 @@
 
 #### RTSS 目标应用限帧
 
-- 新增 **RTSS 配置接管**，默认关闭，可管理全局或目标应用配置。开启联动后，缩放开始时自动准备已安装的 RTSS 与 Magpie 自身配置，再应用目标限帧。MSI Afterburner 为可选工具。
-- 支持同步 Magpie 的基础内容目标，或指定 **15–360 FPS、步进 1** 的上限；同步目标可在 1–1000 FPS 内解析。跟随源时不使用同步限帧，保存的偏好保留。补帧输出帧率与源应用限帧分别处理。
+- 新增 **RTSS 配置接管**，默认关闭，可管理全局或目标应用配置。开启联动后，缩放开始时自动准备已安装的 RTSS 与 GMagpie 自身配置，再应用目标限帧。MSI Afterburner 为可选工具。
+- 支持同步 GMagpie 的基础内容目标，或指定 **15–360 FPS、步进 1** 的上限；同步目标可在 1–1000 FPS 内解析。跟随源时不使用同步限帧，保存的偏好保留。补帧输出帧率与源应用限帧分别处理。
 - 提供工具状态、只读重新检测、初始化和当前会话重试。RTSS 异常显示具体原因，正常缩放可继续。默认正常结束时尝试恢复原限帧，也可选择保留修改；外部配置冲突时停止覆盖。
 - 崩溃或强制结束可能保留最后写入值。“已写入”表示配置核对通过，游戏实际限帧仍取决于 RTSS 挂钩和运行状态。新配置与尚未迁移的设置默认请求管理员启动，之后保留用户关闭该选项的选择。
 
@@ -56,24 +56,24 @@
 
 ### 从 0.6.9、更早版本或本地 Beta 升级，以及首次使用
 
-统一下载完整主包 **`Magpie-Experimental-x64.zip`**。升级前备份设置并从托盘完全退出 Magpie，将 ZIP 完整解压到新目录，再运行其中的 `Magpie.exe`。保留旧目录及配置备份供回退；首次使用直接完整解压后运行即可。
+统一下载完整主包 **`GMagpie-Experimental-x64.zip`**。升级前备份设置并从托盘完全退出 GMagpie，将 ZIP 完整解压到新目录，再运行其中的 `GMagpie.exe`。保留旧目录及配置备份供回退；首次使用直接完整解压后运行即可。
 
 ### 可选附件
 
 | 附件 | 用途 |
 | --- | --- |
-| `DLSSNR-DLL-Options.zip` | 两种 DLL：RTX 50 原版 310.9.16（10 月 16 日性能优化版）；RTX 20／30／40 社区兼容版 310.9.16。退出 Magpie 并备份原 DLL 后，按显卡选择一个替换。 |
+| `DLSSNR-DLL-Options.zip` | 两种 DLL：RTX 50 原版 310.9.16（10 月 16 日性能优化版）；RTX 20／30／40 社区兼容版 310.9.16。退出 GMagpie 并备份原 DLL 后，按显卡选择一个替换。 |
 | `NGX_OTA_Switch.bat` | 查看或切换系统级 NGX OTA 设置，需要管理员权限；使用 Restore default 恢复。正常安装无需运行。 |
 
 ---
 
-# Magpie Experimental v0.6.10 User Guide
+# GMagpie Experimental v0.6.10 User Guide
 
 This release brings together the changes since 0.6.9: reorganized refresh settings, RTSS integration, experimental VRR and FSR 3 frame generation, updated NVIDIA VFX, manual HDR chains and window compatibility improvements.
 
 ## Feature updates
 
-### Magpie usability updates
+### GMagpie usability updates
 
 #### Frame rate and refresh
 
@@ -84,8 +84,8 @@ This release brings together the changes since 0.6.9: reorganized refresh settin
 
 #### RTSS target-application limiting
 
-- Add default-off **RTSS profile management** for global or target-application profiles. When enabled, starting scaling prepares an installed RTSS and Magpie's own profile before applying the target limit. MSI Afterburner is optional.
-- Synchronize with Magpie's base content target or specify **15–360 FPS in 1-FPS steps**; resolved synchronized targets can span 1–1000 FPS. Follow source does not use synchronized limiting and retains saved preferences. Generated output FPS and source-application limiting are handled separately.
+- Add default-off **RTSS profile management** for global or target-application profiles. When enabled, starting scaling prepares an installed RTSS and GMagpie's own profile before applying the target limit. MSI Afterburner is optional.
+- Synchronize with GMagpie's base content target or specify **15–360 FPS in 1-FPS steps**; resolved synchronized targets can span 1–1000 FPS. Follow source does not use synchronized limiting and retains saved preferences. Generated output FPS and source-application limiting are handled separately.
 - Provide tool status, read-only recheck, initialization and current-session retry. RTSS failures show specific causes while normal scaling can continue. Normal shutdown attempts to restore the original limit by default; keeping changes is optional. Stop overwriting on external configuration conflicts.
 - Crashes or forced exits may leave the last written value. A verified write confirms configuration; actual in-game limiting depends on RTSS hooking and runtime state. New and unmigrated settings request administrator startup by default, while later choices to disable it are retained.
 
@@ -125,11 +125,11 @@ This release brings together the changes since 0.6.9: reorganized refresh settin
 
 ### Upgrading from 0.6.9, an older version or a local Beta, or installing for the first time
 
-Everyone should download the complete **`Magpie-Experimental-x64.zip`**. Before upgrading, back up settings and fully exit Magpie from the tray. Extract the entire ZIP into a new folder and run its `Magpie.exe`. Retain the previous folder and configuration backup for rollback. For a first installation, simply extract the complete package and run it.
+Everyone should download the complete **`GMagpie-Experimental-x64.zip`**. Before upgrading, back up settings and fully exit GMagpie from the tray. Extract the entire ZIP into a new folder and run its `GMagpie.exe`. Retain the previous folder and configuration backup for rollback. For a first installation, simply extract the complete package and run it.
 
 ### Optional assets
 
 | Asset | Purpose |
 | --- | --- |
-| `DLSSNR-DLL-Options.zip` | Two DLLs: NVIDIA original 310.9.16 for RTX 50 (October 16 performance update); community-patched 310.9.16 for RTX 20/30/40. Exit Magpie, back up the original DLL, and replace it with one option for your GPU. |
+| `DLSSNR-DLL-Options.zip` | Two DLLs: NVIDIA original 310.9.16 for RTX 50 (October 16 performance update); community-patched 310.9.16 for RTX 20/30/40. Exit GMagpie, back up the original DLL, and replace it with one option for your GPU. |
 | `NGX_OTA_Switch.bat` | View or change system-wide NGX OTA settings with administrator privileges; use Restore default to restore them. Normal installation does not require it. |

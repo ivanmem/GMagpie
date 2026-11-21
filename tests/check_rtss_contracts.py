@@ -18,7 +18,7 @@ def read(path):
 
 
 x = "{http://schemas.microsoft.com/winfx/2006/xaml}"
-root = ET.fromstring(read("src/Magpie/ProfilePage.xaml"))
+root = ET.fromstring(read("src/GMagpie/ProfilePage.xaml"))
 nodes = list(root.iter())
 uids = {n.get(x + "Uid"): n for n in nodes if n.get(x + "Uid")}
 group = next(n for n in nodes if n.get(x+"Name") == "FrameRefreshGroup")
@@ -54,9 +54,9 @@ check("{x:Bind ViewModel.RtssStatusTitle, Mode=OneWay}" in texts and
       status.get("Description") == "{x:Bind ViewModel.RtssStatusDescription, Mode=OneWay}", "independent status title and detail")
 check(any(n.get("AutomationProperties.LiveSetting") == "Polite" for n in presentation.iter()), "accessible status updates")
 
-idl = read("src/Magpie/ProfileViewModel.idl")
-header = read("src/Magpie/ProfileViewModel.h")
-vm = read("src/Magpie/ProfileViewModel.cpp")
+idl = read("src/GMagpie/ProfileViewModel.idl")
+header = read("src/GMagpie/ProfileViewModel.h")
+vm = read("src/GMagpie/ProfileViewModel.cpp")
 sync_getter = vm.split("double ProfileViewModel::RtssSyncedRate() const noexcept {", 1)[1].split("\n}", 1)[0]
 check("ContentSyncRate(_data->runtimeIdentity)" in sync_getter, "profile-isolated current session display")
 check("quiet_NaN()" in sync_getter and "IsRtssSyncAvailable()" in sync_getter, "unknown or source-follow sync has no number")
@@ -81,7 +81,7 @@ for member in members:
     check("ProfileViewModel::" + member + "(" in vm, "implementation: " + member)
 
 resource_maps = []
-for path in sorted((repo / "src/Magpie").glob("Resources.language-*.resw")):
+for path in sorted((repo / "src/GMagpie").glob("Resources.language-*.resw")):
     data = ET.parse(path).getroot().findall("data")
     resources = {n.get("name"): n.findtext("value") for n in data}
     check(len(resources) == len(data), "duplicate resources in " + path.name)
@@ -98,7 +98,7 @@ for language, expected in {
     "en-US": {"Rtss_Rate_Sync.Content": "Sync content frame rate", "Rtss_Status_Written": "RTSS is ready"}
 }.items():
     resources = {n.get("name"): n.findtext("value") for n in
-                 ET.parse(repo / f"src/Magpie/Resources.language-{language}.resw").getroot().findall("data")}
+                 ET.parse(repo / f"src/GMagpie/Resources.language-{language}.resw").getroot().findall("data")}
     for key, value in expected.items():
         check(resources[key] == value, "concise wording: " + language + " " + key)
 for resources in resource_maps:
@@ -108,13 +108,13 @@ for resources in resource_maps:
           "no defensive RTSS UI wording")
 for uid in (n.get(x + "Uid") for n in rtss.iter() if n.get(x + "Uid", "").startswith("Rtss_")):
     check(any(key.startswith(uid + ".") for key in resource_maps[0]), "resource for " + uid)
-for key in set(re.findall(r'L"(Rtss_[A-Za-z0-9_]+)"', vm + read("src/Magpie/RtssService.cpp"))):
+for key in set(re.findall(r'L"(Rtss_[A-Za-z0-9_]+)"', vm + read("src/GMagpie/RtssService.cpp"))):
     check(key in resource_maps[0], "dynamic resource " + key)
 
-settings = read("src/Magpie/AppSettings.cpp")
-profile = read("src/Magpie/Profile.h")
-service = read("src/Magpie/RtssService.cpp")
-access = read("src/Magpie/RtssProfileAccess.cpp")
+settings = read("src/GMagpie/AppSettings.cpp")
+profile = read("src/GMagpie/Profile.h")
+service = read("src/GMagpie/RtssService.cpp")
+access = read("src/GMagpie/RtssProfileAccess.cpp")
 initialization = access.split("bool RtssProfileAccess::InitializeUnlimited(", 1)[1].split("\n}", 1)[0]
 check('_stricmp(profile.c_str(), _selfProfile.c_str())' in initialization, "initialization binds trusted process filename")
 check('before.exists && before.rateKnown[0] && before.rateKnown[2]' in initialization and initialization.index('alreadyUnlimited = true') < initialization.index('_CheckWriteAccess'), "already unlimited requires no write permission or setters")
@@ -128,21 +128,21 @@ check('actual == contents' in access and 'FILE_SHARE_READ,' in access and 'tempo
 check('MOVEFILE_REPLACE_EXISTING' not in access and 'sourceLock' in access, "new profile never overwrites and Global source is locked")
 worker_initialization = service.split("void RtssService::_InitializeMagpie() {", 1)[1].split("\n}", 1)[0]
 check('session->original =' not in worker_initialization and 'session->lastWritten =' not in worker_initialization and 'selfInitialization = true' in worker_initialization and 'GetExePath().filename()' in worker_initialization, "worker initializes actual self name without session mutation")
-startup = read("src/Magpie/App.cpp")
-check('bool _isAlwaysRunAsAdmin = true' in read('src/Magpie/AppSettings.h'), "fresh settings request admin")
+startup = read("src/GMagpie/App.cpp")
+check('bool _isAlwaysRunAsAdmin = true' in read('src/GMagpie/AppSettings.h'), "fresh settings request admin")
 check('ReadAdminStartupSettings(root' in settings and 'adminStartupDefaultsVersion' in settings, "versioned admin defaults migration")
 check(startup.index('if (settings.IsAlwaysRunAsAdmin()') < startup.index('settings.UpdateAdminAutoStart()'), "auto-start migration follows elevation")
 check('if (_isAlwaysRunAsAdmin && !Win32Helper::IsProcessElevated()) return true;' in settings, "startup persistence waits for elevation")
 check('adminAutoStartDefaultsVersion' in settings and 'AutoStartHelper::EnableAutoStart(_isAlwaysRunAsAdmin)' in settings, "existing auto-start reconciled once")
-scaling = read("src/Magpie/ScalingService.cpp")
-renderer = read("src/Magpie.Core/Renderer.cpp")
+scaling = read("src/GMagpie/ScalingService.cpp")
+renderer = read("src/GMagpie.Core/Renderer.cpp")
 check(settings.count("ReadProfileRtss(") == 2, "default and application load")
 check("WriteProfileRtss(writer, profile.rtss)" in settings, "save preferences")
 check("rtss = other.rtss" in profile, "copy preferences")
 check("ContentTargetChanged(rtssSession, source, fixed, baseRate, constrained)" in scaling, "generation-tagged content target")
 check("options.contentTargetChanged(ScalingWindow::Get().SrcTracker().Handle(), fixedContent, _baseFrameRateLimit, constrained)" in renderer, "actual resolved base target")
 check("rebound->SameProcess(*session->initialTarget)" in service and "std::atomic<std::shared_ptr<TargetIdentity>>" in service, "same-process HWND rebuild preserves the session baseline")
-check("RestoreOriginal" in read("src/Magpie/RtssSettings.h"), "restore default")
+check("RestoreOriginal" in read("src/GMagpie/RtssSettings.h"), "restore default")
 check("stillValid()" in access and access.index("if (!stillValid())") < access.index("_CallProfile(_save, profile.c_str())"), "cancel check before save")
 check("saveAttempted = true" in access and "else if (saveAttempted &&" in service, "failed readback retains cleanup")
 check("readbackComplete && RtssProfileAccess::SameRate(before, written)" in service, "verified unchanged failed writes do not fabricate ownership")
@@ -189,8 +189,8 @@ check("failure.fileError == ERROR_ACCESS_DENIED" in service and "Rtss_Failure_Pe
       "permission errors have a specific UI result")
 
 ns = {"msb": "http://schemas.microsoft.com/developer/msbuild/2003"}
-project = ET.fromstring(read("src/Magpie/Magpie.vcxproj"))
-filters = ET.fromstring(read("src/Magpie/Magpie.vcxproj.filters"))
+project = ET.fromstring(read("src/GMagpie/GMagpie.vcxproj"))
+filters = ET.fromstring(read("src/GMagpie/GMagpie.vcxproj.filters"))
 for tree in (project, filters):
     registered = [n.get("Include") for n in tree.findall(".//msb:ClCompile", ns) + tree.findall(".//msb:ClInclude", ns)]
     for name in ("RtssSettings.h", "ProfileRtss.h", "RtssProfileAccess.h", "RtssProfileAccess.cpp", "RtssService.h", "RtssService.cpp"):

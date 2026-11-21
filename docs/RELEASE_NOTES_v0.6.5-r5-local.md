@@ -1,4 +1,4 @@
-# Magpie 0.6.5 r5 local（fix2）
+# GMagpie 0.6.5 r5 local（fix2）
 
 本地测试版，基于当前 r4 工作树继续修改。完整实机、画质和性能验收由用户进行。
 
@@ -12,7 +12,7 @@
 - 新增 36 类问题诊断，覆盖缩放模式、目标窗口、效果/设备/补帧初始化、配置保存、参数冲突、截屏、导入/导出与文件选择器。主页新增“最近一次问题”：查看详情、复制诊断信息、打开日志目录。提示包含可操作建议，连续相同问题的弹窗限流 15 秒。
 - 截图后台任务使用本次会话的目录和回调快照，区分读取、建目录、写入与编码失败；修复空目录编号和扫描失败的处理。导入拒绝不含模式的 JSON，报告语法位置；导出检查实际写入、刷新与关闭结果；正常取消文件选择器不报错。
 - [完整参数分类及后续同步边界](experimental/todos/20260905-v0.6.5-r5-fix2-REVIEW.md)。自动重建时继承实时值、后端拒绝后的逐参数确认等 fix1 后续建议仍单列，未宣称已经修复。
-- Release x64 构建通过；实际 PRI/显示层本地化共 1207 项无界面检查通过，XML、资源重名和诊断映射检查通过。未启动 Magpie 或使用 computer-use。
+- Release x64 构建通过；实际 PRI/显示层本地化共 1207 项无界面检查通过，XML、资源重名和诊断映射检查通过。未启动 GMagpie 或使用 computer-use。
 - 覆盖部署到原 `r5 local` 目录和 ZIP，程序版本字符串继续为 `0.6.5 r5 local`。界面验收由用户进行。
 
 ## fix1（2026-09-05）
@@ -55,11 +55,11 @@
 
 ## 安装
 
-完全退出旧版，将完整 ZIP 解压到新目录后运行 `Magpie.exe`。不要单独替换 EXE；必须使用同包的 `resources.pri` 和运行时。
+完全退出旧版，将完整 ZIP 解压到新目录后运行 `GMagpie.exe`。不要单独替换 EXE；必须使用同包的 `resources.pri` 和运行时。
 
 ---
 
-# Magpie 0.6.5 r5 local（fix2） — English
+# GMagpie 0.6.5 r5 local（fix2） — English
 
 Local build on top of the existing r4 worktree. Hardware, visual quality and performance acceptance are left to the user.
 

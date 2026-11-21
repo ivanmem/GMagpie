@@ -19,44 +19,44 @@ void InitializationTests(const std::filesystem::path& output) {
 	for (bool exists : { false, true }) for (uint32_t time : { 0u, 16667u, 1666667u }) {
 		Fixture f(output); f.access._version = L"7.3.5.28314";
 		WriteBytes(f.Path(""), Profile(97, 1000, time, 100, 0));
-		if (exists) WriteBytes(f.Path("Magpie.exe"), Profile(59940, 1000, time, 100, 3, "custom-OSD"));
-		const auto before = f.Snapshot("Magpie.exe");
+		if (exists) WriteBytes(f.Path("GMagpie.exe"), Profile(59940, 1000, time, 100, 3, "custom-OSD"));
+		const auto before = f.Snapshot("GMagpie.exe");
 		const auto global = ReadBytes(f.Path(""));
 		RtssProfileSnapshot written;
 		bool unlimited = true; std::wstring error;
-		Require(f.access.InitializeUnlimited("Magpie.exe", written, unlimited, error, [] { return true; }), "Initialize creates or clears self profile");
+		Require(f.access.InitializeUnlimited("GMagpie.exe", written, unlimited, error, [] { return true; }), "Initialize creates or clears self profile");
 		Require(!unlimited && written.exists && written.rate == std::array<uint32_t, 4>{0, 1000, 0, 100}, "Both cap forms cleared, denominators kept");
 		Require(written.detectionLevel == before.detectionLevel && written.fields.at("other/value") == before.fields.at("other/value"), "Self detection and OSD kept without Low");
 		Require(f.saves == 0 && f.setters.empty() && f.reloads == 1 && global == ReadBytes(f.Path("")), "Dedicated clear never saves Global or invokes SDK setters");
 		const auto contents = written.contents;
 		const auto identity = written.fileIdentity;
-		Require(f.access.InitializeUnlimited("Magpie.exe", written, unlimited, error, [] { return true; }), "Repeated initialization succeeds");
+		Require(f.access.InitializeUnlimited("GMagpie.exe", written, unlimited, error, [] { return true; }), "Repeated initialization succeeds");
 		Require(unlimited && written.contents == contents && written.fileIdentity == identity && f.reloads == 1 && f.saves == 0 && f.setters.empty(), "Unlimited profile is a physical no-op");
 	}
 	for (int mode = 0; mode < 9; ++mode) {
 		Fixture f(output); f.access._version = L"7.3.5.28314";
 		const bool exists = mode != 5;
-		if (exists) WriteBytes(f.Path("Magpie.exe"), Profile(60, 1, 16667));
-		const auto original = exists ? ReadBytes(f.Path("Magpie.exe")) : ReadBytes(f.Path(""));
+		if (exists) WriteBytes(f.Path("GMagpie.exe"), Profile(60, 1, 16667));
+		const auto original = exists ? ReadBytes(f.Path("GMagpie.exe")) : ReadBytes(f.Path(""));
 		RtssProfileSnapshot written; bool unlimited = false; std::wstring error;
 		int validityCalls = 0;
 		if (mode == 0) f.access._update = nullptr;
 		if (mode == 3) f.reloadFault = true;
-		if (mode == 6) SetFileAttributesW(f.Path("Magpie.exe").c_str(), FILE_ATTRIBUTE_READONLY);
+		if (mode == 6) SetFileAttributesW(f.Path("GMagpie.exe").c_str(), FILE_ATTRIBUTE_READONLY);
 		if (mode == 7) f.access._get = nullptr;
-		const HANDLE locked = mode == 8 ? CreateFileW(f.Path("Magpie.exe").c_str(), GENERIC_READ, FILE_SHARE_READ, nullptr, OPEN_EXISTING, 0, nullptr) : INVALID_HANDLE_VALUE;
-		const bool success = f.access.InitializeUnlimited(mode == 4 ? "game.exe" : "Magpie.exe", written, unlimited, error, [&] {
+		const HANDLE locked = mode == 8 ? CreateFileW(f.Path("GMagpie.exe").c_str(), GENERIC_READ, FILE_SHARE_READ, nullptr, OPEN_EXISTING, 0, nullptr) : INVALID_HANDLE_VALUE;
+		const bool success = f.access.InitializeUnlimited(mode == 4 ? "game.exe" : "GMagpie.exe", written, unlimited, error, [&] {
 			++validityCalls;
 			if (mode == 1) return validityCalls != 2;
 			// Edit in the ReplaceFile race window, after the last content comparison.
-			if ((mode == 2 || mode == 5) && validityCalls == 2) WriteBytes(f.Path("Magpie.exe"), Profile(42, 1, 0, 1, 3, "external"));
+			if ((mode == 2 || mode == 5) && validityCalls == 2) WriteBytes(f.Path("GMagpie.exe"), Profile(42, 1, 0, 1, 3, "external"));
 			return true;
 		});
 		if (locked != INVALID_HANDLE_VALUE) CloseHandle(locked);
-		SetFileAttributesW(f.Path("Magpie.exe").c_str(), FILE_ATTRIBUTE_NORMAL);
+		SetFileAttributesW(f.Path("GMagpie.exe").c_str(), FILE_ATTRIBUTE_NORMAL);
 		Require(!success && f.saves == 0 && f.setters.empty(), "Initialization failures never use a broad fallback");
-		if (mode == 2 || mode == 5) Require(ReadBytes(f.Path("Magpie.exe")) == Profile(42, 1, 0, 1, 3, "external"), "Replacement race restores actual external input, new-profile race never overwrites");
-		else if (mode != 3 && mode != 4) Require(ReadBytes(f.Path("Magpie.exe")) == original, "Failure before commit preserves original bytes");
+		if (mode == 2 || mode == 5) Require(ReadBytes(f.Path("GMagpie.exe")) == Profile(42, 1, 0, 1, 3, "external"), "Replacement race restores actual external input, new-profile race never overwrites");
+		else if (mode != 3 && mode != 4) Require(ReadBytes(f.Path("GMagpie.exe")) == original, "Failure before commit preserves original bytes");
 		if (mode == 1) Require(error == L"Cancelled" && !f.access.Failure().saveAttempted, "Cancelled before commit");
 		if (mode == 3) Require(f.access.Failure().nativeFault && f.access.Failure().stage == RtssFailureStage::Reload && written.rate[2] == 0, "Reload fault is distinct from verified disk write");
 		if (mode == 6) Require(f.access.Failure().fileError == ERROR_ACCESS_DENIED, "Actual permission error");
@@ -64,20 +64,20 @@ void InitializationTests(const std::filesystem::path& output) {
 	std::string outputBytes;
 	for (int mode : { 1, 2 }) {
 		Fixture f(output); f.access._version = L"7.3.5.28314";
-		WriteBytes(f.Path("Magpie.exe"), Profile(60));
-		const auto original = ReadBytes(f.Path("Magpie.exe"));
+		WriteBytes(f.Path("GMagpie.exe"), Profile(60));
+		const auto original = ReadBytes(f.Path("GMagpie.exe"));
 		fileCommitMode = mode;
 		RtssProfileSnapshot written; bool unlimited = false; std::wstring error;
 		unsigned calls = 0;
-		const bool result = f.access.InitializeUnlimited("Magpie.exe", written, unlimited, error, [&] {
-			if (mode == 2 && ++calls == 2) WriteBytes(f.Path("Magpie.exe"), Profile(42));
+		const bool result = f.access.InitializeUnlimited("GMagpie.exe", written, unlimited, error, [&] {
+			if (mode == 2 && ++calls == 2) WriteBytes(f.Path("GMagpie.exe"), Profile(42));
 			return true;
 		});
 		fileCommitMode = 0;
 		Require(!result && f.access.Failure().saveAttempted && f.access.Failure().readbackComplete, "Partial replacement records actual readback");
-		if (mode == 1) Require(ReadBytes(f.Path("Magpie.exe")) == original && f.access.Failure().fileError == ERROR_UNABLE_TO_MOVE_REPLACEMENT_2, "Missing destination recovered after partial ReplaceFile failure");
+		if (mode == 1) Require(ReadBytes(f.Path("GMagpie.exe")) == original && f.access.Failure().fileError == ERROR_UNABLE_TO_MOVE_REPLACEMENT_2, "Missing destination recovered after partial ReplaceFile failure");
 		else {
-			Require(ReadBytes(f.Path("Magpie.exe")) == Profile(88, 1, 0, 1, 3, "external-after-commit"), "Post-commit external edit never rolled back");
+			Require(ReadBytes(f.Path("GMagpie.exe")) == Profile(88, 1, 0, 1, 3, "external-after-commit"), "Post-commit external edit never rolled back");
 			Require(!f.access.Failure().recoveryFile.empty() && ReadBytes(f.access.Failure().recoveryFile) == Profile(42), "Actual replaced external version retained for recovery");
 		}
 	}
@@ -123,7 +123,7 @@ void NativeInitializationTests(const std::filesystem::path& directory) {
 	Require(access.Read("", global, error) && global.rate[0] == 97, "Native initialization isolation sentinel");
 	const auto originalGlobal = global.contents;
 	const auto selfName = access.SelfProfile();
-	Require(!selfName.empty() && selfName != "Magpie.exe", "Native initialization uses actual renamed test executable");
+	Require(!selfName.empty() && selfName != "GMagpie.exe", "Native initialization uses actual renamed test executable");
 	const auto self = directory / "Profiles" / (selfName + ".cfg");
 	for (bool exists : { false, true }) for (uint32_t time : { 0u, 16667u, 1666667u }) {
 		if (exists) {

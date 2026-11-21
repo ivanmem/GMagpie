@@ -17,7 +17,7 @@
   <PropertyGroup>
     <RtxVideoSdkDir Condition="'$(RtxVideoSdkDir)' == ''">$(MSBuildThisFileDirectory)..\..\..\dependencies\RTX-Video-SDK-1.1.0</RtxVideoSdkDir>
     <IntDir Condition="'$(MagpieIntermediateRoot)' != ''">$(MagpieIntermediateRoot)RtxVideoBridge\</IntDir>
-    <TargetName>Magpie.RtxVideo</TargetName>
+    <TargetName>GMagpie.RtxVideo</TargetName>
     <LinkIncremental>false</LinkIncremental>
   </PropertyGroup>
   <ItemDefinitionGroup>

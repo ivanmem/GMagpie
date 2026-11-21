@@ -4,9 +4,9 @@ from pathlib import Path
 import json, re, sys
 import xml.etree.ElementTree as ET
 root=Path(__file__).resolve().parents[1]; output=Path(sys.argv[1])
-p='{http://schemas.microsoft.com/winfx/2006/xaml/presentation}'; x='{http://schemas.microsoft.com/winfx/2006/xaml}'; local='{using:Magpie}'
+p='{http://schemas.microsoft.com/winfx/2006/xaml/presentation}'; x='{http://schemas.microsoft.com/winfx/2006/xaml}'; local='{using:GMagpie}'
 ET.register_namespace('',p[1:-1]); ET.register_namespace('x',x[1:-1])
-page=ET.parse(root/'src/Magpie/ScalingModesPage.xaml').getroot()
+page=ET.parse(root/'src/GMagpie/ScalingModesPage.xaml').getroot()
 template=next(n for n in page.iter(p+'DataTemplate') if n.get(x+'Key')=='EffectParametersFlyout')
 assert not list(template.iter(p+'ScrollViewer')) and not list(template.iter(p+'Viewbox'))
 assert 'RowHeight' not in ET.tostring(template,encoding='unicode')
@@ -56,7 +56,7 @@ item_template=ET.SubElement(host_fixture,p+'ItemsControl.ItemTemplate')
 ET.SubElement(ET.SubElement(item_template,p+'DataTemplate'),p+'Grid',{'Width':'260','Height':'80'})
 lines.append('static const wchar_t* GroupContainerFixture='+literal(host_fixture)+';')
 for lang,language in enumerate(['zh-Hans','zh-Hant','en-US']):
- resources={n.get('name').replace('.','/'):n.findtext('value') for n in ET.parse(root/f'src/Magpie/Resources.language-{language}.resw').getroot().findall('data')}
+ resources={n.get('name').replace('.','/'):n.findtext('value') for n in ET.parse(root/f'src/GMagpie/Resources.language-{language}.resw').getroot().findall('data')}
  for effect,file in enumerate(['DLSSNR/DLSSNR_AI_Filter','OKLabImageAdjustment','CAS/CAS']):
   shader=(root/f'src/Effects/{file}.hlsl').read_text(encoding='utf-8-sig')
   entries=[]; blocks={}
@@ -100,8 +100,8 @@ ET.SubElement(inner,p+'Grid',{'Grid.Row':'1',x+'Name':'Rows'})
 node=clean(group,{}, {'IsVisible':True,'HasLabel':True,'Label':'Group'})
 next(n for n in node.iter(p+'TextBlock') if n.get('Text')=='Group').set(x+'Name','Title')
 lines.append('static const wchar_t* GroupShell='+literal(node)+';')
-source=(root/'src/Magpie/ScalingModesPage.cpp').read_text(encoding='utf-8-sig'); a=source.index('void ScalingModesPage::ParameterCheckboxRow_SizeChanged('); b=source.index('\n}\n',a)+2
+source=(root/'src/GMagpie/ScalingModesPage.cpp').read_text(encoding='utf-8-sig'); a=source.index('void ScalingModesPage::ParameterCheckboxRow_SizeChanged('); b=source.index('\n}\n',a)+2
 lines.append(source[a:b].replace('ScalingModesPage::',''))
 (output/'ParameterSinglePageProduction.inc').write_text('\n'.join(lines),encoding='utf-8')
-source=(root/'src/Magpie/EffectParametersViewModel.cpp').read_text(encoding='utf-8-sig'); a=source.index('void EffectParametersViewModel::_RefreshVisibleGroups()'); b=source.index('// 应确保被删除后',a)
+source=(root/'src/GMagpie/EffectParametersViewModel.cpp').read_text(encoding='utf-8-sig'); a=source.index('void EffectParametersViewModel::_RefreshVisibleGroups()'); b=source.index('// 应确保被删除后',a)
 (output/'ParameterSinglePageStateProduction.inc').write_text(source[a:b],encoding='utf-8')

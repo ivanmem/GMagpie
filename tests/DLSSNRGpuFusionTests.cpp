@@ -96,7 +96,7 @@ struct Harness {
         D3D11_SAMPLER_DESC sample{}; sample.Filter=D3D11_FILTER_MIN_MAG_MIP_LINEAR;
         sample.AddressU=sample.AddressV=sample.AddressW=D3D11_TEXTURE_ADDRESS_CLAMP; sample.MaxLOD=D3D11_FLOAT32_MAX;
         Check(device->CreateSamplerState(&sample,&sampler));
-        const std::string sparse=std::string(Magpie::DLSSNR_COLOR_HLSL)+std::string(Magpie::DLSSNR_SPARSE_HLSL);
+        const std::string sparse=std::string(GMagpie::DLSSNR_COLOR_HLSL)+std::string(GMagpie::DLSSNR_SPARSE_HLSL);
         for (const auto* entry:{"ComposeResidual","FillResidual","OutputColor","ExtractResidual","FillOutput"}) Compile(sparse,entry);
         const std::string probes=sparse+R"(
 [numthreads(8,8,1)] void ProbeTrust(uint3 id:SV_DispatchThreadID) {

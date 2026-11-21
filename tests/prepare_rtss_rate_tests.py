@@ -23,7 +23,7 @@ def extract(path, signatures):
     return "\n".join(methods)
 
 
-vm = extract("src/Magpie/ProfileViewModel.cpp", [
+vm = extract("src/GMagpie/ProfileViewModel.cpp", [
     "double ProfileViewModel::RtssCustomRate() const noexcept",
     "void ProfileViewModel::RtssCustomRate(double value)",
     "double ProfileViewModel::RtssSyncedRate() const noexcept",
@@ -33,7 +33,7 @@ vm = extract("src/Magpie/ProfileViewModel.cpp", [
     "bool ProfileViewModel::ShowRtssSyncedRate() const noexcept",
     "bool ProfileViewModel::IsRtssSyncAvailable() const noexcept",
 ])
-service = extract("src/Magpie/RtssService.cpp", [
+service = extract("src/GMagpie/RtssService.cpp", [
     "uint64_t RtssService::Begin(",
     "void RtssService::ContentTargetChanged(",
     "void RtssService::End()",

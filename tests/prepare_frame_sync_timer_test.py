@@ -5,8 +5,8 @@ import sys
 
 repo = Path(__file__).resolve().parents[1]
 output = Path(sys.argv[1])
-header = (repo / 'src/Magpie.Core/StepTimer.h').read_text(encoding='utf-8-sig')
-body = (repo / 'src/Magpie.Core/StepTimer.cpp').read_text(encoding='utf-8-sig')
+header = (repo / 'src/GMagpie.Core/StepTimer.h').read_text(encoding='utf-8-sig')
+body = (repo / 'src/GMagpie.Core/StepTimer.cpp').read_text(encoding='utf-8-sig')
 body = re.sub(r'^#include[^\n]*\n', '', body, flags=re.M)
 header = header.replace('#pragma once', '').replace('std::chrono::steady_clock', 'TestClock')
 body = body.replace('steady_clock', 'TestClock')
@@ -83,7 +83,7 @@ template<class... T> void MockSleep(T...) { ++yields; }
 #define Sleep MockSleep
 #include "FrameTrace.h"
 #include "FramePacingWait.h"
-namespace Magpie::FrameTrace {
+namespace GMagpie::FrameTrace {
 unsigned wakeMarks=0;
 int64_t wakeResult=0;
 void MockMark(Event event, int64_t a=0, int64_t=0) {
@@ -94,7 +94,7 @@ void MockMark(Event event, int64_t a=0, int64_t=0) {
 '''
 suffix = r'''
 int main() {
-    using namespace Magpie;
+    using namespace GMagpie;
     for (bool strict : {false,true}) {
         StepTimer timer;
         timer.Initialize(0,80.0f,strict);

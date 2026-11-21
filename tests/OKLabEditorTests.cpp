@@ -1,10 +1,10 @@
 #include "OKLabOverlayEditor.h"
 #include "LocalizedStringCache.h"
-#include "../src/Magpie/EffectHelper.h"
+#include "../src/GMagpie/EffectHelper.h"
 #include <iostream>
 #include <map>
 #include <cstdlib>
-using namespace Magpie;
+using namespace GMagpie;
 void Require(bool value,const char* message){if(!value){std::cerr<<message<<'\n';std::exit(1);}}
 int main(){
     LocalizedStringCache labels;

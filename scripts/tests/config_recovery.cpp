@@ -1,8 +1,8 @@
 #include "ConfigRecovery.h"
 #include <cassert>
 #include <iostream>
-using namespace Magpie;
-using namespace Magpie::ConfigRecovery;
+using namespace GMagpie;
+using namespace GMagpie::ConfigRecovery;
 
 static std::string Current(std::string_view fields) {
 	return R"({"experimentalDlssnrSettingsVersion":2,"experimentalDlssSrSettingsVersion":1,"experimentalDepthRemovalVersion":1,)" +

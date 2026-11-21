@@ -69,7 +69,7 @@ std::vector<std::string> events;
 std::wstring verb, parameters;
 namespace Win32Helper {
 	bool IsProcessElevated() { return elevated; }
-	const std::filesystem::path& GetExePath() { static const std::filesystem::path path = L"C:\\isolated\\Magpie.exe"; return path; }
+	const std::filesystem::path& GetExePath() { static const std::filesystem::path path = L"C:\\isolated\\GMagpie.exe"; return path; }
 }
 struct ShortcutService {
 	static ShortcutService& Get() { static ShortcutService instance; return instance; }

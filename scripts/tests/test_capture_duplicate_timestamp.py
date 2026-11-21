@@ -9,7 +9,7 @@ from pathlib import Path
 import sys
 
 root = Path(__file__).resolve().parents[2]
-source = Path(sys.argv[2]) if len(sys.argv) > 2 else root / 'src/Magpie.Core/GraphicsCaptureFrameSource.cpp'
+source = Path(sys.argv[2]) if len(sys.argv) > 2 else root / 'src/GMagpie.Core/GraphicsCaptureFrameSource.cpp'
 capture = source.read_text(encoding='utf-8-sig')
 start = capture.index('\t\t\tconst bool valid = content.Width')
 end = capture.index('\n\t\t}\n\n\t\t// Only an explicitly interrupted sequence', start)

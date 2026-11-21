@@ -4,8 +4,8 @@ import sys
 
 repo = Path(__file__).resolve().parents[1]
 output = Path(sys.argv[1])
-source = (repo/'src/Magpie.Core/Renderer.cpp').read_text(encoding='utf-8-sig')
-header = (repo/'src/Magpie.Core/Renderer.h').read_text(encoding='utf-8-sig')
+source = (repo/'src/GMagpie.Core/Renderer.cpp').read_text(encoding='utf-8-sig')
+header = (repo/'src/GMagpie.Core/Renderer.h').read_text(encoding='utf-8-sig')
 
 def function(signature):
     start = source.index(signature)
@@ -36,7 +36,7 @@ prefix = r'''
 #undef assert
 #define assert(condition) do { if (!(condition)) { std::cerr << "FAILED: " << #condition << '\n'; std::exit(42); } } while(false)
 namespace fmt { template<class... T> std::string format(T&&...) { return {}; } }
-namespace Magpie {
+namespace GMagpie {
 struct EffectOption { std::string name; std::map<std::string,float> parameters; };
 bool IsFrameGenerationEffect(std::string_view name) { return name == "DLSSFG" || name == "XeSSFG"; }
 struct ScalingOptions {
@@ -115,7 +115,7 @@ struct Renderer {
 suffix = r'''
 }
 int main() {
-    using namespace Magpie;
+    using namespace GMagpie;
     auto& options=ScalingWindow::Get().Options();
     Renderer renderer;
     renderer._UpdateFrameRateLimits();
@@ -294,8 +294,8 @@ policy_dir.mkdir(exist_ok=True)
 # Resolve the transitive pacing include to the same mutated policy. Otherwise
 # pragma-once permits two different paths and both enum declarations are loaded.
 (policy_dir/'FrameRefreshSettings.h').write_text(
-    (repo/'src/Magpie.Core/include/FrameRefreshSettings.h').read_text(encoding='utf-8-sig'), encoding='utf-8')
-policy = (repo/'src/Magpie.Core/include/FramePacingOptions.h').read_text(encoding='utf-8-sig')
+    (repo/'src/GMagpie.Core/include/FrameRefreshSettings.h').read_text(encoding='utf-8-sig'), encoding='utf-8')
+policy = (repo/'src/GMagpie.Core/include/FramePacingOptions.h').read_text(encoding='utf-8-sig')
 needle = 'if (settings.mode == FrameSyncMode::Reflex)\n\t\treturn FrameSyncBackend::Reflex;'
 assert needle in policy
 (policy_dir/'FramePacingOptions.h').write_text(policy.replace(needle, 'if (settings.mode == FrameSyncMode::Reflex)\n\t\treturn dlssFG ? FrameSyncBackend::Async : FrameSyncBackend::Reflex;'), encoding='utf-8')

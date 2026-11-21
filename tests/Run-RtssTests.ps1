@@ -1,7 +1,7 @@
 #Requires -Version 7.0
 param(
     [switch]$Compile,
-    [string]$OutputDirectory = (Join-Path $env:TEMP ('Magpie-RtssTests-' + [guid]::NewGuid()))
+    [string]$OutputDirectory = (Join-Path $env:TEMP ('GMagpie-RtssTests-' + [guid]::NewGuid()))
 )
 $ErrorActionPreference = 'Stop'
 $rtssRepo = Split-Path $PSScriptRoot -Parent
@@ -24,7 +24,7 @@ Enter-VsDevShell -VsInstallPath $rtssVs -SkipAutomaticLocation -DevCmdArguments 
 & python (Join-Path $PSScriptRoot 'prepare_rtss_presentation_tests.py') $rtssOutput
 if ($LASTEXITCODE) { throw 'RTSS presentation extraction failed.' }
 & cl.exe /nologo /std:c++20 /EHsc /utf-8 /MT /O2 /W4 /WX /DNOMINMAX `
-    "/I$rtssOutput" "/I$rtssRepo/src/Magpie" (Join-Path $PSScriptRoot 'RtssPresentationTests.cpp') `
+    "/I$rtssOutput" "/I$rtssRepo/src/GMagpie" (Join-Path $PSScriptRoot 'RtssPresentationTests.cpp') `
     "/Fe:$rtssOutput/RtssPresentationTests.exe" "/Fo:$rtssOutput/RtssPresentationTests.obj"
 if ($LASTEXITCODE) { throw 'RTSS presentation test compilation failed.' }
 & (Join-Path $rtssOutput 'RtssPresentationTests.exe')
@@ -40,7 +40,7 @@ if ($LASTEXITCODE) { throw 'RTSS settings tests failed.' }
 & python (Join-Path $PSScriptRoot 'prepare_rtss_rate_tests.py') $rtssOutput
 if ($LASTEXITCODE) { throw 'Production rate code extraction failed.' }
 & cl.exe /nologo /std:c++20 /EHsc /utf-8 /MT /O2 /W4 /WX /DNOMINMAX `
-    "/I$rtssOutput" "/I$rtssRepo/src/Magpie" "/I$rtssRepo/src/Magpie.Core/include" `
+    "/I$rtssOutput" "/I$rtssRepo/src/GMagpie" "/I$rtssRepo/src/GMagpie.Core/include" `
     (Join-Path $PSScriptRoot 'RtssRateDisplayTests.cpp') "/Fe:$rtssOutput/RtssRateDisplayTests.exe" "/Fo:$rtssOutput/RtssRateDisplayTests.obj"
 if ($LASTEXITCODE) { throw 'RTSS rate display test compilation failed.' }
 & (Join-Path $rtssOutput 'RtssRateDisplayTests.exe')
@@ -54,14 +54,14 @@ if ($LASTEXITCODE) { throw 'RTSS transaction test compilation failed.' }
 & (Join-Path $rtssOutput 'RtssProfileTransactionTests.exe') $rtssOutput
 if ($LASTEXITCODE) { throw 'RTSS transaction tests failed.' }
 & cl.exe /nologo /std:c++20 /EHsc /utf-8 /MT /O2 /W4 /WX /DNOMINMAX `
-    "/I$rtssOutput" "/I$rtssRepo/src/Magpie" "/I$rtssRepo/src/Magpie.Core/include" `
+    "/I$rtssOutput" "/I$rtssRepo/src/GMagpie" "/I$rtssRepo/src/GMagpie.Core/include" `
     (Join-Path $PSScriptRoot 'RtssSessionTransactionTests.cpp') `
     (Join-Path $rtssOutput 'RtssProfileAccess.g.cpp') "/Fe:$rtssOutput/RtssSessionTransactionTests.exe" "/Fo:$rtssOutput/"
 if ($LASTEXITCODE) { throw 'RTSS session transaction test compilation failed.' }
 & (Join-Path $rtssOutput 'RtssSessionTransactionTests.exe') $rtssOutput
 if ($LASTEXITCODE) { throw 'RTSS session transaction tests failed.' }
 & cl.exe /nologo /std:c++20 /EHsc /utf-8 /MT /O2 /W4 /WX /DNOMINMAX /DRTSS_TEST_FILE_COMMIT `
-    "/I$rtssOutput" "/I$rtssRepo/src/Magpie" "/I$($rtssRapid.FullName)/p/include" `
+    "/I$rtssOutput" "/I$rtssRepo/src/GMagpie" "/I$($rtssRapid.FullName)/p/include" `
     (Join-Path $PSScriptRoot 'RtssInitializationTests.cpp') (Join-Path $rtssOutput 'RtssProfileAccess.g.cpp') `
     "/Fe:$rtssOutput/RtssInitializationTests.exe" "/Fo:$rtssOutput/"
 if ($LASTEXITCODE) { throw 'RTSS initialization test compilation failed.' }

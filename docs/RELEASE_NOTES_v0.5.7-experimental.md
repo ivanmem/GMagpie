@@ -1,13 +1,13 @@
-# Magpie Experimental v0.5.7
+# GMagpie Experimental v0.5.7
 
 这是面向 NVIDIA RTX 用户的 x64 实验版本，重点改善 DLSSNR 参数配置、DLSS 组合兼容性和 DLSS Frame Generation 的启动与呈现稳定性。
 
 ## 下载与安装
 
-1. 下载 `Magpie-Experimental-x64.zip`。
-2. 完全退出正在运行的 Magpie。
+1. 下载 `GMagpie-Experimental-x64.zip`。
+2. 完全退出正在运行的 GMagpie。
 3. 将 ZIP 完整解压到新目录，不要直接在压缩包内运行，也不建议覆盖旧实验版目录。
-4. 运行解压目录中的 `Magpie.exe`。
+4. 运行解压目录中的 `GMagpie.exe`。
 
 已有配置会自动迁移，但不会自动替换用户现有的缩放模式。v0.5.6 用户可以在“缩放模式”页面导入 `ScalingModes-v0.5.7-experimental.json`，追加 `DLSSFG`、`XeSSFG` 和 `DLSSNR` 三个预设。
 
@@ -42,7 +42,7 @@
 
 - 不要同时启用 DLSS FG、XeSS FG、NVIDIA Smooth Motion 或其他帧生成方案。
 - DLSS FG x3/x4 需要足够高的显示器刷新率；目标帧率超过刷新率时，不会显示全部生成帧。
-- Magpie 的 Motion 和 Depth 来自捕获颜色画面的估算，不能等同于游戏引擎原生数据。快速运动、反遮挡、镜头切换和 UI 仍可能出现伪影。
+- GMagpie 的 Motion 和 Depth 来自捕获颜色画面的估算，不能等同于游戏引擎原生数据。快速运动、反遮挡、镜头切换和 UI 仍可能出现伪影。
 - DLSSNR 是同分辨率 SDR 后处理，不负责放大，可能同时改变文字和 UI；HDR 暂不支持。
 - NVIDIA Indicator 不保证在所有环境显示。可以在 `logs\magpie.log` 中搜索 `DLSSNR STATUS` 确认创建和执行状态。
 
@@ -55,7 +55,7 @@
 - `NVIDIA-Original`：NVIDIA 原版签名文件。
 - `Community-RTX40-RTX50`：主 Release Pack 使用的社区兼容文件。
 
-切换 DLL 前请完全退出 Magpie，再替换程序目录中的 `nvngx_dlssnr.dll`。这些第三方 DLL 不包含在源码仓库或 GitHub 自动生成的源码归档中。
+切换 DLL 前请完全退出 GMagpie，再替换程序目录中的 `nvngx_dlssnr.dll`。这些第三方 DLL 不包含在源码仓库或 GitHub 自动生成的源码归档中。
 
 ## NGX OTA 临时方案
 
@@ -63,6 +63,6 @@
 
 ## English summary
 
-Magpie Experimental v0.5.7 expands the user-facing DLSSNR controls, improves DLSS SR to DLSSNR compatibility, and fixes several DLSS Frame Generation startup, motion-scaling, multi-frame ordering, and high-refresh presentation issues. Existing `DLSS\DLSS_ZeroMV` configurations migrate automatically to `DLSS\DLSS_SR`.
+GMagpie Experimental v0.5.7 expands the user-facing DLSSNR controls, improves DLSS SR to DLSSNR compatibility, and fixes several DLSS Frame Generation startup, motion-scaling, multi-frame ordering, and high-refresh presentation issues. Existing `DLSS\DLSS_ZeroMV` configurations migrate automatically to `DLSS\DLSS_SR`.
 
 The main x64 package includes a community-modified `nvngx_dlssnr.dll` 310.8.0.0 intended for RTX 40-series and RTX 50-series compatibility. A separate DLL-options ZIP contains both the original NVIDIA-signed runtime and the community version. `NGX_OTA_Switch.bat` and an importable scaling-mode preset file are provided as separate Release assets.

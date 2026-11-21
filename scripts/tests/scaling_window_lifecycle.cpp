@@ -24,7 +24,7 @@ static LONG_PTR SetOwnerForTest(HWND window,int index,LONG_PTR owner) {
 #define SetWindowLongPtrW SetOwnerForTest
 #include "ScalingWindowOwner.h"
 #undef SetWindowLongPtrW
-using namespace Magpie;
+using namespace GMagpie;
 struct NvidiaForegroundCompatibility {
     static void Retire() {}
     static void ReleaseReferenceFocus() {}

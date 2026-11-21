@@ -54,9 +54,9 @@ PNG 按实际纹理格式处理，HDR 转 SDR sRGB，DDS 保留实际格式；�
 
 | 文件 | 职责 |
 | --- | --- |
-| `src/Magpie/HdrManualMigration.h` | 只读旧 schema 校验、完整颜色计划对比、备份读取和最小捕获兼容；不生成节点 |
-| `src/Magpie/ScalingModesService.cpp`、`ScalingMode.h` | 手动组读写、一次迁移标记、原组恢复、绕开其他升级改写 |
-| `src/Magpie/ConfigRecovery.h`、`src/Magpie.Core/include/OpticalFlowDefaults.h` | 在 HDR 校验前保留原数据；避免已迁移组的普通参数被覆盖 |
+| `src/GMagpie/HdrManualMigration.h` | 只读旧 schema 校验、完整颜色计划对比、备份读取和最小捕获兼容；不生成节点 |
+| `src/GMagpie/ScalingModesService.cpp`、`ScalingMode.h` | 手动组读写、一次迁移标记、原组恢复、绕开其他升级改写 |
+| `src/GMagpie/ConfigRecovery.h`、`src/GMagpie.Core/include/OpticalFlowDefaults.h` | 在 HDR 校验前保留原数据；避免已迁移组的普通参数被覆盖 |
 | `ScalingModeItem`、`ScalingModeEffectItem`、`ScalingModesPage.xaml` | 撤回组 UI，恢复普通列表与编辑权限，损坏配置显示说明 |
 | `EffectParametersViewModel.cpp`、`OverlayDrawer.cpp`、`EffectParameterLocalization.h` | 独立有效参数、配对来源提示、保留步进帮助 |
 | `ScalingService`、`ScalingRuntime`、`ScalingWindow`、`Renderer` | 删除组切换路径，保留手动参数会话和捕获兼容传递 |

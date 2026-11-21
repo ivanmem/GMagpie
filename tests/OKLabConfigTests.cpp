@@ -7,7 +7,7 @@
 #include <cstdlib>
 void Require(bool v,const char* message){if(!v){std::cerr<<message<<'\n';std::exit(1);}}
 int main(){
-    using namespace Magpie::OKLab;
+    using namespace GMagpie::OKLab;
     std::string saved=ExportCube({}),loaded;
     rapidjson::StringBuffer buffer;rapidjson::PrettyWriter writer(buffer);writer.StartObject();WriteAsset(writer,saved);writer.EndObject();
     rapidjson::Document document;document.Parse(buffer.GetString());

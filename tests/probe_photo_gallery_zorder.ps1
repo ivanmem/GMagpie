@@ -1,13 +1,13 @@
 # Живая проверка z-порядка окон фото-галереи (read-only, ничего не двигает и не показывает).
 #
-# Пока идёт показ (есть окно PhotoStage), оверлеи — окно состояния Magpie.GalleryStatus и
-# список Magpie.GalleryPicker — обязаны: (1) не иметь владельца (owned утягивается под
+# Пока идёт показ (есть окно PhotoStage), оверлеи — окно состояния GMagpie.GalleryStatus и
+# список GMagpie.GalleryPicker — обязаны: (1) не иметь владельца (owned утягивается под
 # перетверждающий z-порядок окно вывода), (2) быть в topmost-полосе, (3) находиться в
 # z-порядке СТРОГО над окном вывода, иначе фото рисуется поверх меню/строки. Проверено
 # зондом и скриншотом: инварианты по исходнику это поймать не могли.
 #
 # Код возврата: 0 — всё над фото; 1 — нарушено (тест красный); 2 — показа сейчас нет
-# (Magpie не запущен или галерея не идёт) — это не провал, а «нечего проверять».
+# (GMagpie не запущен или галерея не идёт) — это не провал, а «нечего проверять».
 #
 # Запуск: pwsh -NoProfile -File tests\probe_photo_gallery_zorder.ps1   (пока открыт показ)
 #
@@ -89,17 +89,17 @@ public static class WinZ {
 '@
 
 $SCALING_CLASS = 'Window_Magpie_967EB565-6F73-4E94-AE53-00CC42592A22'
-$STAGE_CLASS = 'Magpie.PhotoStage'
-$STATUS_CLASS = 'Magpie.GalleryStatus'
-$PICKER_CLASS = 'Magpie.GalleryPicker'
+$STAGE_CLASS = 'GMagpie.PhotoStage'
+$STATUS_CLASS = 'GMagpie.GalleryStatus'
+$PICKER_CLASS = 'GMagpie.GalleryPicker'
 
 $rows = [WinZ]::TopDown()
 
-# Окна только нашего Magpie (F:\Projects\cpp\Magpie\bin), не любой системы
-$magpie = Get-Process Magpie -ErrorAction SilentlyContinue | Where-Object {
-    try { $_.Path -like 'F:\Projects\cpp\Magpie\bin\*' } catch { $false }
+# Окна только нашего GMagpie (F:\Projects\cpp\GMagpie\bin), не любой системы
+$magpie = Get-Process GMagpie -ErrorAction SilentlyContinue | Where-Object {
+    try { $_.Path -like 'F:\Projects\cpp\GMagpie\bin\*' } catch { $false }
 }
-if (-not $magpie) { Write-Output 'Magpie (наш) не запущен — проверять нечего.'; exit 2 }
+if (-not $magpie) { Write-Output 'GMagpie (наш) не запущен — проверять нечего.'; exit 2 }
 $pids = @($magpie.Id)
 $mine = @($rows | Where-Object { $pids -contains $_.Pid })
 
@@ -113,7 +113,7 @@ if (-not $stage -or -not $scaling) {
     exit 2
 }
 
-Write-Output '--- Окна Magpie сверху вниз по z-порядку (0 = самое верхнее) ---'
+Write-Output '--- Окна GMagpie сверху вниз по z-порядку (0 = самое верхнее) ---'
 foreach ($w in $mine) {
     $state = if ($w.Visible) { 'видно' } else { 'скрыто' }
     $tm = if ($w.Topmost) { 'topmost' } else { 'обычное' }

@@ -9,8 +9,8 @@ if ($StartupTrace -and $Modes.Count -gt 2) {
 }
 $repo = Split-Path $PSScriptRoot -Parent
 $workspace = Split-Path $repo -Parent
-if (!$RuntimeDirectory) { $RuntimeDirectory = Join-Path $workspace 'release/v0.6.8-local/Magpie-Experimental-x64' }
-if (Get-Process Magpie -ErrorAction SilentlyContinue) { throw 'Close Magpie before the isolated capture smoke test.' }
+if (!$RuntimeDirectory) { $RuntimeDirectory = Join-Path $workspace 'release/v0.6.8-local/GMagpie-Experimental-x64' }
+if (Get-Process GMagpie -ErrorAction SilentlyContinue) { throw 'Close GMagpie before the isolated capture smoke test.' }
 if (Get-Process MagpieXeSSCaptureApp -ErrorAction SilentlyContinue) { throw 'A capture test is already running.' }
 $output = Join-Path $workspace ('.tools/xess-mfg-impl/capture-' + (Get-Date -Format 'yyyyMMdd-HHmmss'))
 $runtime = Join-Path $output 'runtime'
@@ -71,11 +71,11 @@ public static class XeSSCaptureQuit {
  [DllImport("user32.dll")] public static extern uint GetWindowThreadProcessId(IntPtr hwnd, out uint pid);
 }
 '@
-$appPath = Join-Path $runtime 'Magpie.exe'
+$appPath = Join-Path $runtime 'GMagpie.exe'
 if ($IsolateProcessName) {
     # Optional diagnostic control for third-party injection profiles keyed by EXE name.
     $appPath = Join-Path $runtime 'MagpieXeSSCaptureApp.exe'
-    Copy-Item -LiteralPath (Join-Path $runtime 'Magpie.exe') -Destination $appPath
+    Copy-Item -LiteralPath (Join-Path $runtime 'GMagpie.exe') -Destination $appPath
 }
 $launchEnvironment = @{}
 if ($StartupTrace) { $launchEnvironment['MAGPIE_XESS_STARTUP_TRACE'] = '1' }
@@ -97,9 +97,9 @@ try {
     if ($owner -eq $app.Id) {
         [void][XeSSCaptureQuit]::PostMessage($window, [XeSSCaptureQuit]::RegisterWindowMessage('WM_MAGPIE_QUIT'), [IntPtr]::Zero, [IntPtr]::Zero)
     }
-    if (!$app.WaitForExit(15000)) { throw "Test Magpie did not exit: PID $($app.Id), runtime $runtime" }
+    if (!$app.WaitForExit(15000)) { throw "Test GMagpie did not exit: PID $($app.Id), runtime $runtime" }
 }
-if ($app.ExitCode) { throw "Test Magpie exited with code $($app.ExitCode)" }
+if ($app.ExitCode) { throw "Test GMagpie exited with code $($app.ExitCode)" }
 $logFiles = @(Get-ChildItem -LiteralPath (Join-Path $runtime 'logs') -Filter 'magpie*.log' |
     Sort-Object @{Expression={ if ($_.Name -match '^magpie\.(\d+)\.log$') { [int]$Matches[1] } else { 0 } }; Descending=$true})
 $log = ($logFiles | ForEach-Object { Get-Content -LiteralPath $_.FullName -Raw }) -join "`n"

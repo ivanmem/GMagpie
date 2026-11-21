@@ -1,4 +1,4 @@
-"""Catalog/resource/source contracts only; does not compile or run Magpie."""
+"""Catalog/resource/source contracts only; does not compile or run GMagpie."""
 import json
 from pathlib import Path
 import re
@@ -27,13 +27,13 @@ def documented_ids(path, section):
 class EffectDescriptionContracts(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        cls.catalogs = {lang: json.loads(read(f'src/Magpie/EffectCatalog/{lang}.json'))
+        cls.catalogs = {lang: json.loads(read(f'src/GMagpie/EffectCatalog/{lang}.json'))
                         for lang in ('zh-Hans', 'en-US')}
         cls.effects = {lang: {e['id']: e for e in catalog['effects']}
                        for lang, catalog in cls.catalogs.items()}
         cls.resources = {}
         for lang in cls.catalogs:
-            nodes = ET.fromstring(read(f'src/Magpie/Resources.language-{lang}.resw')).findall('data')
+            nodes = ET.fromstring(read(f'src/GMagpie/Resources.language-{lang}.resw')).findall('data')
             cls.resources[lang] = {n.attrib['name']: n.findtext('value') for n in nodes}
             if len(nodes) != len(cls.resources[lang]):
                 raise AssertionError(f'Duplicate resource key: {lang}')
@@ -50,7 +50,7 @@ class EffectDescriptionContracts(unittest.TestCase):
                 self.assertEqual(entry['subcategory'], categories[category]['subcategories'][0]['name'])
 
     def test_advanced_shortcut_points_to_installed_entries(self):
-        block = read('src/Magpie/EffectPickerModel.h').split('ADVANCED_PICKER_EFFECTS[] = {', 1)[1].split('};', 1)[0]
+        block = read('src/GMagpie/EffectPickerModel.h').split('ADVANCED_PICKER_EFFECTS[] = {', 1)[1].split('};', 1)[0]
         ids = literal_ids(block)
         self.assertEqual(len(ids), len(set(ids)))
         self.assertLessEqual(set(ids), set(self.effects['en-US']))
@@ -58,7 +58,7 @@ class EffectDescriptionContracts(unittest.TestCase):
                               r'FSR3FG\FSR3_FrameGeneration'}, set(ids))
 
     def test_post_effect_allowlist_matches_installed_ids(self):
-        source = read('src/Magpie.Core/include/NvidiaVfxExecutionPlan.h')
+        source = read('src/GMagpie.Core/include/NvidiaVfxExecutionPlan.h')
         body = source.split('inline bool NvidiaVfxPostEffectSupported', 1)[1].split('\n}', 1)[0]
         ids = set(literal_ids(body))
         self.assertEqual(ids, {'Bicubic', 'Bilinear', r'CAS\CAS', r'FSR\FSR_RCAS'})
@@ -72,15 +72,15 @@ class EffectDescriptionContracts(unittest.TestCase):
     def test_full_compatibility_lists_follow_runtime_policy(self):
         # Full chains belong in usage docs. Compare their IDs with the actual
         # admission rules so concise picker copy cannot silently lose a rule.
-        fsr = read('src/Magpie.Core/FSR3FGPolicy.h').split(
+        fsr = read('src/GMagpie.Core/FSR3FGPolicy.h').split(
             'constexpr bool SupportsFSR3FGExternalMotion', 1)[1].split('\n}', 1)[0]
         fsr_ids = set(literal_ids(fsr))
         self.assertEqual(documented_ids('docs/experimental/effects/FSR3FG.md',
                                         'fsr3fg-supported-effects'), fsr_ids)
         self.assertLessEqual(fsr_ids - {r'Utility\FrameRate_Filter'}, set(self.effects['en-US']))
-        vfx = read('src/Magpie.Core/include/NvidiaVfxExecutionPlan.h').split(
+        vfx = read('src/GMagpie.Core/include/NvidiaVfxExecutionPlan.h').split(
             'inline bool NvidiaVfxPostEffectSupported', 1)[1].split('\n}', 1)[0]
-        constants = read('src/Magpie.Core/include/NvidiaVfxParameters.h')
+        constants = read('src/GMagpie.Core/include/NvidiaVfxParameters.h')
         vfx_ids = set(literal_ids(vfx))
         for name in set(re.findall(r'\bNVIDIA_VFX_\w+_ID\b', vfx)):
             value = re.search(r'\b' + name + r'\s*=\s*"([^"]+)"', constants)
@@ -144,7 +144,7 @@ class EffectDescriptionContracts(unittest.TestCase):
                         'NvidiaVfx_Upscale_FixedHelp'):
                 self.assertTrue(resources[key], (lang, key))
         # Both parameter surfaces must still use the common localized helper.
-        for path in ('src/Magpie/EffectParametersViewModel.cpp', 'src/Magpie.Core/OverlayDrawer.cpp'):
+        for path in ('src/GMagpie/EffectParametersViewModel.cpp', 'src/GMagpie.Core/OverlayDrawer.cpp'):
             self.assertIn('EffectParameterLocalization::Tooltip', read(path))
 
     def test_essential_conditions_and_moved_parameter_help(self):
@@ -186,7 +186,7 @@ class EffectDescriptionContracts(unittest.TestCase):
         for name in retired:
             self.assertNotRegex(shader, r'\bint ' + name + ';')
         for language in ('en-US', 'zh-Hans', 'zh-Hant'):
-            nodes = ET.fromstring(read(f'src/Magpie/Resources.language-{language}.resw')).findall('data')
+            nodes = ET.fromstring(read(f'src/GMagpie/Resources.language-{language}.resw')).findall('data')
             resources = {node.attrib['name']: node.findtext('value') for node in nodes}
             prefix = 'EffectParam_DLSSNR_DLSSNR_AI_Filter_'
             for value in range(2):

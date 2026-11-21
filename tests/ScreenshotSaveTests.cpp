@@ -18,7 +18,7 @@ static void DecodeSize(const std::filesystem::path& path, uint32_t width, uint32
 
 int wmain(int argc, wchar_t** argv) {
 	assert(argc == 2);
-	using namespace Magpie;
+	using namespace GMagpie;
 	winrt::init_apartment(winrt::apartment_type::multi_threaded);
 	const auto root = std::filesystem::path(argv[1]) / (L"disk-" + std::to_wstring(GetCurrentProcessId()));
 	std::filesystem::create_directories(root);
@@ -79,7 +79,7 @@ int wmain(int argc, wchar_t** argv) {
 	assert(ScreenshotHelper::FindUnusedScreenshotStem(root, L"20261022_194530_124") == L"Magpie_20261022_194530_124_01");
 	assert(ReadFile(root/L"Magpie_001.png") == "legacy screenshot");
 	for (const auto& entry : std::filesystem::directory_iterator(root))
-		assert(!entry.path().filename().native().starts_with(L".Magpie-"));
+		assert(!entry.path().filename().native().starts_with(L".GMagpie-"));
 	TextureSaveError error;
 	const auto missing = root/L"missing"/L"Magpie_001.png";
 	assert(!TextureHelper::SaveTextureExclusive(missing.c_str(), 1, 1,

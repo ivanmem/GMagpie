@@ -34,7 +34,7 @@ static DWORD CurrentPidForTest() { return allowSelfTarget ? 0 : hostPid; }
 #define GetCurrentProcessId CurrentPidForTest
 #include "SourceWindowRelations.h"
 
-namespace Magpie {
+namespace GMagpie {
 struct Logger {
 	static Logger& Get() { static Logger result; return result; }
 	void Info(std::string_view) {} void Error(std::string_view) {}
@@ -60,7 +60,7 @@ static std::string ProfileName(const std::wstring& name) { return name == L"fixt
 }
 
 int main() {
-	using namespace Magpie;
+	using namespace GMagpie;
 	wil::unique_hwnd source(CreateWindowExW(WS_EX_NOACTIVATE, L"STATIC", L"identity test",
 		WS_POPUP, -32000, -32000, 32, 32, nullptr, nullptr, GetModuleHandleW(nullptr), nullptr));
 	wil::unique_hwnd popup(CreateWindowExW(WS_EX_NOACTIVATE, L"STATIC", L"popup test",

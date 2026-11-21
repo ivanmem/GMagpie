@@ -1,4 +1,4 @@
-"""Check VRR integration boundaries without compiling or running Magpie.
+"""Check VRR integration boundaries without compiling or running GMagpie.
 
 These source/XML checks do not establish C++ compilation, driver behavior,
 hardware eligibility, G-SYNC activation, input behavior, or performance.
@@ -14,7 +14,7 @@ def read(path):
     return (repo / path).read_text(encoding="utf-8-sig")
 
 
-xaml = ET.fromstring(read("src/Magpie/ProfilePage.xaml"))
+xaml = ET.fromstring(read("src/GMagpie/ProfilePage.xaml"))
 x = "{http://schemas.microsoft.com/winfx/2006/xaml}"
 group = next(node for node in xaml.iter() if node.get(x + "Name") == "FrameRefreshGroup")
 card = next(node for node in group if node.get(x + "Uid") == "FrameRefresh_VRR")
@@ -23,21 +23,21 @@ assert not any(node.get(x + "Uid") == "FrameRefresh_Advanced" for node in group.
 toggle = next(node for node in card.iter() if node.get(x + "Uid") == "FrameRefresh_VRR_Input")
 assert toggle.get("IsOn") == "{x:Bind ViewModel.IsVRREnabled, Mode=TwoWay}"
 assert toggle.get(x + "Uid") == "FrameRefresh_VRR_Input"
-assert "Boolean IsVRREnabled;" in read("src/Magpie/ProfileViewModel.idl")
-assert "_data->frameRefresh.vrrEnabled" in read("src/Magpie/ProfileViewModel.cpp")
-model = read("src/Magpie.Core/include/FrameRefreshSettings.h")
+assert "Boolean IsVRREnabled;" in read("src/GMagpie/ProfileViewModel.idl")
+assert "_data->frameRefresh.vrrEnabled" in read("src/GMagpie/ProfileViewModel.cpp")
+model = read("src/GMagpie.Core/include/FrameRefreshSettings.h")
 assert "bool vrrEnabled = false;" in model
 assert "MERGE_REFRESH(vrrEnabled)" in model
 assert "options.isVRREnabled = effective.vrrEnabled;" in model
-serialization = read("src/Magpie/ProfileFrameRefresh.h")
+serialization = read("src/GMagpie/ProfileFrameRefresh.h")
 assert 'boolean("vrrEnabled", result.vrrEnabled);' in serialization
 assert 'writer.Key("vrrEnabled"); writer.Bool(s.vrrEnabled);' in serialization
 assert '"vrr"' not in serialization, "Dormant global field was migrated"
-service = read("src/Magpie/ScalingService.cpp")
+service = read("src/GMagpie/ScalingService.cpp")
 assert "options.isVRREnabled = false;" not in service
 assert "ApplyFrameRefreshSettings(options, profile.frameRefresh, options.isSimpleFrameRefresh)" in service
 for lang in ("en-US", "zh-Hans", "zh-Hant"):
-    nodes = ET.fromstring(read(f"src/Magpie/Resources.language-{lang}.resw")).findall("data")
+    nodes = ET.fromstring(read(f"src/GMagpie/Resources.language-{lang}.resw")).findall("data")
     values = {node.get("name"): node.findtext("value") for node in nodes}
     assert len(nodes) == len(values), f"Duplicate resources: {lang}"
     for key in ("FrameRefresh_VRR.Header", "FrameRefresh_VRR.Description",
@@ -46,7 +46,7 @@ for lang in ("en-US", "zh-Hans", "zh-Hant"):
         assert values[key], (lang, key)
 
 for name in ("AdaptivePresenter", "XeSSFGPresenter"):
-    source = read(f"src/Magpie.Core/{name}.cpp")
+    source = read(f"src/GMagpie.Core/{name}.cpp")
     assert "_vrr.CreationFlags()" in source and "_vrr.ResizeFlags()" in source
     assert "_PresentWithVRR(" in source
     assert "DXGI_SWAP_EFFECT_FLIP_DISCARD" in source
@@ -54,16 +54,16 @@ for name in ("AdaptivePresenter", "XeSSFGPresenter"):
     assert "DXGI_SWAP_CHAIN_FLAG_FRAME_LATENCY_WAITABLE_OBJECT" in source
     assert "DXGI_PRESENT_ALLOW_TEARING" not in source, "Presenter bypasses shared policy"
     assert not re.search(r"\.Flags\s*=.*isVRREnabled", source), "Mutable request used as immutable swap-chain flags"
-base = read("src/Magpie.Core/PresenterBase.cpp")
+base = read("src/GMagpie.Core/PresenterBase.cpp")
 assert "flags && hr == DXGI_ERROR_INVALID_CALL" in base
 assert "_vrr.RejectPresent();" in base
 assert "active=unknown vendorCompatibilityRequested=" in base
-assert "_PresentWithVRR(impl.swapChain.get(), false)" in read("src/Magpie.Core/XeSSFGPresenter.cpp")
-assert "_PresentWithVRR(_dxgiSwapChain.get(), true)" in read("src/Magpie.Core/AdaptivePresenter.cpp")
+assert "_PresentWithVRR(impl.swapChain.get(), false)" in read("src/GMagpie.Core/XeSSFGPresenter.cpp")
+assert "_PresentWithVRR(_dxgiSwapChain.get(), true)" in read("src/GMagpie.Core/AdaptivePresenter.cpp")
 
 ns = "{http://schemas.microsoft.com/developer/msbuild/2003}"
-project = ET.fromstring(read("src/Magpie.Core/Magpie.Core.vcxproj"))
-filters = ET.fromstring(read("src/Magpie.Core/Magpie.Core.vcxproj.filters"))
+project = ET.fromstring(read("src/GMagpie.Core/GMagpie.Core.vcxproj"))
+filters = ET.fromstring(read("src/GMagpie.Core/GMagpie.Core.vcxproj.filters"))
 for root in (project, filters):
     assert sum(node.get("Include") == "VRRPresentationPolicy.h" for node in root.iter(ns + "ClInclude")) == 1
 

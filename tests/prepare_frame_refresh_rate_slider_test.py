@@ -3,7 +3,7 @@ from pathlib import Path
 import sys
 
 repo = Path(__file__).resolve().parents[1]
-source = (repo / 'src/Magpie.Core/OverlayDrawer.cpp').read_text(encoding='utf-8-sig')
+source = (repo / 'src/GMagpie.Core/OverlayDrawer.cpp').read_text(encoding='utf-8-sig')
 start = source.index('auto rate = [&](const char* id, const wchar_t* label, float& value')
 end = source.index('{', start) + 1
 depth = 1
@@ -20,7 +20,7 @@ prefix = r'''
 #include <cassert>
 #include <iostream>
 #include <string>
-using namespace Magpie;
+using namespace GMagpie;
 bool Draw(float& value, bool allowInput) {
     bool parameterEdited=false, needRedraw=false;
     bool _parameterFocusSwitchingEnabled=allowInput;

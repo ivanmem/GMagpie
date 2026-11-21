@@ -1,4 +1,4 @@
-# Magpie Experimental v0.6.8
+# GMagpie Experimental v0.6.8
 
 ## 更新内容
 
@@ -37,21 +37,21 @@
 
 ### 从 0.6.7 升级，或首次安装
 
-1. 备份需要保留的设置与截图，并从托盘完全退出 Magpie。
-2. 将 `Magpie-Experimental-x64.zip` **完整解压到新目录**，再运行其中的 `Magpie.exe`。不要在压缩包内运行，也不要仅替换 EXE。
-3. 普通安装继续使用 `%LOCALAPPDATA%\Magpie\config\v4e\config.json`。便携用户可将原设置复制到新程序目录内的 `config\v4e\config.json`，并保留备份以便回退。
+1. 备份需要保留的设置与截图，并从托盘完全退出 GMagpie。
+2. 将 `GMagpie-Experimental-x64.zip` **完整解压到新目录**，再运行其中的 `GMagpie.exe`。不要在压缩包内运行，也不要仅替换 EXE。
+3. 普通安装继续使用 `%LOCALAPPDATA%\GMagpie\config\v4e\config.json`。便携用户可将原设置复制到新程序目录内的 `config\v4e\config.json`，并保留备份以便回退。
 
 ## 附件的作用与使用
 
 | 附件 | 用途与使用方法 |
 | --- | --- |
-| `Magpie-Experimental-x64.zip` | **必选完整主包**，包含程序、匹配的界面资源、效果与运行组件。完整解压到新目录使用。 |
-| `DLSSNR-DLL-Options-310.8.0.0.zip` | 沿用 067 的可选 DLL 包，提供 NVIDIA 官方版、RTX 40/50 社区兼容版与 SF-v2。需要切换 NR DLL 时下载；完全退出 Magpie，备份现有 DLL，按包内中英说明选择一个版本放到 `Magpie.exe` 旁。 |
+| `GMagpie-Experimental-x64.zip` | **必选完整主包**，包含程序、匹配的界面资源、效果与运行组件。完整解压到新目录使用。 |
+| `DLSSNR-DLL-Options-310.8.0.0.zip` | 沿用 067 的可选 DLL 包，提供 NVIDIA 官方版、RTX 40/50 社区兼容版与 SF-v2。需要切换 NR DLL 时下载；完全退出 GMagpie，备份现有 DLL，按包内中英说明选择一个版本放到 `GMagpie.exe` 旁。 |
 | `NGX_OTA_Switch.bat` | 沿用 067 的可选工具，用于查看或切换 NGX OTA 设置，普通安装无需运行。相关操作需管理员权限并影响系统级设置；使用 **Restore default** 恢复，删除 BAT 不会撤销设置。 |
 
 ---
 
-# Magpie Experimental v0.6.8
+# GMagpie Experimental v0.6.8
 
 ## Updates
 
@@ -90,14 +90,14 @@ Anti-flicker adds a small amount of processing overhead and may introduce ghosti
 
 ### Upgrade from 0.6.7 or Install for the First Time
 
-1. Back up any settings and screenshots you want to keep, then fully exit Magpie from the system tray.
-2. **Extract the entire** `Magpie-Experimental-x64.zip` **into a new folder**, then run its `Magpie.exe`. Do not run inside the ZIP or replace only the EXE.
-3. Normal installations continue using `%LOCALAPPDATA%\Magpie\config\v4e\config.json`. Portable users can copy their existing settings to `config\v4e\config.json` in the new program folder and keep a backup for rollback.
+1. Back up any settings and screenshots you want to keep, then fully exit GMagpie from the system tray.
+2. **Extract the entire** `GMagpie-Experimental-x64.zip` **into a new folder**, then run its `GMagpie.exe`. Do not run inside the ZIP or replace only the EXE.
+3. Normal installations continue using `%LOCALAPPDATA%\GMagpie\config\v4e\config.json`. Portable users can copy their existing settings to `config\v4e\config.json` in the new program folder and keep a backup for rollback.
 
 ## Assets: Purpose and Instructions
 
 | Asset | Purpose and Instructions |
 | --- | --- |
-| `Magpie-Experimental-x64.zip` | **Required complete package**, containing the application, matching UI resources, effects and runtime components. Extract it fully into a new folder. |
-| `DLSSNR-DLL-Options-310.8.0.0.zip` | Reuses the optional 067 DLL package with official NVIDIA, community RTX 40/50-compatible and SF-v2 variants. Download only to switch NR DLLs. Fully exit Magpie, back up the existing DLL, and follow the Chinese/English instructions to place one variant beside `Magpie.exe`. |
+| `GMagpie-Experimental-x64.zip` | **Required complete package**, containing the application, matching UI resources, effects and runtime components. Extract it fully into a new folder. |
+| `DLSSNR-DLL-Options-310.8.0.0.zip` | Reuses the optional 067 DLL package with official NVIDIA, community RTX 40/50-compatible and SF-v2 variants. Download only to switch NR DLLs. Fully exit GMagpie, back up the existing DLL, and follow the Chinese/English instructions to place one variant beside `GMagpie.exe`. |
 | `NGX_OTA_Switch.bat` | Reuses the optional 067 tool for inspecting or changing NGX OTA settings. Normal installation does not require it. Relevant operations require administrator privileges and affect system-wide settings. Use **Restore default** to undo changes; deleting the BAT does not restore settings. |

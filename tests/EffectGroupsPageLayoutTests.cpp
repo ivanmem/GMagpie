@@ -1,4 +1,4 @@
-// Native WinUI resources and production SimpleStackPanel; no Magpie/config startup.
+// Native WinUI resources and production SimpleStackPanel; no GMagpie/config startup.
 #include "pch.h"
 #include "SimpleStackPanel.h"
 #include "EffectGroupsPageFixture.h"
@@ -22,7 +22,7 @@ struct LayoutTestApp : ApplicationT<LayoutTestApp, Markup::IXamlMetadataProvider
 };
 
 auto MakePanel(Orientation orientation = Orientation::Vertical) {
-	auto panel = make_self<Magpie::implementation::SimpleStackPanel>();
+	auto panel = make_self<GMagpie::implementation::SimpleStackPanel>();
 	panel->Orientation(orientation);
 	return panel;
 }

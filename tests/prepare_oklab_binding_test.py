@@ -14,7 +14,7 @@ import xml.etree.ElementTree as ET
 repo = Path(__file__).resolve().parents[1]
 out = Path(sys.argv[1])
 out.mkdir(parents=True, exist_ok=True)
-page = (repo / 'src/Magpie/ScalingModesPage.xaml').read_text(encoding='utf-8-sig')
+page = (repo / 'src/GMagpie/ScalingModesPage.xaml').read_text(encoding='utf-8-sig')
 style_start = page.index('<Style x:Key="EffectParametersPresenterStyle"')
 presenter_style = page[style_start:page.index('</Style>', style_start)+len('</Style>')]
 assert '<ScrollViewer' not in presenter_style
@@ -23,10 +23,10 @@ template = presenter_style + page[page.index('<DataTemplate x:Key="EffectParamet
 template = re.sub(r'x:Uid="[^"]+"', '', template)
 template = template.replace('local:SimpleStackPanel', 'StackPanel').replace('local:WrapPanel', 'StackPanel')
 template = re.sub(r'\s+(HorizontalSpacing|VerticalSpacing)="[^"]+"', '', template)
-(out / 'ScalingModesPage.xaml').write_text('''<Page x:Class="Magpie.ScalingModesPage"
+(out / 'ScalingModesPage.xaml').write_text('''<Page x:Class="GMagpie.ScalingModesPage"
  xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
  xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
- xmlns:local="using:Magpie">
+ xmlns:local="using:GMagpie">
  <Page.Resources>
 ''' + template + '''</Page.Resources>
  <ContentControl x:Name="ParameterContent" ContentTemplate="{StaticResource EffectParametersFlyout}" />
@@ -35,25 +35,25 @@ template = re.sub(r'\s+(HorizontalSpacing|VerticalSpacing)="[^"]+"', '', templat
 events = sorted({name for _, name in re.findall(r'(\w+)="(Parameter\w+)"', template)})
 (out / 'ScalingModesPage.h').write_text('''#pragma once
 #include "ScalingModesPage.g.h"
-namespace winrt::Magpie::implementation {
+namespace winrt::GMagpie::implementation {
 struct ScalingModesPage : ScalingModesPageT<ScalingModesPage> {
- winrt::Magpie::ScalingModesViewModel ViewModel() { return nullptr; }
+ winrt::GMagpie::ScalingModesViewModel ViewModel() { return nullptr; }
 ''' + ''.join(f' template<class... T> void {name}(T&&...) {{}}\n' for name in events) + '};\n}', encoding='utf-8')
 
 resources = []
 for lang in ['zh-Hans', 'zh-Hant', 'en-US']:
-    values = {n.get('name'): n.findtext('value') for n in ET.parse(repo / f'src/Magpie/Resources.language-{lang}.resw').getroot().findall('data')}
+    values = {n.get('name'): n.findtext('value') for n in ET.parse(repo / f'src/GMagpie/Resources.language-{lang}.resw').getroot().findall('data')}
     resources.append('{' + ','.join('{L' + json.dumps(k, ensure_ascii=False) + ',L' + json.dumps(v, ensure_ascii=False) + '}'
                                    for k, v in values.items() if k.startswith(('OKLab_', 'EffectParam_OKLabImageAdjustment_Group_'))) + '}')
 
-source = (repo / 'src/Magpie/EffectParametersViewModel.OKLab.cpp').read_text(encoding='utf-8-sig')
+source = (repo / 'src/GMagpie/EffectParametersViewModel.OKLab.cpp').read_text(encoding='utf-8-sig')
 lists = source[source.index('IVector<hstring> OKList('):source.index('\n}\n}', source.index('IVector<hstring> OKList(')) + 2]
 getters = source[source.index('IVector<hstring> EffectParametersViewModel::OKSections()'):source.index('void EffectParametersViewModel::_OKNotifyVisuals')]
 list_names = set(re.findall(r'EffectParametersViewModel::(\w+)\(', getters))
 assert len(list_names) == 6
-idl = (repo / 'src/Magpie/EffectParametersViewModel.idl').read_text(encoding='utf-8-sig')
+idl = (repo / 'src/GMagpie/EffectParametersViewModel.idl').read_text(encoding='utf-8-sig')
 body = idl.split('runtimeclass EffectParametersViewModel :')[1].split('{', 1)[1].rsplit('}', 2)[0]
-header = (repo / 'src/Magpie/EffectParametersViewModel.h').read_text(encoding='utf-8-sig')
+header = (repo / 'src/GMagpie/EffectParametersViewModel.h').read_text(encoding='utf-8-sig')
 types = {'Boolean': 'bool', 'Int32': 'int32_t', 'UInt32': 'uint32_t', 'Double': 'double', 'String': 'hstring', 'Object': 'IInspectable'}
 def cpp_type(value):
     for a, b in types.items():
@@ -62,7 +62,7 @@ def cpp_type(value):
 
 lines = ['#pragma once', '#include <map>', '#include "EffectParametersViewModel.g.h"', '#include "EffectChoiceItems.h"', '#include "OKLabParameters.h"',
          'struct StrHelper { static std::wstring UTF8ToUTF16(std::string_view s) { return std::wstring(winrt::to_hstring(s)); } };',
-         'namespace winrt::Magpie::implementation {', 'namespace OKLab = ::Magpie::OKLab;',
+         'namespace winrt::GMagpie::implementation {', 'namespace OKLab = ::GMagpie::OKLab;',
          'inline int testLanguage = 0;',
          'inline const std::map<std::wstring,std::wstring> optionResources[]{' + ','.join(resources) + '};',
          'inline hstring OKText(std::wstring_view key) { return hstring(optionResources[testLanguage].at(std::wstring(key))); }', lists,

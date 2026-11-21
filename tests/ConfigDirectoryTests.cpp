@@ -15,7 +15,7 @@ static void Native(const std::filesystem::path& path) {
 	assert(path.native().find(L'/') == std::wstring::npos);
 }
 
-static void Verify(const Magpie::ConfigLocations::Selection& selected) {
+static void Verify(const GMagpie::ConfigLocations::Selection& selected) {
 	assert(!selected.error);
 	Native(selected.source);
 	Native(selected.destination);
@@ -33,16 +33,16 @@ int wmain(int argc, wchar_t** argv) {
 	const auto user = root / L"Local AppData";
 	std::filesystem::create_directories(exe);
 	std::filesystem::create_directories(user);
-	using namespace Magpie::ConfigLocations;
+	using namespace GMagpie::ConfigLocations;
 
-	// A clean user has no Magpie/config/v4e parents yet.
+	// A clean user has no GMagpie/config/v4e parents yet.
 	auto selected = Select(exe, user);
 	assert(selected.source.empty());
 	Verify(selected);
-	assert(selected.destination.native() == user.native() + L"\\Magpie\\config\\v4e\\config.json");
+	assert(selected.destination.native() == user.native() + L"\\GMagpie\\config\\v4e\\config.json");
 
 	// An upstream v4 file must be discovered through a native path and retained.
-	const auto legacy = user / L"Magpie" / L"config" / L"v4" / L"config.json";
+	const auto legacy = user / L"GMagpie" / L"config" / L"v4" / L"config.json";
 	std::filesystem::create_directories(legacy.parent_path());
 	{ std::ofstream file(legacy); file << "{}"; }
 	selected = Select(exe, user);
@@ -73,6 +73,6 @@ int wmain(int argc, wchar_t** argv) {
 
 	// Network roots retain their UNC prefix; no network access is needed here.
 	const auto network = Directory(L"//server/share/app", L"//server/share/user", false);
-	assert(network.native() == L"\\\\server\\share\\user\\Magpie\\config\\v4e");
+	assert(network.native() == L"\\\\server\\share\\user\\GMagpie\\config\\v4e");
 	std::cout << "Native configuration paths: clean startup, existing directories, v4 import/backup, portable mode and Unicode roots passed.\n";
 }

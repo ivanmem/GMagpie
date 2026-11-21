@@ -1,6 +1,6 @@
 #Requires -Version 7.0
 param(
-    [string]$OutputDirectory = (Join-Path $env:TEMP ('Magpie-DisplayOnlyAdapters-' + [guid]::NewGuid())),
+    [string]$OutputDirectory = (Join-Path $env:TEMP ('GMagpie-DisplayOnlyAdapters-' + [guid]::NewGuid())),
     [string]$FmtIncludeDirectory,
     [string]$RapidJsonIncludeDirectory,
     [switch]$NativeProbe
@@ -52,4 +52,4 @@ if ($NativeProbe) {
     & "$adapterOutput/NativeProbe.exe"
     if ($LASTEXITCODE) { throw 'Native adapter probe failed.' }
 }
-Write-Host "Adapter checks complete. Full Magpie build and Sunshine DLSS NR/FG acceptance remain separate. Output: $adapterOutput"
+Write-Host "Adapter checks complete. Full GMagpie build and Sunshine DLSS NR/FG acceptance remain separate. Output: $adapterOutput"

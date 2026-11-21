@@ -1,8 +1,8 @@
-#include "../src/Magpie.Core/PresentationFrameRate.h"
+#include "../src/GMagpie.Core/PresentationFrameRate.h"
 #include <cassert>
 #include <cstdio>
 
-using namespace Magpie;
+using namespace GMagpie;
 using namespace std::chrono;
 static const ProfilerHistory::Time base(100s);
 static bool Near(double value,double expected,double tolerance=0.01){return std::abs(value-expected)<tolerance;}

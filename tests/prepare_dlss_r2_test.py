@@ -6,8 +6,8 @@ import sys
 repo = Path(__file__).resolve().parents[1]
 out = Path(sys.argv[1])
 out.mkdir(parents=True, exist_ok=True)
-nr = (repo / 'src/Magpie.Core/DLSSNRFilter.cpp').read_text(encoding='utf-8-sig')
-fg = (repo / 'src/Magpie.Core/DLSSFrameGenerator.cpp').read_text(encoding='utf-8-sig')
+nr = (repo / 'src/GMagpie.Core/DLSSNRFilter.cpp').read_text(encoding='utf-8-sig')
+fg = (repo / 'src/GMagpie.Core/DLSSFrameGenerator.cpp').read_text(encoding='utf-8-sig')
 
 def function(source, signature):
     start = source.index(signature)
@@ -24,8 +24,8 @@ constants = function(nr, 'struct ResampleConstants') + ';'
 content = ['#include <string>\n#include "DLSSNRColorShader.h"\n#include "DLSSNRDetailShader.h"', 'namespace Nr {', constants]
 for name, body in shaders:
     content.append(f'constexpr char {name}_HLSL[] = R"({body})";')
-content.append('inline const std::string RESIDUAL_PREPARE_SHADER = std::string(Magpie::DLSSNR_COLOR_HLSL) + RESIDUAL_PREPARE_HLSL + std::string(Magpie::DLSSNR_DETAIL_HLSL);')
-content.append('inline const std::string RESIDUAL_VERTICAL_COMPOSITE_SHADER = std::string(Magpie::DLSSNR_COLOR_HLSL) + RESIDUAL_VERTICAL_COMPOSITE_HLSL;')
+content.append('inline const std::string RESIDUAL_PREPARE_SHADER = std::string(GMagpie::DLSSNR_COLOR_HLSL) + RESIDUAL_PREPARE_HLSL + std::string(GMagpie::DLSSNR_DETAIL_HLSL);')
+content.append('inline const std::string RESIDUAL_VERTICAL_COMPOSITE_SHADER = std::string(GMagpie::DLSSNR_COLOR_HLSL) + RESIDUAL_VERTICAL_COMPOSITE_HLSL;')
 content.extend(function(nr, signature) for signature in (
     'static bool CreateCompositeOutput(',
     'static bool CompositeResidual('))

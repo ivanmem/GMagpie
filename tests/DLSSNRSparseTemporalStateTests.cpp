@@ -3,7 +3,7 @@
 #include <cmath>
 #include <iostream>
 
-using namespace Magpie;
+using namespace GMagpie;
 
 int main() {
 	DLSSNRSparseTemporalObservation observation;

@@ -3,9 +3,9 @@ from pathlib import Path
 import sys
 repo = Path(__file__).resolve().parents[1]
 out = Path(sys.argv[1])
-texture = (repo/'src/Magpie.Core/TextureHelper.cpp').read_text(encoding='utf-8-sig')
+texture = (repo/'src/GMagpie.Core/TextureHelper.cpp').read_text(encoding='utf-8-sig')
 texture = texture[texture.index('static void RecordTextureSaveError('):texture.rfind('\n}')]
-helper = (repo/'src/Magpie.Core/ScreenshotHelper.cpp').read_text(encoding='utf-8-sig')
+helper = (repo/'src/GMagpie.Core/ScreenshotHelper.cpp').read_text(encoding='utf-8-sig')
 helper = helper[helper.index('std::mutex& ScreenshotHelper::SaveMutex('):helper.rfind('\n}')]
 preamble = r'''
 #include "pch.h"
@@ -19,7 +19,7 @@ preamble = r'''
 #include <thread>
 #include <cassert>
 #include <iostream>
-namespace Magpie {
+namespace GMagpie {
 struct Logger {
     static Logger& Get(){ static Logger instance; return instance; }
     void ComError(const char*, HRESULT){}

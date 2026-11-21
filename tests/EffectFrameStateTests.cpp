@@ -3,7 +3,7 @@
 #include <array>
 #include <cstdlib>
 #include <iostream>
-using namespace Magpie;
+using namespace GMagpie;
 static void Check(bool value, const char* message) {
 	if (!value) { std::cerr << message << '\n'; std::exit(1); }
 }

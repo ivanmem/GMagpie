@@ -50,7 +50,7 @@ template<class T> struct com_ptr {
 namespace fmt {
 template<class... Args> std::string format(const char* value, Args&&...) { return value; }
 }
-namespace Magpie {
+namespace GMagpie {
 struct EffectOption { std::map<std::string, float> parameters; uint32_t inputResolutionPercent = 100; };
 enum class EffectParameterApplyMode { Live, RestartRequired, Unavailable };
 enum class EffectParameterRestartReason { None, ResourceRecreation, FrameGuidance };
@@ -256,7 +256,7 @@ struct DLSSNRFilter {
 #undef private
 
 int main() {
-	using namespace Magpie;
+	using namespace GMagpie;
 	EffectOption option{{{"intensity", 2.f}, {"style", 2.f}, {"residualMultiplier", 1.5f}}};
 	auto get = [&](std::string_view name, float fallback) {
 		const auto it = option.parameters.find(std::string(name));

@@ -1,8 +1,8 @@
-#include "../src/Magpie.Core/ProfilerHistory.h"
-#include "../src/Magpie.Core/PresentationFrameRate.h"
-#include "../src/Magpie.Core/include/OverlayWindowGeometry.h"
-#include "../src/Magpie.Core/include/OverlayProfilerOptions.h"
-#include "../src/Magpie.Core/include/EffectParameterPopupLayout.h"
+#include "../src/GMagpie.Core/ProfilerHistory.h"
+#include "../src/GMagpie.Core/PresentationFrameRate.h"
+#include "../src/GMagpie.Core/include/OverlayWindowGeometry.h"
+#include "../src/GMagpie.Core/include/OverlayProfilerOptions.h"
+#include "../src/GMagpie.Core/include/EffectParameterPopupLayout.h"
 #include <imgui.h>
 #include <imgui_internal.h>
 #define FMT_HEADER_ONLY
@@ -17,7 +17,7 @@
 #include <unordered_map>
 #include "ProfilerUiResources.inc"
 using namespace std::chrono;
-using namespace Magpie;
+using namespace GMagpie;
 
 struct EffectsProfilerSnapshot { ProfilerHistory history; bool gpuAvailable = true; };
 struct MockRenderer {

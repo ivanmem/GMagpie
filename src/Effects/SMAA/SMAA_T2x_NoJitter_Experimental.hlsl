@@ -1,4 +1,4 @@
-// Captured-frame, no-jitter approximation of SMAA T2x for Magpie.
+// Captured-frame, no-jitter approximation of SMAA T2x for GMagpie.
 // It retains the official temporal subsample indices and history accumulation,
 // but does not shift the captured image. This is not native SMAA T2x.
 

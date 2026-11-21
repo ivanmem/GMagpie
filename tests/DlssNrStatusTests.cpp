@@ -2,7 +2,7 @@
 #include <cassert>
 #include <iostream>
 
-using namespace Magpie;
+using namespace GMagpie;
 
 int main() {
 	// SDK result domains must never be guessed from an integer alone.

@@ -21,7 +21,7 @@ struct ResourceLoader {
 };
 struct CommonSharedConstants { static constexpr const wchar_t* APP_RESOURCE_MAP_ID = L"test"; };
 
-namespace Magpie {
+namespace GMagpie {
 #include "GraphicsCardIdProduction.inc"
 struct Profile { GraphicsCardId graphicsCardId; };
 struct AdapterInfo { uint32_t idx, vendorId, deviceId; std::wstring description; };
@@ -52,16 +52,16 @@ static void Check(bool value, const char* message) {
     ++checks;
     if (!value) { std::fprintf(stderr, "FAIL: %s\n", message); std::exit(1); }
 }
-static bool Same(Magpie::GraphicsCardId a, Magpie::GraphicsCardId b) {
+static bool Same(GMagpie::GraphicsCardId a, GMagpie::GraphicsCardId b) {
     return a.idx == b.idx && a.vendorId == b.vendorId && a.deviceId == b.deviceId;
 }
-static void Selected(Magpie::ProfileViewModel& vm, uint32_t index, const char* message) {
+static void Selected(GMagpie::ProfileViewModel& vm, uint32_t index, const char* message) {
     Check(vm.GraphicsCard() == vm.GraphicsCards().GetAt(index), message);
 }
 
 int main() {
     init_apartment(apartment_type::single_threaded);
-    using namespace Magpie;
+    using namespace GMagpie;
     Profile defaults, app;
     ProfileViewModel vm{&defaults, nullptr, {}, false, {}};
     auto& adapters = AdaptersService::Get().adapters;

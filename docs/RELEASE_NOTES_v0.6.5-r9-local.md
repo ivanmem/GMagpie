@@ -1,4 +1,4 @@
-# Magpie 0.6.5 r9 local
+# GMagpie 0.6.5 r9 local
 
 落实 [r9 调查报告](experimental/reviews/20260905-v0.6.5-r9-dlssnr-switching-stutter-REVIEW.md) 中的 A、B、C、D，保留此前 r8 功能与默认参数。
 

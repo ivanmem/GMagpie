@@ -4,12 +4,12 @@
 // so it can be compiled as a small console executable when a test runner is
 // available. It validates protocol route data and the adapter dispatcher plan.
 // Configuration round-trip and source-level invariants are covered by
-// scripts\Run-HdrMechanicalValidation.ps1 and by Magpie's normal build.
+// scripts\Run-HdrMechanicalValidation.ps1 and by GMagpie's normal build.
 //
 // Suggested compile shape (after MSVC environment is set up):
-//   cl /std:c++20 /EHsc /I src\Magpie.Core src\Magpie.Core\HdrFrame.cpp ^
-//       src\Magpie.Core\HdrProtocol.cpp src\Magpie.Core\HdrColorTransform.cpp ^
-//       src\Magpie.Core\HdrAdapterDispatcher.cpp src\Magpie.Core\HdrEffectBoundary.cpp ^
+//   cl /std:c++20 /EHsc /I src\GMagpie.Core src\GMagpie.Core\HdrFrame.cpp ^
+//       src\GMagpie.Core\HdrProtocol.cpp src\GMagpie.Core\HdrColorTransform.cpp ^
+//       src\GMagpie.Core\HdrAdapterDispatcher.cpp src\GMagpie.Core\HdrEffectBoundary.cpp ^
 //       tests\HdrMechanicalTests.cpp
 
 #include "HdrAdapterDispatcher.h"
@@ -25,7 +25,7 @@
 #include <string>
 #include <vector>
 
-using namespace Magpie;
+using namespace GMagpie;
 
 namespace {
 

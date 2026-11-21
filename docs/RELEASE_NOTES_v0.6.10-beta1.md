@@ -1,4 +1,4 @@
-# Magpie Experimental 0.6.10 Beta1
+# GMagpie Experimental 0.6.10 Beta1
 
 本地测试版本，基于完整的 0.6.9 公开源码整合。公开更新入口仍指向 0.6.9。
 

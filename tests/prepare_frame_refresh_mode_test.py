@@ -23,9 +23,9 @@ def match(pattern, source):
     assert result, pattern
     return result[0]
 
-header = read("src/Magpie/AppSettings.h")
-source = read("src/Magpie/AppSettings.cpp")
-service = read("src/Magpie/ScalingService.cpp")
+header = read("src/GMagpie/AppSettings.h")
+source = read("src/GMagpie/AppSettings.cpp")
+service = read("src/GMagpie/ScalingService.cpp")
 declaration = match(r"bool _isSimpleFrameRefresh = .*?;", header)
 accessors = block(header, "bool IsSimpleFrameRefresh()") + "\n" + block(header, "void IsSimpleFrameRefresh(bool")
 load = match(r'_isSimpleFrameRefresh = true;\s*JsonHelper::ReadBool\(root, "simpleFrameRefresh", _isSimpleFrameRefresh\);', source)
@@ -37,8 +37,8 @@ startup = "\n".join(match(pattern, service) for pattern in (
     r"options.IsStatisticsForDynamicDetectionEnabled\(!options.isSimpleFrameRefresh.*?;",
     r"const auto rtssSession = RtssService::Get\(\).Begin\(hWnd, profile.runtimeIdentity,.*?;",
 ))
-duplicate = block(read("src/Magpie.Core/include/ScalingOptions.h"), "enum class DuplicateFrameDetectionMode") + ";"
-json_read = block(read("src/Magpie/JsonHelper.cpp"), "bool JsonHelper::ReadBool(")
+duplicate = block(read("src/GMagpie.Core/include/ScalingOptions.h"), "enum class DuplicateFrameDetectionMode") + ";"
+json_read = block(read("src/GMagpie/JsonHelper.cpp"), "bool JsonHelper::ReadBool(")
 prefix = r'''
 #include "FrameRefreshSettings.h"
 #include <rapidjson/document.h>
@@ -53,12 +53,12 @@ prefix = r'''
 #include <string>
 #include "EffectParameterPersistence.h"
 #include "FrameGenerationParameters.h"
-using namespace Magpie;
+using namespace GMagpie;
 struct JsonHelper {
     static bool ReadBool(const rapidjson::GenericObject<true, rapidjson::Value>&, const char*, bool&, bool = false) noexcept;
 };
 '''
-prefix += '#include "' + (repo / "src/Magpie/RtssSettings.h").as_posix() + '"\n' + json_read + "\n" + duplicate
+prefix += '#include "' + (repo / "src/GMagpie/RtssSettings.h").as_posix() + '"\n' + json_read + "\n" + duplicate
 prefix += "\nstruct AppSettings {\n" + declaration + r'''
     unsigned saves=0;
     struct Event { unsigned count=0; void Invoke() { ++count; } } FrameRefreshModeChanged;
@@ -70,9 +70,9 @@ prefix += "\nstruct AppSettings {\n" + declaration + r'''
 prefix += accessors + '\nvoid Load(const rapidjson::GenericObject<true, rapidjson::Value>& root) {\n' + load + '}\n};\n'
 prefix += 'std::string Save(const AppSettings& data) { rapidjson::StringBuffer b; rapidjson::Writer<rapidjson::StringBuffer> writer(b); writer.StartObject();\n' + save + '\nwriter.EndObject(); return b.GetString(); }\n'
 duplicate_load = match(r"uint32_t duplicateFrameDetectionMode = .*?_duplicateFrameDetectionMode = .*?;", source)
-read_uint = block(read("src/Magpie/JsonHelper.cpp"), "bool JsonHelper::ReadUInt(")
+read_uint = block(read("src/GMagpie/JsonHelper.cpp"), "bool JsonHelper::ReadUInt(")
 prefix = prefix.replace("static bool ReadBool", "static bool ReadUInt(const rapidjson::GenericObject<true, rapidjson::Value>&, const char*, uint32_t&, bool = false) noexcept;\n    static bool ReadBool")
-prefix += read_uint + "\nnamespace Magpie { using ::DuplicateFrameDetectionMode; }\n"
+prefix += read_uint + "\nnamespace GMagpie { using ::DuplicateFrameDetectionMode; }\n"
 prefix += "DuplicateFrameDetectionMode ReadDuplicate(const rapidjson::GenericObject<true, rapidjson::Value>& root) { DuplicateFrameDetectionMode _duplicateFrameDetectionMode;\n" + duplicate_load + "\nreturn _duplicateFrameDetectionMode; }\n"
 prefix += r'''
 struct Options {
@@ -100,7 +100,7 @@ prefix += startup + '\n(void)rtssSession; return options; }\n'
 prefix += r'''
 struct EffectOption { std::unordered_map<std::string, float> parameters; std::string name; };
 '''
-prefix += block(read("src/Magpie.Core/include/ScalingOptions.h"), "struct EffectParameterSessionState") + ";\n"
+prefix += block(read("src/GMagpie.Core/include/ScalingOptions.h"), "struct EffectParameterSessionState") + ";\n"
 prefix += r'''
 struct ScalingWindow {
     ::Options options;
@@ -110,7 +110,7 @@ struct ScalingWindow {
 uint32_t Pending(const FrameRefreshSettings& _draftFrameRefresh,
     const EffectParameterSessionState::Snapshot& _parameterSessionSnapshot) {
 '''
-prefix += block(read("src/Magpie.Core/OverlayDrawer.cpp"), "auto frameSyncChangeCount =") + ';\nreturn frameSyncChangeCount(); }\n'
+prefix += block(read("src/GMagpie.Core/OverlayDrawer.cpp"), "auto frameSyncChangeCount =") + ';\nreturn frameSyncChangeCount(); }\n'
 suffix = r'''
 int main() {
     auto& settings=AppSettings::Get();

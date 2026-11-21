@@ -13,13 +13,13 @@ def check(name,condition):
     if not condition: raise AssertionError(name)
     results.append(name)
 
-core=root/'src/Magpie.Core'
+core=root/'src/GMagpie.Core'
 include=core/'include'
 ns={'m':'http://schemas.microsoft.com/developer/msbuild/2003'}
-for path in ['src/BuildOptions.props','src/Common.Post.props','src/Magpie.Core/Magpie.Core.vcxproj','src/Magpie/Magpie.vcxproj']:
+for path in ['src/BuildOptions.props','src/Common.Post.props','src/GMagpie.Core/GMagpie.Core.vcxproj','src/GMagpie/GMagpie.vcxproj']:
     ET.parse(root/path)
     check('XML parsed: '+path,True)
-project=ET.parse(core/'Magpie.Core.vcxproj')
+project=ET.parse(core/'GMagpie.Core.vcxproj')
 registered={item.attrib['Include'].replace('\\','/') for tag in ['ClInclude','ClCompile'] for item in project.findall('.//m:'+tag,ns) if 'Include' in item.attrib}
 for name in ['NvidiaVfxRuntime.h','NvidiaVfxRuntime.cpp','NvidiaVfxImageBackend.h','NvidiaVfxImageBackend.cpp','NvidiaVfxFrameGenerator.h','NvidiaVfxFrameGenerator.cpp','include/NvidiaVfxParameters.h','include/NvidiaVfxParameterPolicy.h','include/NvidiaVfxExecutionPlan.h']:
     check('Project registration: '+name,name in registered and (core/name).is_file())
@@ -58,7 +58,7 @@ hdr=parameters(root/'src/Effects/RTXVideo/RTXVideo_HDR.hlsl')
 for key,expected in {'contrast':('0','200','100'),'saturation':('0','200','100'),'middleGray':('10','100','50'),'peakNits':('400','2000','1000')}.items():
     check('TrueHDR saved range/default: '+key,tuple(hdr[key][x] for x in ['min','max','default'])==expected)
 check('TrueHDR debanding default ON',hdr['debanding']['default']=='1')
-baseline=subprocess.check_output(['git','show','49de3f25478008c962e24015cf81d7e9772b9a2b:src/Magpie.Core/include/HdrParameterPolicy.h'],cwd=root).decode('utf-8-sig').replace('\r\n','\n')
+baseline=subprocess.check_output(['git','show','49de3f25478008c962e24015cf81d7e9772b9a2b:src/GMagpie.Core/include/HdrParameterPolicy.h'],cwd=root).decode('utf-8-sig').replace('\r\n','\n')
 policy=(include/'HdrParameterPolicy.h').read_text(encoding='utf-8-sig')
 check('Beta4 exact-input/ordinary/coarse policy preserved',policy.replace(' || parameter.name == "debanding"','')==baseline)
 
@@ -67,7 +67,7 @@ check('VFG exposes Performance/Balanced with stable 0/1 ABI',
       re.findall(r'^//!OPTION (\d+) (.+)$',vfg,re.M)==[('0','Performance'),('1','Balanced')])
 check('VFG Balanced remains default',parameters(root/'src/Effects/NvidiaVFX/VFG.hlsl')['model']['default']=='1')
 for language in ['en-US','zh-Hans','zh-Hant']:
-    resources=ET.parse(root/f'src/Magpie/Resources.language-{language}.resw')
+    resources=ET.parse(root/f'src/GMagpie/Resources.language-{language}.resw')
     names=[item.attrib['name'] for item in resources.findall('data')]
     check('Unique resource keys: '+language,len(names)==len(set(names)))
     keys=['EffectParam_NvidiaVFX_VFG_model_Option_0','EffectParam_NvidiaVFX_VFG_model_Option_1']

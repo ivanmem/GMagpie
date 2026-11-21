@@ -1,4 +1,4 @@
-# Magpie Experimental v0.5.2
+# GMagpie Experimental v0.5.2
 
 ## 中文
 
@@ -25,7 +25,7 @@
 
 ### 作者的主观使用组合建议
 
-以下建议来自有限游戏和设备上的主观观察，不代表普遍画质结论。SMAA 应放在 DLSS 等上采样 Effect 之前；L/M/J/K 指通过 NVIDIA Profile Inspector 等工具设置的驱动层 DLSS Preset，并非 Magpie 内部选项。关于历史帧和当前帧权重的解释属于现象推测。
+以下建议来自有限游戏和设备上的主观观察，不代表普遍画质结论。SMAA 应放在 DLSS 等上采样 Effect 之前；L/M/J/K 指通过 NVIDIA Profile Inspector 等工具设置的驱动层 DLSS Preset，并非 GMagpie 内部选项。关于历史帧和当前帧权重的解释属于现象推测。
 
 #### NVIDIA 显卡
 
@@ -75,7 +75,7 @@ This release further improves experimental Frame Generation, restart compatibili
 
 ### Author's subjective combination suggestions
 
-These suggestions are subjective observations from a limited set of games and systems, not universal image-quality conclusions. Place SMAA before an upscaling Effect such as DLSS. L/M/J/K refer to driver-level DLSS Presets selected through tools such as NVIDIA Profile Inspector, not options built into Magpie. The explanations about current-frame and history weighting are hypotheses based on observed behaviour.
+These suggestions are subjective observations from a limited set of games and systems, not universal image-quality conclusions. Place SMAA before an upscaling Effect such as DLSS. L/M/J/K refer to driver-level DLSS Presets selected through tools such as NVIDIA Profile Inspector, not options built into GMagpie. The explanations about current-frame and history weighting are hypotheses based on observed behaviour.
 
 #### NVIDIA GPUs
 

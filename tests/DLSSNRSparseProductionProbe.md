@@ -3,7 +3,7 @@
 The probe compiles the current Filter, Sparse engine and MultiPass wrapper,
 linking a snapshot of the matching Core library. It adds scene generation,
 timestamp scopes and optional image/validity diagnostics. It does not launch
-Magpie or measure desktop Present, game FPS, power or input-to-photon latency.
+GMagpie or measure desktop Present, game FPS, power or input-to-photon latency.
 
 FrameGuidanceService uses the real AMD/NVIDIA provider. Accepted captures
 advance the backend's local ordinal; redraws and completion do not. The scene
@@ -16,7 +16,7 @@ Run Run-DLSSNRSparseStateTests.ps1 and Run-DLSSNRSparseShaderTests.ps1 for CPU
 and WARP coverage. Build the production probe with
 Run-DLSSNRSparseProductionProbe.ps1, supplying -BuildRoot, -CoreLibrary,
 -Output and -CompileOnly. The four-mode stage is at workspace-relative
-diagnostics/20261101-dlssnr-four-modes/stage, with Core in runtime/Magpie.Core.lib.
+diagnostics/20261101-dlssnr-four-modes/stage, with Core in runtime/GMagpie.Core.lib.
 
 Choose a fresh output directory for every build. The builder snapshots Core
 and records source, generated instrumentation, library and runtime hashes.

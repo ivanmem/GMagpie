@@ -1,4 +1,4 @@
-# Magpie 实验分支文档索引
+# GMagpie 实验分支文档索引
 
 ## 0.6.12 发布候选 / Release candidate
 
@@ -8,7 +8,7 @@
 
 ## 0.6.11 已公开版本 / Published release
 
-[Magpie Experimental v0.6.11](https://github.com/SAOG0721/Magpie/releases/tag/v0.6.11-experimental) 已于 2026-10-23 公开，保持 Pre-release，标签对应 `4fc74a19`。[完整中英更新说明](../RELEASE_NOTES_v0.6.11-experimental.md)汇总性能分析浮窗与双曲线、XeSS 输出间隔、DLSS 参数、SM86 0.4.0、默认社区 DLSSNR、暂停截图和时间戳命名。`version.json` 和公开下载入口已同步为 0.6.11。[发布准备历史 TODO](todos/20261023-xess-output-interval-release-TODO.md)保留当时的审核记录。
+[GMagpie Experimental v0.6.11](https://github.com/SAOG0721/Magpie/releases/tag/v0.6.11-experimental) 已于 2026-10-23 公开，保持 Pre-release，标签对应 `4fc74a19`。[完整中英更新说明](../RELEASE_NOTES_v0.6.11-experimental.md)汇总性能分析浮窗与双曲线、XeSS 输出间隔、DLSS 参数、SM86 0.4.0、默认社区 DLSSNR、暂停截图和时间戳命名。`version.json` 和公开下载入口已同步为 0.6.11。[发布准备历史 TODO](todos/20261023-xess-output-interval-release-TODO.md)保留当时的审核记录。
 
 [Version 0.6.11](https://github.com/SAOG0721/Magpie/releases/tag/v0.6.11-experimental) was published on 2026-10-23 as a Pre-release at `4fc74a19`. The update manifest and public download links now refer to this release. See its [bilingual notes](../RELEASE_NOTES_v0.6.11-experimental.md) for features and installation.
 
@@ -28,7 +28,7 @@
 
 帧率与刷新及配置页布局：原 `feature/0610-frame-refresh-rtss-auto` 分支在整页 280 DIP 布局基础上，完成模式外框圆角、10 处单位外置及 RTSS 独立分组。见[第五阶段实施与交接](reviews/20261011-rtss-grouped-units.md)及[TODO R01–R06](todos/20261011-frame-refresh-modes-TODO.md)。最新设计参照为 `profile-rtss-grouped.html`；R06 / S07 / V07 原生视觉与运行验收、产品编译部署交给后续会话。[第四阶段](reviews/20261011-profile-controls-unified.md)、[第三阶段](reviews/20261011-frame-refresh-visual-alignment.md)、[第二阶段](reviews/20261011-frame-refresh-rtss-auto.md)与[第一阶段](reviews/20261011-frame-refresh-modes.md)保留为历史。
 
-上一公开版本 [Magpie Experimental v0.6.10](https://github.com/SAOG0721/Magpie/releases/tag/v0.6.10-experimental) 的[中英 Release Note](../RELEASE_NOTES_v0.6.10-experimental.md)保留供查阅。
+上一公开版本 [GMagpie Experimental v0.6.10](https://github.com/SAOG0721/Magpie/releases/tag/v0.6.10-experimental) 的[中英 Release Note](../RELEASE_NOTES_v0.6.10-experimental.md)保留供查阅。
 
 HDR 兼容模式更新开发中：见[功能文档](design/20261005-hdr-compatibility-update-functional-spec.md)和[开发需求与进度](todos/20261005-hdr-compatibility-update-development-TODO.md)。本轮进行源码和针对性回归，应用完整编译及部署留给后续会话。
 
@@ -36,7 +36,7 @@ HDR 兼容模式更新开发中：见[功能文档](design/20261005-hdr-compatib
 
 HDR 当前状态：旧配置页入口保持隐藏，新旧配置中的旧开关保持关闭；效果器选择器新增「HDR 组件」分类，仅显式转换链按节点启用 HDR 捕获／输出。见 [HDR 组件实施记录](reviews/20260908-v0.6.7-hdr-conversion-effects-plan.md)。
 
-历史版本 [Magpie Experimental v0.6.8](https://github.com/SAOG0721/Magpie/releases/tag/v0.6.8-experimental.1) 的[更新说明](../RELEASE_NOTES_v0.6.8-experimental.md)与[分发准备记录](reviews/20260914-v0.6.8-release-preparation.md)保留供查阅。下方 Beta、TODO 与部署状态均为当时的历史记录，具体使用说明以当前版本 Release Note 为准。
+历史版本 [GMagpie Experimental v0.6.8](https://github.com/SAOG0721/Magpie/releases/tag/v0.6.8-experimental.1) 的[更新说明](../RELEASE_NOTES_v0.6.8-experimental.md)与[分发准备记录](reviews/20260914-v0.6.8-release-preparation.md)保留供查阅。下方 Beta、TODO 与部署状态均为当时的历史记录，具体使用说明以当前版本 Release Note 为准。
 
 当前功能已包含 Beta 1–6 的全部迭代，见 [Beta 6 TODO](todos/20260910-v0.6.7-beta6-TODO.md)、[Reflex 驱动限帧](reviews/20260910-beta6-reflex-pacing.md)、[HDR 组件](reviews/20260908-v0.6.7-hdr-conversion-effects-plan.md) 与 [参数输入验证](testing/PARAMETER-INPUT.md)。历史 [Beta 6 说明](../RELEASE_NOTES_v0.6.7-beta6.md)、[Beta 1 说明](../RELEASE_NOTES_v0.6.7-beta1.md)、[0.6.6 说明](../RELEASE_NOTES_v0.6.6-experimental.md) 保留。
 
@@ -56,7 +56,7 @@ HDR 当前状态：旧配置页入口保持隐藏，新旧配置中的旧开关�
 - [效果器说明维护规范](EFFECT-DESCRIPTION-GUIDE.md)：已修订为用户理解和选择优先，明确比较／组合／参数信息的归属；技术来源与证据要求继续保留。
 - [上一轮效果器说明 TODO](todos/20261013-effect-descriptions-and-guidelines-TODO.md)／[逐项审查与交接](reviews/20261013-effect-description-standards.md)：保留 165 项事实核对、分类／进阶入口及 VFG RCAS ID 修正记录。本轮文案重写结果见上方；编译部署及实机验收交给独立会话。
 
-- [DLSSFG sm86 启动修复源码交接](reviews/20261011-issue37-dlssfg-sm86-startup-fix.md)：原功能分支补齐显式 bundle 加载和 NGX 搜索目录；独立 loader 四场景通过，修改后的 Magpie 编译与真实补帧由后续会话验收。
+- [DLSSFG sm86 启动修复源码交接](reviews/20261011-issue37-dlssfg-sm86-startup-fix.md)：原功能分支补齐显式 bundle 加载和 NGX 搜索目录；独立 loader 四场景通过，修改后的 GMagpie 编译与真实补帧由后续会话验收。
 
 - [DLSSFG Beta7 启用失败修复 TODO](todos/20261011-issue37-dlssfg-sm86-startup-failure-TODO.md)：`FeatureNotFound` 实机记录与独立加载探针；补齐 bundle 准备和 NGX 搜索路径。
 
@@ -81,9 +81,9 @@ HDR 当前状态：旧配置页入口保持隐藏，新旧配置中的旧开关�
 
 - [RTSS 能力判断与固定门槛整改 TODO](todos/20261009-rtss-capability-checks-TODO.md)：按实际接口、字段和操作条件判断可用性。第一阶段 10 项已完成：移除版本/名称及整项拒绝、解除同步模式的无关手动值依赖，开放可验证的离线配置操作，恢复只尝试一次且不阻断开始。源码与隔离回归通过，第二阶段 4 项安装发现、架构、格式和范围扩展后置；产品构建/UI/FPS 交给独立会话。[实施与交接](reviews/20261009-rtss-capability-checks.md)。
 
-- [RTSS 状态分段与 Magpie 初始化及管理员启动 TODO](todos/20261009-rtss-status-magpie-init-and-admin-TODO.md)：已确认优先同行、按内容类型整段换行，三按钮统一普通操作样式，初始化 Magpie 独立不限帧配置且保留其他设置，主程序启动默认请求管理员权限。源码及隔离回归已完成，真实 UI、UAC/自启动与产品 FPS 待独立会话验收，见[实施与交接](reviews/20261009-rtss-status-magpie-init-and-admin.md)。
+- [RTSS 状态分段与 GMagpie 初始化及管理员启动 TODO](todos/20261009-rtss-status-magpie-init-and-admin-TODO.md)：已确认优先同行、按内容类型整段换行，三按钮统一普通操作样式，初始化 GMagpie 独立不限帧配置且保留其他设置，主程序启动默认请求管理员权限。源码及隔离回归已完成，真实 UI、UAC/自启动与产品 FPS 待独立会话验收，见[实施与交接](reviews/20261009-rtss-status-magpie-init-and-admin.md)。
 
-- [RTSS 配置保存失败 TODO](todos/20261009-rtss-save-failure-TODO.md)：普通 FPS 的 Apply/Restore 已按当前值跳过无效 setter，失败阶段与日志已拆分。216 项配置事务、64 项会话事务、55 项本机隔离原生事务及 358 项当前资源检查通过；非零帧时间兼容方案已设计，本次已完成 Magpie 初始化的清零文件路径和默认管理员启动；Global/目标转正 FPS、缺失字段恢复与其他版本验证仍待完成；本机普通权限无法写安装目录，已加入明确权限检测。产品构建、部署及目标应用 FPS 由独立会话验收。[修复与交接](reviews/20261009-rtss-save-failure-fix.md)。
+- [RTSS 配置保存失败 TODO](todos/20261009-rtss-save-failure-TODO.md)：普通 FPS 的 Apply/Restore 已按当前值跳过无效 setter，失败阶段与日志已拆分。216 项配置事务、64 项会话事务、55 项本机隔离原生事务及 358 项当前资源检查通过；非零帧时间兼容方案已设计，本次已完成 GMagpie 初始化的清零文件路径和默认管理员启动；Global/目标转正 FPS、缺失字段恢复与其他版本验证仍待完成；本机普通权限无法写安装目录，已加入明确权限检测。产品构建、部署及目标应用 FPS 由独立会话验收。[修复与交接](reviews/20261009-rtss-save-failure-fix.md)。
 
 - [RTSS 界面文案精简与控件样式 TODO](todos/20261009-rtss-ui-text-and-style-TODO.md)：固定帧率行、只读同步 FPS、停止策略直接排列和精简文案已在原分支完成，工具按钮局部对齐沿用原生样式。297 项合同、176 项设置、54 项生产代码显示回归、334 项当前资源原生检查通过；产品构建、主题/DPI 与真实交互交给独立会话。[实施与交接](reviews/20261009-rtss-ui-text-and-style.md)。
 
@@ -102,7 +102,7 @@ HDR 当前状态：旧配置页入口保持隐藏，新旧配置中的旧开关�
 - **0.6.9 UWP 窗口兼容与死锁保护**：`fix/069-uwp-window-owner` 已实现两种协作模式、首帧准入与完整退役边界，保留 Win32 owner 和 NGX 防护，通过离线回归。完整构建／部署和实机验收待独立会话。[当前 TODO](todos/20261004-v0.6.9-uwp-window-coordination-and-lifecycle-TODO.md)、[第二阶段实施记录](reviews/20261004-v0.6.9-uwp-coordination-implementation.md)、[原定位](todos/20261004-v0.6.9-issues-65-67-uwp-window-owner-TODO.md)、[阶段 1 记录](reviews/20261004-v0.6.9-uwp-window-owner.md)。
 
 
-- [069 “其他选项”按钮样式协调 TODO](todos/20261002-v0.6.9-effect-options-button-style-TODO.md)：已继承普通按钮的 14 号字与默认留白，保留 36 DIP 高度、纯文字、中性填充和零边框。144 组原生页头布局及页脚、容器和配置目录检查通过；单线程完整 Release 与包／编译资源校验通过。按用户明确授权关闭 Magpie 后，已归档旧完整目录、保留最新配置并替换至原 Beta3 路径，替换后的实际文件校验通过；Magpie 保持关闭，实际界面验收待完成。[实施与部署记录](reviews/20261002-v0.6.9-effect-options-button-style.md)。
+- [069 “其他选项”按钮样式协调 TODO](todos/20261002-v0.6.9-effect-options-button-style-TODO.md)：已继承普通按钮的 14 号字与默认留白，保留 36 DIP 高度、纯文字、中性填充和零边框。144 组原生页头布局及页脚、容器和配置目录检查通过；单线程完整 Release 与包／编译资源校验通过。按用户明确授权关闭 GMagpie 后，已归档旧完整目录、保留最新配置并替换至原 Beta3 路径，替换后的实际文件校验通过；GMagpie 保持关闭，实际界面验收待完成。[实施与部署记录](reviews/20261002-v0.6.9-effect-options-button-style.md)。
 
 - [069 效果组其他选项菜单与效果器说明 Review TODO](todos/20261002-v0.6.9-effect-options-and-description-review-TODO.md)：菜单源码与全部 162 项双语说明审查完成，入口沿用旧版 36 DIP 高度及当前普通按钮外观；目录生成、144 组原生页头布局、选择器模型与页面语法检查通过。已按单线程、低优先级和单逻辑核心完成 Beta3 构建部署及包／编译资源校验，游戏期间未启动应用；实际主窗口操作、完整 DPI 和安装后选择器验收仍待完成。[实施与验证](reviews/20261002-v0.6.9-effect-options-and-description-review.md)、[Beta3 部署记录](reviews/20261002-v0.6.9-beta3-deployment.md)。
 

@@ -2,7 +2,7 @@ from pathlib import Path
 
 import sys
 root = Path(__file__).resolve().parents[2]
-core = root / 'src/Magpie.Core'
+core = root / 'src/GMagpie.Core'
 tracker = (core / 'SrcTracker.cpp').read_text(encoding='utf-8-sig')
 scaling = (core / 'ScalingWindow.cpp').read_text(encoding='utf-8-sig')
 
@@ -20,7 +20,7 @@ prefix = r'''
 #define NOMINMAX
 #include <windows.h>
 #include "FramePresentationTiming.h"
-using Magpie::PresentationJobTiming;
+using GMagpie::PresentationJobTiming;
 #include <algorithm>
 #include <cassert>
 #include <functional>
@@ -66,7 +66,7 @@ constexpr UINT WM_MAGPIE_SCALINGCHANGED=WM_USER;
 static bool IsTopmostWindow(HWND) { return false; }
 namespace FrameTrace { enum class Event { FrontendPrepare }; struct Scope { Scope(Event) {} }; }
 namespace fmt { template<class... T> const char* format(const char* message,T&&...) { return message; } }
-namespace Magpie {
+namespace GMagpie {
 struct Logger {
     static Logger& Get() { static Logger x; return x; }
     void Info(const char*) { ++stateLogs; }
@@ -177,7 +177,7 @@ production = '\n'.join([
 
 tests = r'''
 }
-using namespace Magpie;
+using namespace GMagpie;
 static void reset() {
     auto& w=ScalingWindow::Get(); w._srcTracker=SrcTracker{};w._options.windowed=w._options.game3d=false;
     w._isSrcRepositioning=false;w.destroyed=0;

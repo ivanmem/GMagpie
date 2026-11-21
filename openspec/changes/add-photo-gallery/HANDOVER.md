@@ -1,4 +1,4 @@
-# HANDOVER: фотогалерея Magpie — доделать, стабилизировать, отрефакторить, опубликовать
+# HANDOVER: фотогалерея GMagpie — доделать, стабилизировать, отрефакторить, опубликовать
 
 Документ — полное ТЗ для инженера, который продолжает работу после агента-автора.
 Читай целиком до правок. Все paths — относительно корня репозитория.
@@ -20,15 +20,15 @@
 4. **Ничего не коммитить без явного запроса** пользователя (весь текущий объём лежит
    незакоммиченным намеренно). Исключение — фаза публикации (§7), там коммиты нужны.
 5. Живые прогоны не должны мешать пользователю: убивать только процессы с
-   `Path` вида `F:\Projects\cpp\Magpie\bin\*`; чужой Magpie пользователя — не убивать
+   `Path` вида `F:\Projects\cpp\GMagpie\bin\*`; чужой GMagpie пользователя — не убивать
    без спроса; полноэкранные пробы — одним коротким заходом и с предупреждением.
 6. После всех правок — полная батарея (§6) обязанна быть зелёной + `/code-review
    high --fix` прогнать самостоятельно и довести дерево до того же состояния.
 
 ## 1. Что за фича
 
-Фотогалерея/слайдшоу поверх эффект-цепи масштабирования Magpie Experimental
-(C++20, WinUI3-остров, D3D11, DirectXMath, wil). CLI `Magpie.exe --gallery <папка>
+Фотогалерея/слайдшоу поверх эффект-цепи масштабирования GMagpie Experimental
+(C++20, WinUI3-остров, D3D11, DirectXMath, wil). CLI `GMagpie.exe --gallery <папка>
 [--interval сек] [--mode "имя режима"]` открывает полноэкранный показ: ←/→/↑/↓,
 колесо, Home/End, Space-пауза, F11/Esc — стоп, Num6 — окно выбора апскейлера
 (включая нативный RTX Video VSR), Delete — файл в корзину, Compare в фото-сессии
@@ -37,19 +37,19 @@
 (proposal, design, tasks — 7.1..7.35, specs/photo-gallery/spec.md).
 
 Ключевые файлы:
-- `src/Magpie/GalleryService.cpp/.h` — синглтон сервиса: плейлист, навигация, хуки,
+- `src/GMagpie/GalleryService.cpp/.h` — синглтон сервиса: плейлист, навигация, хуки,
   окно статуса, окно пикера (GDI, ownerless+WS_EX_TOPMOST+WM_TIMER 200мс страховщик
   z-порядка), удаление, прогресс-событие, лёгкий режим-зависимое поведение.
-- `src/Magpie.Core/PhotoFrameSource.cpp/.h` — источник кадров: ждёт запрос файла на
+- `src/GMagpie.Core/PhotoFrameSource.cpp/.h` — источник кадров: ждёт запрос файла на
   своём потоке захвата + поток предзагрузки, декод WIC/WinRT (`RespectExifOrientation`).
-- `src/Magpie.Core/Renderer.cpp/.h` — фото-сессия: `_ResizePhotoEffects` (цепь под
+- `src/GMagpie.Core/Renderer.cpp/.h` — фото-сессия: `_ResizePhotoEffects` (цепь под
   размер фото, лог «Геометрия фото-сессии»), `CalcPhotoEffectStages`,
   `_UpdateDestRect` (letterbox по аспекту фото), `_DrawPhotoSceneScaled`/
   `CalcPhotoSceneViewport` (прорисовка сцены в целевой прямоугольник через
   приватную копию `_photoSceneCopy` — SRV на scene-текстуру с keyed mutex нельзя).
-- `src/Magpie/ScalingService.cpp/.h` — запуск/остановка фото-сессии, `_photoStage`
+- `src/GMagpie/ScalingService.cpp/.h` — запуск/остановка фото-сессии, `_photoStage`
   (окно-«приманка» источника на мониторе курсора), `RestartPhotoEffects`.
-- `src/Magpie/App.cpp/.h` — CLI парсер, `_galleryLiteMode` (см. §4.5), показ из
+- `src/GMagpie/App.cpp/.h` — CLI парсер, `_galleryLiteMode` (см. §4.5), показ из
   командной строки.
 - Тесты: `tests/prepare_photo_gallery_test.py` (извлекает чистые функции в
   `PhotoGalleryUnderTest.h`) → `tests/PhotoGalleryTests.cpp` (CPU, assert'ы);
@@ -63,7 +63,7 @@
 
 - Всё незакоммичено: 30 изменённых файлов (+1428/-27) + untracked
   `openspec/`, `GalleryService.*`, `PhotoFrameSource.*`, все `tests/*photo*|*gallery*`.
-- Последняя успешная сборка: build-50 (mtime `bin/x64/Release/Magpie.exe` 21.11 17:04),
+- Последняя успешная сборка: build-50 (mtime `bin/x64/Release/GMagpie.exe` 21.11 17:04),
   после лёгкого режима, EXIF-фикса и фиксов ревью. Логи сборок: `%TEMP%\opencode\build-*.log`.
 - Батарея зелёная: src-инварианты 0, self-test 0 (43), resources 0, state 0, CPU 0,
   CJK 0. Z-проба живьём зелёная (схема ownerless+TOPMOST зафиксирована в 7.32).
@@ -224,7 +224,7 @@
 ## 6. Как проверять (тихая батарея — всегда)
 
 ```
-cd F:\Projects\cpp\Magpie
+cd F:\Projects\cpp\GMagpie
 py -3 -B tests\validate_photo_gallery_source.py            # инварианты источника
 py -3 -B tests\validate_photo_gallery_source.py --self-test # 43+ регрессии
 py -3 -B tests\validate_photo_gallery_resources.py          # resw ×4 локали
@@ -234,7 +234,7 @@ pwsh -NoProfile -ExecutionPolicy Bypass -File tests\Run-PhotoGalleryTests.ps1  #
 # пересохрани в репу в tests/ при публикации!)
 ```
 Сборка: PATH += `%TEMP%\opencode\conan-shim` (conan-пути в shим'ах), `MSBuild
-Magpie.slnx /p:Configuration=Release /p:Platform=x64 /p:EnableRTXVideoDenoise=true /m`
+GMagpie.slnx /p:Configuration=Release /p:Platform=x64 /p:EnableRTXVideoDenoise=true /m`
 (VS2022 Community). До сборки убивай ТОЛЬКО свои `bin\*` процессы (LNK1104).
 
 Живой заход (один, ~1–2 мин, предупреди пользователя): coexistence → flash → z →
@@ -259,7 +259,7 @@ foreground-окно — сначала ALT + `SetForegroundWindow` на окно
    (Renderer/PhotoFrameSource/ScalingRuntime/ScalingWindow/ScalingOptions),
    (б) сервис галереи + ввод/оверлеи, (в) UI главной + ресурсы 4 локалей +
    лёгкий режим, (г) тесты, (д) openspec-доки, (е) фиксы ревью-сессии (можно
-   влить к своим модулям), (ж) мелочь `Magpie→GMagpie` в заголовке (MainWindow/
+   влить к своим модулям), (ж) мелочь `GMagpie→GMagpie` в заголовке (MainWindow/
    TitleBarControl) — СПРОСИ пользователя, это его переименование или нет.
 4. Не пушь без команды пользователя (удалённый GitLab-remote может ещё не быть).
 5. Обнови `openspec/.../tasks.md` и `proposal.md`/`design.md` под реальность
@@ -293,7 +293,7 @@ foreground-окно — сначала ALT + `SetForegroundWindow` на окно
   Delete-холд) — за первым экранным заходом продолжателя.
 - 21.11 (продолжатель): сделаны P0-1..3, P1-4..6 (задачи 7.36..7.40), build-51 чистая, инварианты
   +5 (self-test 48). Живьём: coexistence PASS (обычный наш + показ + блок дубля; в пробе был баг
-  `Wait-Process` - исправлен; оригинальный Magpie пользователя не искал), flash PASS (в пробе не
+  `Wait-Process` - исправлен; оригинальный GMagpie пользователя не искал), flash PASS (в пробе не
   хватало запуска показа, DPI-aware, `$script:frames`, InvariantCulture; «красность» до фикса не
   перепроверял), z-порядок PASS, Delete-холд: процесс жив (5 файлов в синтетическом альбоме ушли в
   корзину). НЕ проверено: EXIF-процент живьём (покрыт только CPU-тестом `PhotoAppliesExifRotation`),

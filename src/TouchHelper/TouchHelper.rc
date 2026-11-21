@@ -41,7 +41,7 @@ BEGIN
             VALUE "InternalName", "TouchHelper.exe"
             VALUE "LegalCopyright", "Copyright © 2021-2025 Xu"
             VALUE "OriginalFilename", "TouchHelper.exe"
-            VALUE "ProductName", "Magpie"
+            VALUE "ProductName", "GMagpie"
         END
     END
     BLOCK "VarFileInfo"

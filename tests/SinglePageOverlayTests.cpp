@@ -20,7 +20,7 @@
 #include "EffectParameterPopupLayout.h"
 #include "EffectParameterResetGesture.h"
 #include "OKLabOverlayEditor.h"
-using namespace Magpie;
+using namespace GMagpie;
 #include "SinglePageResources.inc"
 static std::string language="zh";
 static std::string Resource(std::wstring_view key,const char* fallback="") {

@@ -22,7 +22,7 @@ namespace fmt {
 template<class... Args> std::string format(Args&&...) { return {}; }
 }
 
-namespace Magpie {
+namespace GMagpie {
 #include "ShortcutAction.inc"
 constexpr size_t ACTION_COUNT = (size_t)ShortcutAction::COUNT_OR_NONE;
 static std::array<std::optional<std::pair<UINT, UINT>>, ACTION_COUNT> registered;
@@ -284,8 +284,8 @@ static void RuntimeAndDialogTests() {
 int wmain(int argc, wchar_t** argv) {
 	try {
 		Require(argc == 2, "Pass the fixture output directory");
-		Magpie::ConfigTests(argv[1]);
-		Magpie::RuntimeAndDialogTests();
+		GMagpie::ConfigTests(argv[1]);
+		GMagpie::RuntimeAndDialogTests();
 		std::cout << "Shortcut clear production regressions passed: eight zero roundtrips, legacy/missing/corrupt config, recovery, atomic persistence/failure, unregister/rebind/conflict, hook delivery, stale callbacks and save/clear/cancel.\n";
 		return 0;
 	} catch (const std::exception& error) {

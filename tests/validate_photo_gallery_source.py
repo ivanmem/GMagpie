@@ -58,7 +58,7 @@ def run_checks():
     del failures[:]
 
     # --- Renderer: every photo session ends with a pass at renderer size -----
-    renderer = text("Magpie.Core/Renderer.cpp")
+    renderer = text("GMagpie.Core/Renderer.cpp")
     should_append = body(renderer, "bool Renderer::_ShouldAppendBicubic(")
     check("always-normalize", "if (options.photoSession)" in should_append,
           "photo sessions must return true before anything can return false: the "
@@ -115,7 +115,7 @@ def run_checks():
           "clear; the scene must first be copied into a private texture and only "
           "then drawn from it")
     passthrough_body = body(renderer, "bool Renderer::SetPassThroughActive(")
-    eye_guard = text("Magpie.Core/OverlayDrawer.cpp")
+    eye_guard = text("GMagpie.Core/OverlayDrawer.cpp")
     eye_at = eye_guard.index("Overlay_Toolbar_PassThrough")
     check("compare-off-in-photo-session",
           "Options().photoSession" in passthrough_body
@@ -129,7 +129,7 @@ def run_checks():
           "toolbar must not even offer the eye button there")
 
     # --- PhotoFrameSource: the first page is presented like every other page --
-    photos = text("Magpie.Core/PhotoFrameSource.cpp")
+    photos = text("GMagpie.Core/PhotoFrameSource.cpp")
     initialize = body(photos, "bool PhotoFrameSource::_Initialize() noexcept")
     update = body(photos, "FrameSourceState PhotoFrameSource::_Update() noexcept")
     check("first-page-presented",
@@ -144,14 +144,14 @@ def run_checks():
 
     # --- ScalingService: a photo session must not relaunch the app -----------
     restart = [m for m in re.findall(r"shouldRestartForSmoothMotion\s*=\s*([^;]+);",
-                                     text("Magpie/ScalingService.cpp"))
+                                     text("GMagpie/ScalingService.cpp"))
                if "IsSmoothMotionCompatibilityMode" in m]
     check("no-restart-for-photos",
           len(restart) == 1 and "!_photoSessionActive" in restart[0],
           "the app must not relaunch itself after a slideshow: it raced manual launches "
           "('already one instance running' / 'scaling session in progress')")
 
-    scaling = text("Magpie/ScalingService.cpp")
+    scaling = text("GMagpie/ScalingService.cpp")
     start_photo = body(scaling, "bool ScalingService::StartPhotoSession(")
     check("photo-session-build-mode-fallback",
           "EffectDisabledAtBuildTime(effect.name)" in start_photo
@@ -161,7 +161,7 @@ def run_checks():
           "session must fall back to the first build-supported mode instead of starting a doomed one")
 
     # --- GalleryService: input belongs to the slideshow only when focused ----
-    gallery = text("Magpie/GalleryService.cpp")
+    gallery = text("GMagpie/GalleryService.cpp")
     keyboard = body(gallery, "LRESULT CALLBACK GalleryService::_KeyboardHookProc(")
     check("keys-come-from-tested-map",
           "DecideGalleryKey(vkCode, self._pickerVisible)" in keyboard
@@ -246,29 +246,29 @@ def run_checks():
           "place (from the last page step back), via the tested pure function - not "
           "jump to page one")
     check("home-shows-gallery-progress",
-          "ViewModel.GalleryProgressText" in text("Magpie/HomePage.xaml")
-          and "GalleryService::Get().ProgressIndex()" in text("Magpie/HomeViewModel.cpp")
+          "ViewModel.GalleryProgressText" in text("GMagpie/HomePage.xaml")
+          and "GalleryService::Get().ProgressIndex()" in text("GMagpie/HomeViewModel.cpp")
           and "ProgressChanged.Invoke(_index + 1" in body(gallery, "void GalleryService::_ShowCurrent(")
           and "ProgressChanged.Invoke(0, 0);" in body(gallery, "void GalleryService::_Cleanup("),
           "the home page shows the slideshow position next to the resume button (same "
           "'N / M' as the status line): the gallery must publish every page and the "
           "clear-on-stop, the view model must read the live position")
-    app = text("Magpie/App.cpp")
+    app = text("GMagpie/App.cpp")
     check("gallery-lite-coexists",
           'L"-Gallery"' in body(app, "bool App::_CheckSingleInstance(")
           and "_galleryLiteMode = HasGalleryArgument(" in app
           and "if (!_galleryLiteMode) {\n\t\tShortcutService::Get().Initialize();" in app
           and "if (!_galleryLiteMode) {\n\t\tUpdateService::Get().Initialize();" in app,
-          "the slideshow instance must live next to the user's Magpie: its own "
+          "the slideshow instance must live next to the user's GMagpie: its own "
           "single-instance group (no SHOWME/QUIT fights), no global hotkey hook, no "
           "update check - a plain launch keeps the original full behaviour")
-    scaling = text("Magpie/ScalingService.cpp")
+    scaling = text("GMagpie/ScalingService.cpp")
     check("gallery-lite-no-foreground-watcher",
           "IsGalleryLiteMode()" in scaling
           and scaling.index("IsGalleryLiteMode()")
               < scaling.index("_checkForegroundTimer = dispatcher.CreateTimer()")
           and "if (_checkForegroundTimer)" in scaling,
-          "two Magpie instances must not both chase the foreground window - the lite "
+          "two GMagpie instances must not both chase the foreground window - the lite "
           "gallery instance skips the watcher timer (and its immediate first tick), "
           "and Uninitialize must tolerate the timer never having been created")
     check("start-last-resets-failure-reason",
@@ -277,7 +277,7 @@ def run_checks():
           "a resume that fails before Start (the folder vanished) must not leave the "
           "previous run's failure reason in place - the home toast would tell about "
           "the wrong problem")
-    renderer_cpp = text("Magpie.Core/Renderer.cpp")
+    renderer_cpp = text("GMagpie.Core/Renderer.cpp")
     check("frontend-dest-rect-snapshot",
           "_frontendDestRect = _destRect;\n\t\t_frontendMotionAvailability" in renderer_cpp
           and "CalcPhotoSceneViewport(_frontendDestRect," in renderer_cpp
@@ -292,7 +292,7 @@ def run_checks():
           "a backend that returned on an NGX fault ran cleanupBackend (_frameSource.reset()) "
           "in parallel with the frontend photo lambdas - wait for WM_QUIT/join instead")
     check("restart-latest-request-wins",
-          "serial != _restartSerial.load" in text("Magpie.Core/ScalingRuntime.cpp"),
+          "serial != _restartSerial.load" in text("GMagpie.Core/ScalingRuntime.cpp"),
           "the first queued restart recreates the window and bumps RunId, so every later "
           "queued one died on the guards - only the newest request may run")
     check("stale-idle-tears-down-photo-session",
@@ -338,7 +338,7 @@ def run_checks():
           "window: passing the owner handle placed the overlay exactly beneath the "
           "photo (the user saw 'the menu is right under the picture'); the overlays "
           "must sit at the top of the topmost band")
-    gallery_text = text("Magpie/GalleryService.cpp")
+    gallery_text = text("GMagpie/GalleryService.cpp")
     check("overlay-reasserts-topmost",
           gallery_text.count("WM_TIMER:") == 2
           and gallery_text.count(
@@ -388,11 +388,11 @@ def run_checks():
           "backend thread and from the window thread: a holder of `const RECT&` could see "
           "the value change under it. One writer (backend, next to _destRect) instead.")
     check("stage-released-on-stop",
-          "_photoStage.reset()" in body(text("Magpie/ScalingService.cpp"),
+          "_photoStage.reset()" in body(text("GMagpie/ScalingService.cpp"),
               "void ScalingService::_ScalingRuntime_StateChanged(ScalingState value)"),
           "the spec requires the invisible photo stage window to be released when the "
           "session stops; keeping it alive until the process exits leaks a top-level window")
-    scaling = text("Magpie/ScalingService.cpp")
+    scaling = text("GMagpie/ScalingService.cpp")
     ensure_stage = body(scaling, "HWND ScalingService::_EnsurePhotoStage() noexcept")
     place_stage = body(scaling, "void ScalingService::_PlacePhotoStageAtCursor(HWND stage) noexcept")
     check("stage-on-cursor-monitor",
@@ -403,7 +403,7 @@ def run_checks():
           "place it on the monitor under the mouse - on a reused window as well as a new one")
 
     # --- AppSettings: the resume state round-trips, and only when it exists --
-    settings = text("Magpie/AppSettings.cpp")
+    settings = text("GMagpie/AppSettings.cpp")
     save = body(settings, "std::string AppSettings::_Serialize(")
     check("resume-omitted-when-empty",
           "if (!data._galleryLastFolder.empty())" in save
@@ -415,12 +415,12 @@ def run_checks():
           "the saved folder and page must be read back")
 
     # --- defaults: no autoplay unless someone asked for it -------------------
-    cli = body(text("Magpie/App.cpp"), "static void _TryStartGalleryFromCommandLine()")
+    cli = body(text("GMagpie/App.cpp"), "static void _TryStartGalleryFromCommandLine()")
     check("cli-default-interval",
           "uint32_t interval = 0;" in cli and "value > 0 ? static_cast<uint32_t>(value) : 0" in cli,
           "the interval default is 0 seconds; a negative or missing value must not start an "
           "autoplay nobody asked for")
-    check("ui-default-interval", "double _galleryInterval = 0.0;" in text("Magpie/HomeViewModel.h"),
+    check("ui-default-interval", "double _galleryInterval = 0.0;" in text("GMagpie/HomeViewModel.h"),
           "the UI interval default must stay 0 as the user asked")
 
     return failures
@@ -430,125 +430,125 @@ def run_checks():
 OPEN_PHOTO_CHECK = "bool Renderer::_ShouldAppendBicubic(ID3D11Texture2D* outTexture) noexcept {\n\tconst ScalingOptions& options = ScalingWindow::Get().Options();\n\tif (options.photoSession) {"
 
 REGRESSIONS = {
-    "always-normalize": ("Magpie.Core/Renderer.cpp",
+    "always-normalize": ("GMagpie.Core/Renderer.cpp",
         [("if (options.photoSession) {\n\t\t// ", "if (false) {\n\t\t// ")]),
-    "always-normalize-first": ("Magpie.Core/Renderer.cpp",
+    "always-normalize-first": ("GMagpie.Core/Renderer.cpp",
         [(OPEN_PHOTO_CHECK, OPEN_PHOTO_CHECK.replace(
             "\tif (options.photoSession) {",
             "\tif (options.photoSession) return false;\n\tif (options.photoSession) {"))]),
-    "stage-count-is-predicted": ("Magpie.Core/Renderer.cpp",
+    "stage-count-is-predicted": ("GMagpie.Core/Renderer.cpp",
         [("CalcPhotoEffectStages(_photoEffectOptionsAll", "size_t(_photoEffectOptionsAll.size()) //")]),
-    "empty-chain-guard": ("Magpie.Core/Renderer.cpp",
+    "empty-chain-guard": ("GMagpie.Core/Renderer.cpp",
         [("_effectDrawers.empty()\n\t\t\t\t? _frameSource->GetPipelineTexture()", "_effectDrawers.back()")]),
-    "cleanup-not-from-its-own-event": ("Magpie/GalleryService.cpp",
+    "cleanup-not-from-its-own-event": ("GMagpie/GalleryService.cpp",
         [("App::Get().Dispatcher().TryEnqueue([this] {\n\t\t\t\tif (_running) {\n\t\t\t\t\t_Cleanup();\n\t\t\t\t}\n\t\t\t});",
           "_Cleanup();")]),
-    "photo-src-rect-single-writer": ("Magpie.Core/Renderer.cpp",
+    "photo-src-rect-single-writer": ("GMagpie.Core/Renderer.cpp",
         [("\t_photoSrcRect = { 0, 0, static_cast<LONG>(desc.Width), static_cast<LONG>(desc.Height) };",
           "\tdesc.Width = desc.Height = 0;"),
          ("\t\treturn _photoSrcRect;", "\t\t_photoSrcRect = {};\n\t\treturn _photoSrcRect;")]),
-    "stage-released-on-stop": ("Magpie/ScalingService.cpp", [("\t\t\t\t_photoStage.reset();", "")]),
-    "stage-on-cursor-monitor": ("Magpie/ScalingService.cpp",
+    "stage-released-on-stop": ("GMagpie/ScalingService.cpp", [("\t\t\t\t_photoStage.reset();", "")]),
+    "stage-on-cursor-monitor": ("GMagpie/ScalingService.cpp",
         [("\t\t_PlacePhotoStageAtCursor(_photoStage.get());", "")]),
-    "no-restart-for-photos": ("Magpie/ScalingService.cpp",
+    "no-restart-for-photos": ("GMagpie/ScalingService.cpp",
         [("!_photoSessionActive && AppSettings::Get().IsSmoothMotionCompatibilityMode()",
           "AppSettings::Get().IsSmoothMotionCompatibilityMode()")]),
-    "keys-come-from-tested-map": ("Magpie/GalleryService.cpp",
+    "keys-come-from-tested-map": ("GMagpie/GalleryService.cpp",
         [("const auto action = DecideGalleryKey(vkCode, self._pickerVisible);",
           "const auto action = vkCode == VK_LEFT || vkCode == VK_UP\n"
           "\t\t\t\t? GalleryKeyAction::PagePrev : GalleryKeyAction::PassThrough;")]),
-    "keys-need-focus": ("Magpie/GalleryService.cpp",
+    "keys-need-focus": ("GMagpie/GalleryService.cpp",
         [("if (action != GalleryKeyAction::PassThrough && self._IsSessionForeground()) {",
           "if (action != GalleryKeyAction::PassThrough) {")]),
-    "num6-single-toggle": ("Magpie/GalleryService.cpp",
+    "num6-single-toggle": ("GMagpie/GalleryService.cpp",
         [("\t\t\tself._num6Held = false;", "")]),
-    "picker-stays-open-on-choice": ("Magpie/GalleryService.cpp",
+    "picker-stays-open-on-choice": ("GMagpie/GalleryService.cpp",
         [("\t\t_CycleUpscaler(+1, true);\n\t\tbreak;",
           "\t\t_CycleUpscaler(+1, true);\n\t\t_HideUpscalerPicker();\n\t\tbreak;")]),
-    "vsr-in-upscaler-cycle": ("Magpie/GalleryService.cpp",
+    "vsr-in-upscaler-cycle": ("GMagpie/GalleryService.cpp",
         [("\t, std::string(NVIDIA_VFX_VSR_ID)", "")]),
-    "picker-highlight-follows-choice": ("Magpie/GalleryService.cpp",
+    "picker-highlight-follows-choice": ("GMagpie/GalleryService.cpp",
         [("\t\t_ShowUpscalerPicker();\n\t}", "\t}")]),
-    "cycle-dedup-profile-effect": ("Magpie/GalleryService.cpp",
+    "cycle-dedup-profile-effect": ("GMagpie/GalleryService.cpp",
         [("\t\tstd::erase(_upscalerCycle, _originalFirst[0].name);\n", "")]),
-    "delete-goes-to-recycle-bin": ("Magpie/GalleryService.cpp",
+    "delete-goes-to-recycle-bin": ("GMagpie/GalleryService.cpp",
         [("FOF_ALLOWUNDO | ", "")]),
-    "delete-keeps-page-position": ("Magpie/GalleryService.cpp",
+    "delete-keeps-page-position": ("GMagpie/GalleryService.cpp",
         [("if (const auto next = PhotoIndexAfterDelete(_index, _playlist.size() + 1)) {",
           "if (const auto next = std::optional<size_t>(_index)) {")]),
-    "compare-off-in-photo-session": ("Magpie.Core/Renderer.cpp",
+    "compare-off-in-photo-session": ("GMagpie.Core/Renderer.cpp",
         [("if (value && ScalingWindow::Get().Options().photoSession) {", "if (false) {")]),
-    "home-shows-gallery-progress": ("Magpie/GalleryService.cpp",
+    "home-shows-gallery-progress": ("GMagpie/GalleryService.cpp",
         [("\tProgressChanged.Invoke(_index + 1, _playlist.size());\n", "")]),
-    "gallery-lite-coexists": ("Magpie/App.cpp",
+    "gallery-lite-coexists": ("GMagpie/App.cpp",
         [(" std::wstring(CommonSharedConstants::SINGLE_INSTANCE_MUTEX_NAME) + L\"-Gallery\"",
           " CommonSharedConstants::SINGLE_INSTANCE_MUTEX_NAME")]),
-    "gallery-lite-no-foreground-watcher": ("Magpie/ScalingService.cpp",
+    "gallery-lite-no-foreground-watcher": ("GMagpie/ScalingService.cpp",
         [("if (!App::Get().IsGalleryLiteMode()) {", "if (true) {")]),
-    "start-last-resets-failure-reason": ("Magpie/GalleryService.cpp",
+    "start-last-resets-failure-reason": ("GMagpie/GalleryService.cpp",
         [("\t// Причина отказа актуальна только для текущего запуска: иначе при недоступной\n"
           "\t// папке главной странице показался бы тост с причиной ПРОШЛОГО отказа\n"
           "\t_lastStartFailure = GalleryStartFailure::Other;\n", "")]),
-    "status-percent-respects-exif": ("Magpie/GalleryService.cpp",
+    "status-percent-respects-exif": ("GMagpie/GalleryService.cpp",
         [("if (PhotoAppliesExifRotation(orientation)) {", "if (false) {")]),
-    "delete-survives-message-pump": ("Magpie/GalleryService.cpp",
+    "delete-survives-message-pump": ("GMagpie/GalleryService.cpp",
         [("const auto it = std::find(_playlist.begin(), _playlist.end(), path);",
           "auto it = _playlist.begin() + (long long)_index;")]),
-    "frontend-dest-rect-snapshot": ("Magpie.Core/Renderer.cpp",
+    "frontend-dest-rect-snapshot": ("GMagpie.Core/Renderer.cpp",
         [("CalcPhotoSceneViewport(_frontendDestRect,", "CalcPhotoSceneViewport(_destRect,")]),
-    "ngx-fault-keeps-frame-source": ("Magpie.Core/Renderer.cpp",
+    "ngx-fault-keeps-frame-source": ("GMagpie.Core/Renderer.cpp",
         [("\t\t\twhile (GetMessage(&msg, NULL, 0, 0) > 0) {\n\t\t\t\tDispatchMessage(&msg);\n\t\t\t}\n\t\t\treturn;\n\t\t}\n\t\tif (_sessionLifetime->IsStopping())",
           "\t\t\treturn;\n\t\t}\n\t\tif (_sessionLifetime->IsStopping())")]),
-    "restart-latest-request-wins": ("Magpie.Core/ScalingRuntime.cpp",
+    "restart-latest-request-wins": ("GMagpie.Core/ScalingRuntime.cpp",
         [("serial != _restartSerial.load", "false && _restartSerial.load")]),
-    "stale-idle-tears-down-photo-session": ("Magpie/ScalingService.cpp",
+    "stale-idle-tears-down-photo-session": ("GMagpie/ScalingService.cpp",
         [("if (value == ScalingState::Idle && _photoSessionActive) {\n\t\t\t\t_photoStage.reset();",
           "if (false) {\n\t\t\t\t_photoStage.reset();")]),
-    "gallery-start-timer-failure-cleans-up": ("Magpie/GalleryService.cpp",
+    "gallery-start-timer-failure-cleans-up": ("GMagpie/GalleryService.cpp",
         [("} catch (const winrt::hresult_error& e) {", "} catch (...) {")]),
-    "photo-scene-scaled-to-dest": ("Magpie.Core/Renderer.cpp",
+    "photo-scene-scaled-to-dest": ("GMagpie.Core/Renderer.cpp",
         [("\t\t\t\t_DrawPhotoSceneScaled(scene, rtv, view);", "")]),
-    "photo-scene-copy-before-draw": ("Magpie.Core/Renderer.cpp",
+    "photo-scene-copy-before-draw": ("GMagpie.Core/Renderer.cpp",
         [("\tdc->CopyResource(_photoSceneCopy.get(), scene);", "")]),
-    "overlay-owned-reanchors-below-photo": ("Magpie/GalleryService.cpp",
+    "overlay-owned-reanchors-below-photo": ("GMagpie/GalleryService.cpp",
         [("0, 0, 0, 0, nullptr, nullptr", "0, 0, 0, 0, owner, nullptr")]),
-    "overlay-layered-sinks-below-photo": ("Magpie/GalleryService.cpp",
+    "overlay-layered-sinks-below-photo": ("GMagpie/GalleryService.cpp",
         [("WS_EX_NOACTIVATE | WS_EX_TRANSPARENT,",
           "WS_EX_NOACTIVATE | WS_EX_TRANSPARENT | WS_EX_LAYERED,")]),
-    "overlay-insert-after-owner-sinks": ("Magpie/GalleryService.cpp",
+    "overlay-insert-after-owner-sinks": ("GMagpie/GalleryService.cpp",
         [("SetWindowPos(g_hwnd.get(), HWND_TOPMOST, x, y, w, h",
           "SetWindowPos(g_hwnd.get(), owner ? owner : HWND_TOPMOST, x, y, w, h"),
          ("SetWindowPos(g_hwnd.get(), HWND_TOPMOST, x, py, w, h",
           "SetWindowPos(g_hwnd.get(), owner ? owner : HWND_TOPMOST, x, py, w, h")]),
-    "overlay-reasserts-topmost": ("Magpie/GalleryService.cpp",
+    "overlay-reasserts-topmost": ("GMagpie/GalleryService.cpp",
         [("SetTimer(g_hwnd.get(), Z_REASSERT_TIMER, 200, nullptr); // см. IsBelowOutputWindow\n",
           "")]),
-    "photo-session-build-mode-fallback": ("Magpie/ScalingService.cpp",
+    "photo-session-build-mode-fallback": ("GMagpie/ScalingService.cpp",
         [("\t\t\tprofile.scalingMode = static_cast<int>(*fallback);", "")]),
-    "restart-keeps-page": ("Magpie/GalleryService.cpp",
+    "restart-keeps-page": ("GMagpie/GalleryService.cpp",
         [("\t\tScalingService::Get().RequestPhoto(_playlist[_index]);", "")]),
-    "picker-no-self-hide": ("Magpie/GalleryService.cpp",
+    "picker-no-self-hide": ("GMagpie/GalleryService.cpp",
         [("\t\t\t_ResourceString(_paused ? L\"Gallery_PausedToast\" : L\"Gallery_AutoPlayToast\"), scalingWindow);",
           "\t\t\t_ResourceString(_paused ? L\"Gallery_PausedToast\" : L\"Gallery_AutoPlayToast\"), scalingWindow);\n"
           "\t\tgallery_picker::Hide();  // дефект: список прячется не по выбору пользователя")]),
-    "wheel-data-source": ("Magpie/GalleryService.cpp",
+    "wheel-data-source": ("GMagpie/GalleryService.cpp",
         [("HIWORD(((MSLLHOOKSTRUCT*)lParam)->mouseData)", "GET_WHEEL_DELTA_WPARAM(wParam)")]),
-    "wheel-need-focus": ("Magpie/GalleryService.cpp",
+    "wheel-need-focus": ("GMagpie/GalleryService.cpp",
         [("if (delta != 0 && self._IsSessionForeground()) {\n\t\t\t\tself._OnMouseWheel",
           "if (delta != 0) {\n\t\t\t\tself._OnMouseWheel")]),
-    "cycle-uses-tested-index": ("Magpie/GalleryService.cpp",
+    "cycle-uses-tested-index": ("GMagpie/GalleryService.cpp",
         [("NextUpscalerCycle(_cyclePos, (int)_upscalerCycle.size(), direction)",
           "(((_cyclePos + 1) + direction) % (int)_upscalerCycle.size() + 1) - 1")]),
-    "resume-page-clamped": ("Magpie/GalleryService.cpp",
+    "resume-page-clamped": ("GMagpie/GalleryService.cpp",
         [("PhotoResumeIndex(startIndex, _playlist.size())", "startIndex")]),
-    "state-saved-before-reset": ("Magpie/GalleryService.cpp",
+    "state-saved-before-reset": ("GMagpie/GalleryService.cpp",
         [("\tif (_running) {\n\t\t_PersistSession(true);\n\t}\n\ttry {", "try {")]),
-    "prefetch-follows-direction": ("Magpie/GalleryService.cpp",
+    "prefetch-follows-direction": ("GMagpie/GalleryService.cpp",
         [("PhotoPrefetchIndex(_index, _playlist.size(), _stepDirection)", "(_index + 1) % _playlist.size()")]),
-    "resume-omitted-when-empty": ("Magpie/AppSettings.cpp",
+    "resume-omitted-when-empty": ("GMagpie/AppSettings.cpp",
         [("if (!data._galleryLastFolder.empty()) {", "if (true) {")]),
-    "cli-default-interval": ("Magpie/App.cpp", [("uint32_t interval = 0;", "uint32_t interval = 3;")]),
-    "ui-default-interval": ("Magpie/HomeViewModel.h",
+    "cli-default-interval": ("GMagpie/App.cpp", [("uint32_t interval = 0;", "uint32_t interval = 3;")]),
+    "ui-default-interval": ("GMagpie/HomeViewModel.h",
         [("double _galleryInterval = 0.0;", "double _galleryInterval = 5.0;")]),
 }
 

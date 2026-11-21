@@ -21,9 +21,9 @@ def block(source, marker):
     return source[start:end]
 
 
-renderer = (repo / "src/Magpie.Core/Renderer.cpp").read_text(encoding="utf-8-sig")
-presenter = (repo / "src/Magpie.Core/AdaptivePresenter.cpp").read_text(encoding="utf-8-sig")
-wait = (repo / "src/Magpie.Core/FramePacingWait.h").read_text(encoding="utf-8-sig")
+renderer = (repo / "src/GMagpie.Core/Renderer.cpp").read_text(encoding="utf-8-sig")
+presenter = (repo / "src/GMagpie.Core/AdaptivePresenter.cpp").read_text(encoding="utf-8-sig")
+wait = (repo / "src/GMagpie.Core/FramePacingWait.h").read_text(encoding="utf-8-sig")
 # Keep the readiness/GPU split wired for every supported capture backend.
 for name, gpu_call in (
     ("GraphicsCaptureFrameSource", "_deviceResources->GetD3DDC()->CopySubresourceRegion("),
@@ -31,7 +31,7 @@ for name, gpu_call in (
     ("DwmSharedSurfaceFrameSource", "->OpenSharedResource("),
     ("GDIFrameSource", "_dxgiSurface->GetDC("),
 ):
-    source = (repo / "src/Magpie.Core" / (name + ".cpp")).read_text(encoding="utf-8-sig")
+    source = (repo / "src/GMagpie.Core" / (name + ".cpp")).read_text(encoding="utf-8-sig")
     capture = block(source, "FrameSourceState " + name + "::_Update()")
     assert capture.index("_BeginCaptureRender();") < capture.index(gpu_call), name + " must mark before GPU work"
 gate = block(wait, "class FrameLatencyGate {") + ";"
@@ -48,7 +48,7 @@ admission = render[render.index("\tconst auto beginFrameStart"):render.index("\t
 end = block(presenter, "bool AdaptivePresenter::EndFrame(")
 present = end[end.index("\t\tconst auto tracePresent"):end.index("\t\tFrameTrace::Presentation(")]
 fixture = (repo / "tests/ReflexMarkerBoundaryTests.cpp").read_text(encoding="utf-8-sig")
-motion = block((repo / "src/Magpie.Core/FrontendMotionTexture.h").read_text(encoding="utf-8-sig"),
+motion = block((repo / "src/GMagpie.Core/FrontendMotionTexture.h").read_text(encoding="utf-8-sig"),
                "inline HRESULT EnsureFrontendMotionTexture(").replace("ID3D11Device*", "Device*")
 for name, value in {"GATE": gate, "METHODS": methods, "UPDATE": update,
                     "ADMISSION": admission, "PRESENT": present, "MOTION_TEXTURE": motion}.items():

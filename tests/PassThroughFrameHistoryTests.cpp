@@ -11,7 +11,7 @@
 #include <utility>
 #include <vector>
 
-namespace Magpie {
+namespace GMagpie {
 struct CpuReferenceTexture { uint64_t pixels = 0; };
 struct CpuReferenceHandle {
 	std::shared_ptr<CpuReferenceTexture> value;
@@ -128,7 +128,7 @@ public:
 }
 
 int main() {
-	using namespace Magpie;
+	using namespace GMagpie;
 	PassThroughFrameHistory bounds;
 	assert(bounds.Capture(1) == bounds.Missing);
 	assert(!bounds.Select(1,0).targetAvailable);

@@ -63,7 +63,7 @@
 | 补帧／帧数倍率 | frame generation / frame multiplier | 不与空间放大倍率混淆 |
 | 光流 | optical flow | 区分外部估计与游戏真实运动信息 |
 | 采样抖动 | sampling jitter | 不译为画面抖动；NoJitter 仍可能使用帧历史 |
-| 重新启动缩放 | restart scaling | 与 restart Magpie 区分 |
+| 重新启动缩放 | restart scaling | 与 restart GMagpie 区分 |
 | SDR 兼容转换 | SDR-compatible conversion | 不等于原生 HDR，也不保证无损 |
 | 尼特 | nits | 中文与英文的数值、单位必须一致 |
 
@@ -98,9 +98,9 @@ Upscale 的主体写法示例（必要硬件条件另置末尾短句）：
 
 同一 ID 以合并后的有效条目为准；修改其当前来源，不把被覆盖的旧条目当成实际显示内容。补充审查是现有组织方式，无需为一次文案调整再加一层覆盖。
 
-运行 [Generate-EffectCatalog.ps1](../../scripts/Generate-EffectCatalog.ps1) 生成 `src/Magpie/EffectCatalog/{zh-Hans,en-US,hdr-components}.json`。**不能只改生成产物**。效果 ID 和参数键属于配置兼容协议，改说明不能随意改 ID。
+运行 [Generate-EffectCatalog.ps1](../../scripts/Generate-EffectCatalog.ps1) 生成 `src/GMagpie/EffectCatalog/{zh-Hans,en-US,hdr-components}.json`。**不能只改生成产物**。效果 ID 和参数键属于配置兼容协议，改说明不能随意改 ID。
 
-参数提示位于 `src/Magpie/Resources.language-{zh-Hans,en-US}.resw` 的 `EffectParam_<效果键>_<参数键>_Description`。效果键里的非字母数字字符变为 `_`。现有 `EffectParameterLocalization::Tooltip` 供参数页与运行面板共用，不要为相同文字增加第二套入口。查不到说明时按现有标签／数字提示回退。
+参数提示位于 `src/GMagpie/Resources.language-{zh-Hans,en-US}.resw` 的 `EffectParam_<效果键>_<参数键>_Description`。效果键里的非字母数字字符变为 `_`。现有 `EffectParameterLocalization::Tooltip` 供参数页与运行面板共用，不要为相同文字增加第二套入口。查不到说明时按现有标签／数字提示回退。
 
 组合与共用设置的现有落点为[内置效果使用说明](../Built-in%20effects.md#current-branch-setup)，中英文仓库首页均提供入口；FSR3 FG 的[完整清单](effects/FSR3FG.md#compatible-effect-list)由该文档继续链接。自动检查将文档中的支持 ID 与实际策略比对。选择器详情本身不提供这些文档的点击入口，维护者不能把仓库入口描述成应用内链接。
 

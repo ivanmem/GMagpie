@@ -9,7 +9,7 @@
 #include <chrono>
 namespace wil { template<class F> struct Exit { F callback; ~Exit() { callback(); } }; template<class F> auto scope_exit(F f) { return Exit<F>{f}; } }
 
-namespace Magpie {
+namespace GMagpie {
 bool installed = true, launchSuccess = false;
 unsigned launches = 0;
 std::function<void()> launchHook;

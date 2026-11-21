@@ -125,7 +125,7 @@ def analyze(meta, rows):
 
 def markdown(result, path):
     meta = result['metadata']
-    out = ['# r9 debug 帧时间分析', '', f'输入：`{path.name}`；Magpie PID：{meta["pid"]}；'
+    out = ['# r9 debug 帧时间分析', '', f'输入：`{path.name}`；GMagpie PID：{meta["pid"]}；'
         f'会话时长：{meta["duration_us"]/1_000_000:.3f} 秒。', '',
         '**这是 CPU 捕获／提交时间线，不是实际屏幕上屏测量。** 嵌套阶段的时间互相包含，不能相加。'
         '等待新捕获帧和低帧率视频可以产生正常的长间隔；不能把所有 ≥50 ms 事件自动判定为故障。', '',

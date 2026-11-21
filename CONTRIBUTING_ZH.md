@@ -2,7 +2,7 @@
 
 **首先，感谢你将宝贵的时间花费在本项目上！** 
 
-Magpie 是一个个人项目，最早启发于 IntegerScaler 和 Lossless Scaling，但现在它比前辈们强大的多。开发者的能力和精力有限，因此欢迎任何形式的贡献！Magpie 遵循 [All Contributors](https://github.com/all-contributors/all-contributors) 规范，无论你以何种形式做出贡献，诸如编写代码、撰写文档、用户测试等，只要你的贡献足够，开发者都会把你加入贡献者清单。
+GMagpie 是一个个人项目，最早启发于 IntegerScaler 和 Lossless Scaling，但现在它比前辈们强大的多。开发者的能力和精力有限，因此欢迎任何形式的贡献！GMagpie 遵循 [All Contributors](https://github.com/all-contributors/all-contributors) 规范，无论你以何种形式做出贡献，诸如编写代码、撰写文档、用户测试等，只要你的贡献足够，开发者都会把你加入贡献者清单。
 
 如果你是新手，强烈推荐你读一下[这篇文章](https://opensourceway.community/open-source-guide/how-to-contribute/)。
 
@@ -14,7 +14,7 @@ Magpie 是一个个人项目，最早启发于 IntegerScaler 和 Lossless Scalin
 
 ### 我遇到了一个错误 🐞
 
-Magpie 没有广泛的测试过，因此错误不可避免。希望你能向开发者反馈这个错误，这样可以帮助所有和你遇到同样问题的人。
+GMagpie 没有广泛的测试过，因此错误不可避免。希望你能向开发者反馈这个错误，这样可以帮助所有和你遇到同样问题的人。
 
 首先请在 Issue 和 Discussion 中搜索你遇到的错误，避免和现有 Issue 重复。汇报错误时请发布一个 [Issue（bug report）](https://github.com/Blinue/Magpie/issues/new?assignees=&labels=bug&template=01_bug.yaml)，下面是一些有利于开发者快速定位问题的最佳实践：
 
@@ -25,7 +25,7 @@ Magpie 没有广泛的测试过，因此错误不可避免。希望你能向开�
 
 ### 我有一个功能建议 🚀
 
-你可能有一些关于 Magpie 的奇思妙想，请和开发者分享它们！开发者通常只是通过自己的使用经验添加新功能，但你的点子可能会使 Magpie 与众不同。
+你可能有一些关于 GMagpie 的奇思妙想，请和开发者分享它们！开发者通常只是通过自己的使用经验添加新功能，但你的点子可能会使 GMagpie 与众不同。
 
 首先请在 Issue 中搜索你的功能建议，确保不和已有的重复，尤其要查看 [Projects](https://github.com/Blinue/Magpie/projects) 里是否有这个功能。然后提交一个 [Issue (feature request)](https://github.com/Blinue/Magpie/issues/new?assignees=&labels=enhancement&template=03_request.yaml) 详细地描述你的建议，比如是否有其他软件实现了类似的功能。
 
@@ -35,11 +35,11 @@ Magpie 没有广泛的测试过，因此错误不可避免。希望你能向开�
 
 新增效果器或改变已有能力时，请同步维护双语选择器说明、分类／家族和相关参数提示，遵循[效果器说明规范](docs/experimental/EFFECT-DESCRIPTION-GUIDE.md)。修改正式审查来源后重新生成目录，并运行规范中列出的检查；源码验证与构建、界面、GPU 验收分别记录。
 
-贡献代码是帮助 Magpie 项目最直接的方式，你可以修复 bug，增加新功能或修正格式错误。不要因为修改太小就羞于贡献，你的每一行修改都很重要。
+贡献代码是帮助 GMagpie 项目最直接的方式，你可以修复 bug，增加新功能或修正格式错误。不要因为修改太小就羞于贡献，你的每一行修改都很重要。
 
-和所有开源项目一样，你需要提交 pull request 来向 Magpie 贡献代码。开发者可能会要求你做一些更改，如果你无法及时响应，你的 pull request 可能会被关闭。你应将提交合并到 dev 分支。
+和所有开源项目一样，你需要提交 pull request 来向 GMagpie 贡献代码。开发者可能会要求你做一些更改，如果你无法及时响应，你的 pull request 可能会被关闭。你应将提交合并到 dev 分支。
 
-**注意：一旦你向 Magpie 贡献代码，便表示你同意将该代码的版权转让给 Magpie 当前的版权所有者。** 这是为了使开发者做出重大决定（如更换许可证）时无需征得每一个贡献者的同意。开发者承诺 Magpie 项目更换许可证的唯一情形是迁移到更新版本的 GPL 协议。如果你想保留版权，只能放弃贡献，将更改保留在自己的 Fork 中。
+**注意：一旦你向 GMagpie 贡献代码，便表示你同意将该代码的版权转让给 GMagpie 当前的版权所有者。** 这是为了使开发者做出重大决定（如更换许可证）时无需征得每一个贡献者的同意。开发者承诺 GMagpie 项目更换许可证的唯一情形是迁移到更新版本的 GPL 协议。如果你想保留版权，只能放弃贡献，将更改保留在自己的 Fork 中。
 
 贡献代码时你需要遵守一些准则：
 
@@ -83,14 +83,14 @@ Magpie 没有广泛的测试过，因此错误不可避免。希望你能向开�
 
 ### 我想贡献翻译 🌍
 
-我们使用 Weblate 进行本地化工作。如果你想帮助将 Magpie 翻译成更多语言，请前往 https://hosted.weblate.org/projects/magpie 。
+我们使用 Weblate 进行本地化工作。如果你想帮助将 GMagpie 翻译成更多语言，请前往 https://hosted.weblate.org/projects/magpie 。
 
 ### 我想贡献文档 📖
 
-因为开发者的懒惰，Magpie 的文档长期处于缺失/过时的状态，因此文档的贡献是非常欢迎的。Magpie 的 wiki 是从 main 分支的 docs 文件夹自动发布的，因此修改文档和[贡献代码](#我想贡献代码-)的方式相同。
+因为开发者的懒惰，GMagpie 的文档长期处于缺失/过时的状态，因此文档的贡献是非常欢迎的。GMagpie 的 wiki 是从 main 分支的 docs 文件夹自动发布的，因此修改文档和[贡献代码](#我想贡献代码-)的方式相同。
 
 如果你想改进已发布功能的文档，请合并到 main 分支，否则请合并到 dev 分支。每次发布版本时，dev 分支的更改都将合并到 main 分支，wiki 也会相应的自动更新。
 
-### 我想资助 Magpie 💰
+### 我想资助 GMagpie 💰
 
 请点击页面上方的 "Sponsor" 按钮，非常感谢你的支持。如果能从中获益，我便会将更多精力投入开源项目的开发和维护。

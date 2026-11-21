@@ -21,12 +21,12 @@ def block(source, marker):
     return source[begin:end]
 
 
-renderer = (repo / "src/Magpie.Core/Renderer.cpp").read_text(encoding="utf-8-sig")
-renderer_header = (repo / "src/Magpie.Core/Renderer.h").read_text(encoding="utf-8-sig")
-source = (repo / "src/Magpie.Core/FrameSourceBase.cpp").read_text(encoding="utf-8-sig")
-source_header = (repo / "src/Magpie.Core/FrameSourceBase.h").read_text(encoding="utf-8-sig")
-driver = (repo / "src/Magpie.Core/ReflexController.cpp").read_text(encoding="utf-8-sig")
-trace = (repo / "src/Magpie.Core/FrameTrace.cpp").read_text(encoding="utf-8-sig")
+renderer = (repo / "src/GMagpie.Core/Renderer.cpp").read_text(encoding="utf-8-sig")
+renderer_header = (repo / "src/GMagpie.Core/Renderer.h").read_text(encoding="utf-8-sig")
+source = (repo / "src/GMagpie.Core/FrameSourceBase.cpp").read_text(encoding="utf-8-sig")
+source_header = (repo / "src/GMagpie.Core/FrameSourceBase.h").read_text(encoding="utf-8-sig")
+driver = (repo / "src/GMagpie.Core/ReflexController.cpp").read_text(encoding="utf-8-sig")
+trace = (repo / "src/GMagpie.Core/FrameTrace.cpp").read_text(encoding="utf-8-sig")
 trace_start = block(trace, "bool Start() noexcept")
 native_stages_init = "session->nativeNrStages = NativeNrStagesRequested();"
 assert trace_start.count(native_stages_init) == 1

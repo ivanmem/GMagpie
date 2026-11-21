@@ -105,7 +105,7 @@ os.chdir(os.path.dirname(__file__) + "\\..\\publish")
 pkgInfos = {}
 for platform in ["x64", "ARM64"]:
     # 打包成 zip
-    pkgName = "Magpie-" + args.tag + "-" + platform
+    pkgName = "GMagpie-" + args.tag + "-" + platform
     shutil.make_archive(pkgName, "zip", pkgName)
     pkgName += ".zip"
 

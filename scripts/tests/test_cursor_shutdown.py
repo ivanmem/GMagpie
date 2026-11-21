@@ -2,7 +2,7 @@
 from pathlib import Path
 import sys
 root = Path(__file__).resolve().parents[2]
-core = root / 'src/Magpie.Core'
+core = root / 'src/GMagpie.Core'
 cursor = (core / 'CursorManager.cpp').read_text(encoding='utf-8-sig')
 window = (core / 'ScalingWindow.h').read_text(encoding='utf-8-sig')
 window_cpp = (core / 'ScalingWindow.cpp').read_text(encoding='utf-8-sig')
@@ -32,7 +32,7 @@ harness = r'''
 #include <iostream>
 #include <memory>
 #include <utility>
-using namespace Magpie;
+using namespace GMagpie;
 struct POINT { int x, y; };
 struct FrameTrace {
     enum class Event { HitTestComplete };

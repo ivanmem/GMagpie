@@ -1,4 +1,4 @@
-# Magpie 0.6.5 HDR Effect Protocol Audit
+# GMagpie 0.6.5 HDR Effect Protocol Audit
 
 Date: 2026-09-07  
 Canonical surface: `R16G16B16A16_FLOAT`, linear scRGB, reference white 80 nit.
@@ -20,7 +20,7 @@ implemented and the effect remains on the explicit compatibility path.
 | FSR3 SR | DirectFP16, linear | `FSR3Upscaler::Draw` -> FSR3 dispatch | Contract | current provider path still needs HDR linear dispatch proof |
 | FSR4 | DirectFP16, linear | `FSR3Upscaler::Draw(useFsr4)` | Contract | FSR4 ML/provider contract and live output proof pending |
 | XeSS SR | DirectFP16, FP16 linear (default) | `XeSSUpscaler::Draw` -> `xessD3D12Execute` | Contract | `XESS_INIT_FLAG_LDR_INPUT_COLOR` is now omitted for FP16/R10 HDR routes |
-| NIS | DirectFP16 candidate | shader pass using NIS linear HDR mode | Contract | exact Magpie `NIS_HDR_MODE` compile route and live pixel proof pending |
+| NIS | DirectFP16 candidate | shader pass using NIS linear HDR mode | Contract | exact GMagpie `NIS_HDR_MODE` compile route and live pixel proof pending |
 | CAS | SDRCompatible R8 | shader pass | Fallback | current shader saturates RGB and forces alpha 1 |
 | Anime4K | Unknown -> SDR fallback | shader passes | Fallback | preset-specific FP16 intermediates lack a color contract |
 | CRT | Unknown -> SDR fallback | shader passes | Fallback | preset gamma/clamp behavior is SDR-bound |
@@ -92,7 +92,7 @@ separately.
 
 The current workspace has no reproducible live GPU capture for every listed
 effect, so the effects marked `Contract`, `Fallback`, or `Unavailable` are not
-reported as visually passed. The existing `E:\Magpie-0.6.5-build\matrix`
+reported as visually passed. The existing `E:\GMagpie-0.6.5-build\matrix`
 captures and DLSSNR experiment logs remain the available pixel/hash evidence.
 The startup matrix must be rerun on a target display with the user sample to
 populate the remaining screenshot, SHA-256, finite-statistics, and GPU-time

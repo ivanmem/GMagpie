@@ -4,7 +4,7 @@
 
 This catalog translates the protocol evidence matrix into an implementation-facing list. It records accepted backend protocols separately from HDR-native protocols, which adapter profile HDR mode should choose, what conversion happens at the boundary, and which conclusions still need local testing.
 
-The authoritative source URLs and research notes are in [HDR_PROTOCOL_EVIDENCE.md](HDR_PROTOCOL_EVIDENCE.md) and [HDR_PROTOCOL_EVIDENCE.json](HDR_PROTOCOL_EVIDENCE.json). This catalog records integration decisions; it does not claim that current Magpie already supports these paths.
+The authoritative source URLs and research notes are in [HDR_PROTOCOL_EVIDENCE.md](HDR_PROTOCOL_EVIDENCE.md) and [HDR_PROTOCOL_EVIDENCE.json](HDR_PROTOCOL_EVIDENCE.json). This catalog records integration decisions; it does not claim that current GMagpie already supports these paths.
 
 ## Profile Legend
 
@@ -97,7 +97,7 @@ An effect-level selector is displayed only when more than one reliable route is 
 ### CAS
 
 - **Known resources:** The official reference CLI uses `R8G8B8A8_UNORM` and `R16G16B16A16_FLOAT`; shader paths include linear handling and FP16/FP32 math variants.
-- **Adapter:** Start with the current SDR-compatible selection. Add a hidden or experimental DirectFP16 profile after the exact Magpie CAS path proves that it preserves linear FP16 values and alpha.
+- **Adapter:** Start with the current SDR-compatible selection. Add a hidden or experimental DirectFP16 profile after the exact GMagpie CAS path proves that it preserves linear FP16 values and alpha.
 - **Boundary:** Reference CLI behavior proves a viable FP16 direction. It does not alone prove every CAS integration's resource contract.
 
 ### NNEDI3

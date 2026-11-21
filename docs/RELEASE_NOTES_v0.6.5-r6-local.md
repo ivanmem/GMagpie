@@ -1,4 +1,4 @@
-# Magpie 0.6.5 r6 local
+# GMagpie 0.6.5 r6 local
 
 在 r5 fix2 基础上实施已确认的交互和预设调整。HDR 按用户决定留到后续版本，本次不加入 TrueHDR、HDR 转换效果器或 HDR 输出设置。
 
@@ -27,12 +27,12 @@
 
 ## 验证范围
 
-Release x64 完整构建通过，已部署到 `release/v0.6.5-r6-local/Magpie-v0.6.5-r6-local-x64` 并生成同名 ZIP。目录与 ZIP 的 235 个文件均通过 manifest／SHA256 核对，170 个效果器源码与发行文件一致。
+Release x64 完整构建通过，已部署到 `release/v0.6.5-r6-local/GMagpie-v0.6.5-r6-local-x64` 并生成同名 ZIP。目录与 ZIP 的 235 个文件均通过 manifest／SHA256 核对，170 个效果器源码与发行文件一致。
 
 “对比”名称与快捷键更新已完成覆盖部署，15 个语言候选值逐项匹配实际 PRI，记录见 [对比快捷键更新](experimental/todos/20260905-v0.6.5-r6-comparison-shortcut.md)。随后角标的 2 秒停留／500ms 淡出更新也已完成覆盖部署，三种语言共 6 个新增文案与实际 PRI 一致，最新产物及校验记录见 [对比角标更新](experimental/todos/20260905-v0.6.5-r6-comparison-badge.md)。
 
 已完成的无界面检查：170ms 手势边界及取消逻辑、参考图计算着色器离线编译、三种语言资源键与占位符、268 个修改文案在实际 PRI 中的值、报错映射、XAML／项目 XML、JSON 预设差异。完整构建与部署结果记录在 [r6 实施记录](experimental/todos/20260905-v0.6.5-r6-TODO.md)。
 
-按用户要求，不启动 Magpie、不使用 computer-use；实际交互、画质和 GPU 性能由用户验收。尤其需要在 DLSSFG／XeSSFG 上确认后台帧计数持续、切回无历史重置，以及 XeSS 覆盖期间驱动没有因遮挡而停止生成。源码保留处理调用不等于已完成这项实机验证。
+按用户要求，不启动 GMagpie、不使用 computer-use；实际交互、画质和 GPU 性能由用户验收。尤其需要在 DLSSFG／XeSSFG 上确认后台帧计数持续、切回无历史重置，以及 XeSS 覆盖期间驱动没有因遮挡而停止生成。源码保留处理调用不等于已完成这项实机验证。
 
 建议优先查看：两个参数页双击重置、DLSSNR 默认组、连续切换对比、静态／动态内容、尺寸变化、截屏与当前分支、补帧后台计数。

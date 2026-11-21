@@ -9,9 +9,9 @@
 当前有两个独立问题，应分别修复、验收：
 
 1. **崩溃触发路径已定位到 RTSS 注入的 NVIDIA Reflex 延迟标记。** SDK 初始化交换链时进入 RTSS，RTSS 调用 `NvAPI_D3D_SetLatencyMarker`，NVAPI 查询 D3D12 设备接口时发生访问异常，随后控制流保护终止进程。转储中的标记帧号带 `RTSS` 签名，证据比仅有模块调用栈更明确。具体设备／接口为何无效，尚不能判定是过期引用、钩子链损坏还是驱动兼容性。
-2. **额外限帧造成的多帧节奏问题。** 换名测试进程受到 RTSS 全局 60 FPS 配置影响；3×出现较长 Present 和调度等待，4×测试时段内未积累足够提交样本。它不能解释原名 Magpie 进程的初始化崩溃。
+2. **额外限帧造成的多帧节奏问题。** 换名测试进程受到 RTSS 全局 60 FPS 配置影响；3×出现较长 Present 和调度等待，4×测试时段内未积累足够提交样本。它不能解释原名 GMagpie 进程的初始化崩溃。
 
-推荐目标：**RTSS 继续运行并显示 OSD；XeSS 会话由 XeLL 管理低延迟和输出限帧，RTSS 不再向 Magpie 注入 Reflex 标记、Sleep 或额外限帧。** 如用户要用 RTSS 限制源游戏，可以继续针对源游戏进程配置；该限制不等于限制 Magpie 的插帧输出。
+推荐目标：**RTSS 继续运行并显示 OSD；XeSS 会话由 XeLL 管理低延迟和输出限帧，RTSS 不再向 GMagpie 注入 Reflex 标记、Sleep 或额外限帧。** 如用户要用 RTSS 限制源游戏，可以继续针对源游戏进程配置；该限制不等于限制 GMagpie 的插帧输出。
 
 ## 2. 为什么看起来 2×可以、3×和 4×不行
 
@@ -34,7 +34,7 @@
 
 ## 3. 崩溃证据：从模块定位到具体调用
 
-转储：`C:/Users/81443/AppData/Local/CrashDumps/Magpie.exe.43460.dmp`，2026-09-14 15:21:36；NVAPI 驱动版本 `32.0.16.1692`。
+转储：`C:/Users/81443/AppData/Local/CrashDumps/GMagpie.exe.43460.dmp`，2026-09-14 15:21:36；NVAPI 驱动版本 `32.0.16.1692`。
 
 已确认的调用链：
 
@@ -55,7 +55,7 @@ XeSSFGPresenter::_Initialize
 - 恢复调用栈帧可得参数地址 `0x00000040bb0fdb70`。内容为结构版本 `0x00010058`、frameID `0x5254535300000935`、markerType `1`。帧号高 32 位 `0x52545353` 对应 `RTSS`；字段布局与 NVIDIA 的 `NV_LATENCY_MARKER_PARAMS_V1` 一致。[NVAPI 结构定义](https://github.com/NVIDIA/nvapi/blob/main/nvapi.h)
 - 内层异常记录 `0x00000040bb0fd1b0` 为 `0xc0000005`，在 `0x00007fff6cf060c0` 尝试读取 `0xffffffffffffffff`；最终异常为 `0xc0000409`、子码 `0xa`。因此不能仅凭最终异常名断言“只缺 CFG 注册”。
 - mini dump 未包含关键目标内存和完整设备对象，无法证明具体指针的分配、销毁责任；也不能将缺失内存直接解释为已释放内存。
-- Magpie 自身 `Renderer.cpp` 仅为 DLSS FG／普通 Reflex 模式初始化 `_reflex`；XeSS 使用 XeLL。当前证据不支持“Magpie 同时主动开启自己的 Reflex 和 XeLL”这一猜测。
+- GMagpie 自身 `Renderer.cpp` 仅为 DLSS FG／普通 Reflex 模式初始化 `_reflex`；XeSS 使用 XeLL。当前证据不支持“GMagpie 同时主动开启自己的 Reflex 和 XeLL”这一猜测。
 
 外部交叉证据：本机 RTSS 官方帮助明确表示标记注入可能导致应用不兼容，并支持按应用关闭；OptiScaler 的 XeFG 发布说明要求关闭 RTSS Reflex 标记注入，其源码也检测 RTSS 标记并提示冲突。它提供已知兼容性背景，不代替本机对照实验。[OptiScaler 发布说明](https://github.com/optiscaler/OptiScaler/releases) · [固定提交的检测代码](https://github.com/optiscaler/OptiScaler/blob/731f3b79c762bc92971e5fe33dade87c6f83067b/OptiScaler/hooks/Reflex_Hooks.cpp)
 
@@ -63,7 +63,7 @@ XeSSFGPresenter::_Initialize
 
 本轮读取的磁盘配置：
 
-| 字段 | Magpie.exe 专用配置 | 全局配置／换名测试来源 |
+| 字段 | GMagpie.exe 专用配置 | 全局配置／换名测试来源 |
 |---|---|---|
 | Limit | 0 | 60 |
 | SyncLimiter | 1 | 0 |
@@ -72,15 +72,15 @@ XeSSFGPresenter::_Initialize
 | UseDetours | 1 | 1 |
 | InjectionDelay | 15000 | 15000 |
 
-磁盘值不等于进程实际生效值。不能把全局 60 FPS 套到原名 Magpie；也不能认为“Limit=0”会关闭 Reflex 标记注入。`UseDetours=1` 已开启，因此仅建议开启 MS Detours 不能作为本机的新修复。
+磁盘值不等于进程实际生效值。不能把全局 60 FPS 套到原名 GMagpie；也不能认为“Limit=0”会关闭 Reflex 标记注入。`UseDetours=1` 已开启，因此仅建议开启 MS Detours 不能作为本机的新修复。
 
 `capture-20260914-152433` 的换名测试中，3×在 120 次提交时记录：SDK 输出 346 张、源帧间隔约 53.332 ms、估计 50.003 ms、Present 48.199 ms、额外等待 16.349 ms；provider 提交间隔 P50 31.113 ms、P95 62.569 ms。说明生成仍在进行，但呈现链明显变慢。这里尚未把每段等待精确归因到 RTSS、XeLL 和补丁，也没有最终显示事件，不能据此宣称测得完整输出 FPS 或某一方的全部耗时。
 
-机制上，RTSS 在 Magpie 呈现调用处等待，XeLL 和兼容调度同时维护时间计划，可能形成串联等待。假设 RTSS 钩住每一次实际输出且上限为 L，则输出上限仍为 L，稳定完整倍率 M 对应的输入上限约为 L/M；这只是条件模型，必须先验证钩住的是代理、真实交换链还是多条交换链。
+机制上，RTSS 在 GMagpie 呈现调用处等待，XeLL 和兼容调度同时维护时间计划，可能形成串联等待。假设 RTSS 钩住每一次实际输出且上限为 L，则输出上限仍为 L，稳定完整倍率 M 对应的输入上限约为 L/M；这只是条件模型，必须先验证钩住的是代理、真实交换链还是多条交换链。
 
 现有调度还有需要加固的代码：`PaceFrame` 在目标落后时重新等待一个间隔；`TsDetour` 在后续输出迟到时将期限延至当前时间加一个间隔。外部已经阻塞后继续延后，可能放大突发输出耗时。捕获时间估计优先于 provider ring 是正确方向，但“被接收帧的时间间隔”仍可能包含背压导致的上游跳帧，不能当成游戏原始渲染周期，也不能简单减去整个 Present 耗时。
 
-Intel 官方建议 XeLL 工作时关闭其他低延迟／额外限帧机制，限制目标传给 XeLL；这支持由 XeLL 统一管理 Magpie 输出的方案。[XeLL 开发指南](https://github.com/intel/xess/blob/main/doc/xell_developer_guide_english.md#requirements)
+Intel 官方建议 XeLL 工作时关闭其他低延迟／额外限帧机制，限制目标传给 XeLL；这支持由 XeLL 统一管理 GMagpie 输出的方案。[XeLL 开发指南](https://github.com/intel/xess/blob/main/doc/xell_developer_guide_english.md#requirements)
 
 ## 5. 推荐修改路线
 
@@ -97,13 +97,13 @@ Intel 官方建议 XeLL 工作时关闭其他低延迟／额外限帧机制，�
 新增隔离的 `RtssCompatibility` 适配模块，供 XeSS 2×／3×／4×共同使用：
 
 1. 识别当前进程是否已加载 RTSSHooks64；只检测，不为了探测而主动加载注入 DLL。读取可查询的生效属性，并区分“不支持／未知”和“已关闭”。
-2. 目标设置为保留 OSD、关闭 Magpie 的 Reflex 标记注入和外层限帧；关闭可能启用的 Reflex Sleep／Reflex 限帧。XeLL 的上下文和必要标记继续保留。
+2. 目标设置为保留 OSD、关闭 GMagpie 的 Reflex 标记注入和外层限帧；关闭可能启用的 Reflex Sleep／Reflex 限帧。XeLL 的上下文和必要标记继续保留。
 3. 优先验证 RTSS 官方属性接口能否安全控制当前进程。SDK 示例确有 `GetProfileProperty/SetProfileProperty` 和 `FramerateLimit`，但示例没有承诺 `ReflexSetLatencyMarker`、`ReflexSleep` 磁盘键就是可用的 API 属性名，也没承诺 setter 会立刻撤销已安装的 NVAPI hook。必须先验证查询、修改、回读和实际调用链。
-4. 若运行时接口不支持目标字段或生效太晚，提供一次性的 Magpie 专用配置协调及重启生效路径。只调整经过验证的专用配置字段；不修改 RTSS 全局或游戏配置。不要通过修改配置的成功返回推断旧进程的注入已经撤销。
+4. 若运行时接口不支持目标字段或生效太晚，提供一次性的 GMagpie 专用配置协调及重启生效路径。只调整经过验证的专用配置字段；不修改 RTSS 全局或游戏配置。不要通过修改配置的成功返回推断旧进程的注入已经撤销。
 5. 若需要临时设置，保存原值；释放时仅恢复仍等于本模块写入值的字段，避免覆盖用户中途修改。需明确属性是进程状态还是持久配置，再确定恢复与重启策略。
 6. 处理延迟注入：初始化时无模块不代表整个会话没有 RTSS。增加低频检测／阶段检测；已知不安全的注入组合在设备初始化前处理，不能等到第一帧后才补救。无法消除加载竞态时，应要求专用配置在下次启动前生效，不用任意 Sleep 充当修复。
 
-这条路线的产品目标是用户仍能保留 RTSS 的 OSD 和源游戏限帧；不承诺 RTSS 的 Reflex 注入与 XeLL 在 Magpie 中同时工作。
+这条路线的产品目标是用户仍能保留 RTSS 的 OSD 和源游戏限帧；不承诺 RTSS 的 Reflex 注入与 XeLL 在 GMagpie 中同时工作。
 
 ### 第三步：多帧调度抗外部阻塞
 
@@ -111,7 +111,7 @@ Intel 官方建议 XeLL 工作时关闭其他低延迟／额外限帧机制，�
 
 - 一个 burst 使用固定时间锚点和有界期限；外部等待已消耗的时隙不再机械追加完整间隔。
 - 为严重迟到设定有界恢复：避免连续立即提交所有过期帧造成新的突发，也避免每张迟到帧继续向后延期。下一 burst 重新定相；保留 SDK 所需的输出顺序。
-- 分离自有等待、native provider 调用时间与来源不明的等待。当前 `extraWaitNs` 包含 scheduler 函数总耗时，不能直接贴上“纯 Magpie 等待”的标签。
+- 分离自有等待、native provider 调用时间与来源不明的等待。当前 `extraWaitNs` 包含 scheduler 函数总耗时，不能直接贴上“纯 GMagpie 等待”的标签。
 - 测试 0／4／16.7／33.3 ms 外部阻塞、不规则源间隔、捕获重启、资源换代和无时间戳回退；验证期限有界、倍率恢复、输入估计不自激增长。
 - 保留 DLL 哈希、字节、页面校验和销毁后回滚；不为兼容 RTSS 放宽补丁验证。
 
@@ -128,10 +128,10 @@ Intel 官方建议 XeLL 工作时关闭其他低延迟／额外限帧机制，�
 | 场景 | 主要验证内容 |
 |---|---|
 | RTSS 退出 | 保持现有 2×／3×／4×和 DLSSNR＋4×基线 |
-| RTSS 开启、OSD 开启、无标记注入、无 Magpie 限帧 | 主兼容目标，冷启动和循环重建无同类崩溃 |
-| RTSS 开启、OSD 开启、标记注入开启、无 Magpie 限帧 | 明确标记开关的因果差异及协调措施是否在初始化前生效 |
-| RTSS 仅限制源游戏 | 输入稳定，Magpie 仍按目标倍率输出 |
-| RTSS 限制 Magpie 为 60／120 FPS | 验证代理／真实 Present 钩子层级；不能错误要求输出超过上限 |
+| RTSS 开启、OSD 开启、无标记注入、无 GMagpie 限帧 | 主兼容目标，冷启动和循环重建无同类崩溃 |
+| RTSS 开启、OSD 开启、标记注入开启、无 GMagpie 限帧 | 明确标记开关的因果差异及协调措施是否在初始化前生效 |
+| RTSS 仅限制源游戏 | 输入稳定，GMagpie 仍按目标倍率输出 |
+| RTSS 限制 GMagpie 为 60／120 FPS | 验证代理／真实 Present 钩子层级；不能错误要求输出超过上限 |
 | RTSS 延迟注入、运行中开关、倍率反复切换 | 加载时序、清理与配置恢复 |
 | 窗口／无边框、SDR／HDR、VRR 开关 | 主方案通过后再扩大验证范围 |
 
@@ -152,4 +152,4 @@ Intel 官方建议 XeLL 工作时关闭其他低延迟／额外限帧机制，�
 - `C:/Program Files (x86)/RivaTuner Statistics Server/Help/Properties/General/REFLEX_SET_LATENCY_MARKER`：标记注入的官方说明；同目录的 `REFLEX_SLEEP`、`USE_DETOURS`、`SYNC_LIMITER` 为相关帮助。
 - `C:/Program Files (x86)/RivaTuner Statistics Server/SDK/Samples/SharedMemory/RTSSSharedMemorySample/RTSSProfileInterface.h`：属性接口说明；`SDK/Tools/DesktopOverlayHost/RTSSHooksInterface.cpp` 为已加载模块的调用示例。
 
-上述 `.tools` 路径相对于工作区 `C:/Users/81443/Documents/Magpie enhance`，为本机诊断产物，不随 Release ZIP 分发。
+上述 `.tools` 路径相对于工作区 `C:/Users/81443/Documents/GMagpie enhance`，为本机诊断产物，不随 Release ZIP 分发。

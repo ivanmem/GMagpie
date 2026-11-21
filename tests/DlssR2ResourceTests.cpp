@@ -30,10 +30,10 @@ struct Logger {
 };
 
 namespace Nr {
-using Magpie::DlssNrFailure;
-using Magpie::DlssNrStage;
-using Magpie::DlssNrCodeKind;
-using Magpie::DlssNrApiFailure;
+using GMagpie::DlssNrFailure;
+using GMagpie::DlssNrStage;
+using GMagpie::DlssNrCodeKind;
+using GMagpie::DlssNrApiFailure;
 struct DLSSNRSettings {
 	float residualMultiplier = 1, residualSaturation = 1, residualLightness = 1;
 	float shadowStructureMultiplier = 1, reflectionGlowMultiplier = 1;
@@ -194,7 +194,7 @@ int main() {
 	Shader(Nr::COLOR_DOWNSAMPLE_HLSL,"DownsampleColorVertical"); Shader(Nr::COLOR_DOWNSAMPLE_HLSL,"DownsampleColorHorizontal"); Shader(Nr::COLOR_CONVERT_HLSL,"ConvertToRgba");
 	TestResidual(17,11,17,11); TestResidual(17,11,13,8); TestResidual(17,11,9,6); TestResidual(1,1,1,1); TestResidual(1,13,1,7);
 	TestFgReadback();
-	if constexpr (Magpie::NativeBackendTiming::Enabled) { Check(Magpie::NativeBackendTiming::Now().time_since_epoch().count()>0,"timing enabled in validation build"); }
-	else { Check(Magpie::NativeBackendTiming::Now()==Magpie::NativeBackendTiming::Clock::time_point{} && Magpie::NativeBackendTiming::ElapsedMilliseconds({})==0,"disabled timing is a no-op"); }
+	if constexpr (GMagpie::NativeBackendTiming::Enabled) { Check(GMagpie::NativeBackendTiming::Now().time_since_epoch().count()>0,"timing enabled in validation build"); }
+	else { Check(GMagpie::NativeBackendTiming::Now()==GMagpie::NativeBackendTiming::Clock::time_point{} && GMagpie::NativeBackendTiming::ElapsedMilliseconds({})==0,"disabled timing is a no-op"); }
 	std::puts("PASS: NR copied/direct outputs (25 cases), alias fallback, FG persistent readback (96 submissions), timing option");
 }

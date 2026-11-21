@@ -11,8 +11,8 @@ def read(path):
     return (repo / path).read_text(encoding="utf-8-sig")
 
 x = "{http://schemas.microsoft.com/winfx/2006/xaml}"
-local = "{using:Magpie}"
-profile = ET.fromstring(read("src/Magpie/ProfilePage.xaml"))
+local = "{using:GMagpie}"
+profile = ET.fromstring(read("src/GMagpie/ProfilePage.xaml"))
 group = next(n for n in profile.iter() if n.get(x + "Name") == "FrameRefreshGroup")
 uids = {n.get(x + "Uid"): n for n in group.iter() if n.get(x + "Uid")}
 sections = [n for n in group if n.tag in (local+"SettingsExpander", local+"SettingsCard")]
@@ -66,26 +66,26 @@ launch = page_uids["Profile_Advanced_LaunchParameters"]
 assert launch.get("ContentAlignment") == "Vertical" and "IsNotDefaultProfile" in launch.get(x+"Load", "")
 assert page_uids["Profile_SourceWindow_CaptureTitleBar"].get("IsEnabled") == "{x:Bind ViewModel.CanCaptureTitleBar, Mode=OneWay}"
 assert "HasMultipleMonitors" in page_uids["Profile_General_Multimonitor"].get(x+"Load", "")
-page_cpp = read("src/Magpie/ProfilePage.cpp")
+page_cpp = read("src/GMagpie/ProfilePage.cpp")
 assert "SettingsCardContentMinWidth" not in page_cpp, "scale selection must not restore the old global width"
 assert "ControlHelper::NumberBox_Loaded(sender)" in page_cpp and "ControlHelper::ComboBox_DropDownOpened(sender)" in page_cpp
-home = read("src/Magpie/HomePage.xaml")
+home = read("src/GMagpie/HomePage.xaml")
 assert "MinFrameRateIndex" not in home and "DefaultFrameRefreshSummary" in home and "EditDefaultFrameRefresh" in home
-assert "Profile_Cursor_Refresh" not in read("src/Magpie/ProfilePage.xaml")
-assert "Profile_Performance_FrameRateLimiter" not in read("src/Magpie/ProfilePage.xaml")
-idl = read("src/Magpie/ProfileViewModel.idl")
-header = read("src/Magpie/ProfileViewModel.h")
-vm = read("src/Magpie/ProfileViewModel.cpp")
+assert "Profile_Cursor_Refresh" not in read("src/GMagpie/ProfilePage.xaml")
+assert "Profile_Performance_FrameRateLimiter" not in read("src/GMagpie/ProfilePage.xaml")
+idl = read("src/GMagpie/ProfileViewModel.idl")
+header = read("src/GMagpie/ProfileViewModel.h")
+vm = read("src/GMagpie/ProfileViewModel.cpp")
 names = set(re.findall(r"ViewModel\.([A-Za-z]+)", ET.tostring(group, encoding="unicode")))
 for name in names:
     assert name in idl and name in header and "ProfileViewModel::" + name + "(" in vm, name
     if name not in ("ResetFrameRefresh", "RetryRtss", "RefreshRtss", "LaunchRtss", "LaunchAfterburner", "InitializeMagpieRtss"):
         assert f'L"{name}"' in vm, name
-fallback_root = ET.fromstring(read("src/Magpie/Resources.language-en-US.resw"))
+fallback_root = ET.fromstring(read("src/GMagpie/Resources.language-en-US.resw"))
 fallback = {n.get("name"): n.findtext("value") for n in fallback_root.findall("data")}
-for file in (repo / "src/Magpie").glob("Resources.language-*.resw"):
+for file in (repo / "src/GMagpie").glob("Resources.language-*.resw"):
     lang = file.stem.removeprefix("Resources.language-")
-    root = ET.fromstring(read(f"src/Magpie/Resources.language-{lang}.resw"))
+    root = ET.fromstring(read(f"src/GMagpie/Resources.language-{lang}.resw"))
     resources = {n.get("name"): n.findtext("value") for n in root.findall("data")}
     assert len(resources) == len(root.findall("data")), lang
     assert all(k in resources for k in ("FrameRefresh_Mode.Header", "FrameRefresh_Mode.Description", "FrameRefresh_Mode_Simple.Content", "FrameRefresh_Mode_Advanced.Content"))
@@ -109,21 +109,21 @@ for file in (repo / "src/Magpie").glob("Resources.language-*.resw"):
             assert resources.get(uid + ".Content") or resources.get(uid + ".Text") or resources.get(uid + ".Header"), (lang, uid)
     for name in ("Home_FrameRefresh_Summary", "Home_FrameRefresh_Edit.Content", "FrameRefresh_RestartNotice", "FrameRefresh_LegacyNotice"):
         assert resources[name], (lang, name)
-renderer = read("src/Magpie.Core/Renderer.cpp")
+renderer = read("src/GMagpie.Core/Renderer.cpp")
 assert "const bool paced = !stableBaseOnly &&" in renderer
 assert "else if (!stableBaseOnly) {\n\t\t_frontEdgeClock.Reset();" in renderer
 assert "if (submitted && contentFrame && ActiveFrameSyncBackend() == FrameSyncBackend::FrontEdge" in renderer
 assert "_frontendPresentedBaseValid && overlayPending &&" in renderer
-window = read("src/Magpie.Core/ScalingWindow.cpp")
-service = read("src/Magpie/ScalingService.cpp")
+window = read("src/GMagpie.Core/ScalingWindow.cpp")
+service = read("src/GMagpie/ScalingService.cpp")
 assert "ApplyFrameRefreshSettings(_options, frameRefresh, _options.isSimpleFrameRefresh)" in window
 assert "ApplyFrameRefreshSettings(options, profile.frameRefresh, options.isSimpleFrameRefresh)" in service
-settings = read("src/Magpie/AppSettings.cpp")
+settings = read("src/GMagpie/AppSettings.cpp")
 assert "_LoadProfile(scaleProfilesArray[0].GetObj(), _defaultProfile, true, legacyParameterFocusSwitching, legacyFrameSync, legacyIdle, migrateLegacyRefresh)" in settings
 assert "_LoadProfile(scaleProfilesArray[i].GetObj(), rule, false, legacyParameterFocusSwitching, legacyFrameSync, legacyIdle, migrateLegacyRefresh)" in settings
 assert "MergeFrameRefreshSettings(mergedFrameRefresh, request.previousFrameRefresh, request.frameRefresh)" in service
 assert "FindProfileByIdentity" in service and "scalingRunId" in service
-overlay = read("src/Magpie.Core/OverlayDrawer.cpp")
+overlay = read("src/GMagpie.Core/OverlayDrawer.cpp")
 assert "FrameRefresh_Mode" not in overlay, "Toolbar must not expose the global mode selector"
 assert 'L"FrameRefresh_Source/Content", L"FrameRefresh_Custom/Content"' in overlay
 assert "const bool simpleRefresh = ScalingWindow::Get().Options().isSimpleFrameRefresh;" in overlay
