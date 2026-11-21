@@ -67,6 +67,15 @@ public:
 		ID3D11Texture2D** inOutTexture
 	) noexcept;
 
+	// Предсказывает размер выхода одной стадии эффектов; правила совпадают с ResizeTextures (одна реализация).
+	// Рендерер в фото-сессии определяет по нему «эта фотография уже увеличена до предела экрана» и потому пропускает лишние стадии,
+	// а не поджимает работающие стадии пропорционально — второе сдвигает эффекты вроде ACNet, у которых кратность зашита в UV.
+	static SIZE CalcOutputSize(
+		const EffectDesc& desc,
+		const EffectOption& option,
+		SIZE inputSize
+	) noexcept;
+
 	bool UpdateParameters(
 		const EffectDesc& desc,
 		const EffectOption& option,

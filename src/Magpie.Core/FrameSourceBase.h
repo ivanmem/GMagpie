@@ -93,6 +93,16 @@ public:
 	
 	virtual void OnCursorVisibilityChanged(bool /*isVisible*/, bool /*onDestory*/) noexcept {};
 
+	// Класс-потомок возвращает true после замены текстуры _output (например при переходе на фото другого размера), чтение со сбросом
+	// (после вызова гасится). Вызывается только потоком бэкенда перед отрисовкой нового кадра; по нему рендерер перепривязывает цепь.
+	virtual bool RequiresRebind() noexcept { return false; }
+
+	// Только фото-сессия: запросить смену текущего изображения. Реализация по умолчанию игнорирует.
+	virtual void RequestPhotoFile(std::wstring /*path*/) noexcept {}
+
+	// Только фото-сессия: намёк заранее декодировать следующее изображение на фоне. Реализация по умолчанию игнорирует.
+	virtual void RequestPhotoPrefetch(std::wstring /*path*/) noexcept {}
+
 protected:
 	// Capture acquisition/readiness checks happen before this hook. Call it
 	// before the first GPU operation on the candidate texture.

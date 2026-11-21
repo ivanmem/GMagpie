@@ -30,6 +30,7 @@
 #include "GraphicsCaptureFrameSource.h"
 #include "Logger.h"
 #include "OverlayDrawer.h"
+#include "PhotoFrameSource.h"
 #include "Renderer.h"
 #include "NgxRuntimeGuard.h"
 #include "ScalingOptions.h"
@@ -38,6 +39,8 @@
 #include "StrHelper.h"
 #include "TextureHelper.h"
 #include "Win32Helper.h"
+#include "shaders/SimplePS.h"
+#include "shaders/SimpleVS.h"
 #include "DLSSFrameGenerator.h"
 #include "OpticalFlowSettings.h"
 #include "DLSSSRUpscaler.h"
@@ -968,6 +971,7 @@ Renderer::FrontendBaseResult Renderer::_UpdateFrontendBase(uint32_t sharedTextur
 		_frontendResources.GetD3DDC()->CopyResource(_frontendBaseTexture.get(), source);
 		_frontendCaptureFrameId = _sharedTextureFrameIds[sharedTextureSlot].load(std::memory_order_acquire);
 		_frontendFrameMetadata = _sharedFrameMetadata[sharedTextureSlot];
+		_frontendDestRect = _destRect;
 		_frontendMotionAvailability = _sharedMotionAvailability[sharedTextureSlot];
 		FrameTrace::SetFrame(_frontendCaptureFrameId);
 		traceBase.FrameId(_frontendCaptureFrameId);
@@ -1013,6 +1017,38 @@ Renderer::FrontendBaseResult Renderer::_UpdateFrontendBase(uint32_t sharedTextur
 	return FrontendBaseResult::Ready;
 }
 
+// Фото-сессия: целевой прямоугольник кадра в системе координат цели копирования.
+// Кадр всегда размера экрана (фото растянуто в нём — нормализующий проход цепи),
+// поэтому именно этот прямоугольник делает вписывание с сохранением аспекта; копие
+// 1:1 его игнорируют, и фото «растягивается на весь экран». Пустой прямоугольник в
+// ответе — копировать 1:1 (прямоугольник ровно совпал с целью, фото «в экран» своим
+// аспектом). Иначе — масштабированная прорисовка в пересечение с целью (пустое —
+// только чёрный фон).
+RECT CalcPhotoSceneViewport(RECT destRect, RECT rendererRect, POINT drawOffset,
+	SIZE targetSize) noexcept {
+	const RECT view{
+		destRect.left - rendererRect.left + drawOffset.x,
+		destRect.top - rendererRect.top + drawOffset.y,
+		destRect.right - rendererRect.left + drawOffset.x,
+		destRect.bottom - rendererRect.top + drawOffset.y
+	};
+	const RECT full{ 0, 0, targetSize.cx, targetSize.cy };
+	if (view.left == full.left && view.top == full.top
+		&& view.right == full.right && view.bottom == full.bottom) {
+		return {};
+	}
+	RECT clipped{
+		std::max(view.left, full.left),
+		std::max(view.top, full.top),
+		std::min(view.right, full.right),
+		std::min(view.bottom, full.bottom)
+	};
+	if (clipped.left >= clipped.right || clipped.top >= clipped.bottom) {
+		return {};
+	}
+	return clipped;
+}
+
 void Renderer::_CopySceneToTarget(ID3D11Texture2D* scene, ID3D11Texture2D* target,
 	ID3D11RenderTargetView* rtv, POINT drawOffset) noexcept {
 	auto context = _frontendResources.GetD3DDC();
@@ -1021,6 +1057,20 @@ void Renderer::_CopySceneToTarget(ID3D11Texture2D* scene, ID3D11Texture2D* targe
 	D3D11_TEXTURE2D_DESC targetDesc{}, sceneDesc{};
 	target->GetDesc(&targetDesc);
 	scene->GetDesc(&sceneDesc);
+	if (ScalingWindow::Get().Options().photoSession) {
+		const RECT view = CalcPhotoSceneViewport(_frontendDestRect, rendererRect, drawOffset,
+			{ static_cast<LONG>(targetDesc.Width), static_cast<LONG>(targetDesc.Height) });
+		if (view.left != 0 || view.top != 0 || view.right != 0 || view.bottom != 0) {
+			context->ClearRenderTargetView(rtv, BLACK);
+			VRRPerformance::Record(VRRPerformance::Event::TargetClear);
+			if (view.left < view.right && view.top < view.bottom) {
+				_DrawPhotoSceneScaled(scene, rtv, view);
+			}
+			VRRPerformance::Record(VRRPerformance::Event::RegionSceneCopy);
+			return;
+		}
+		// прямоугольник совпал с целью — обычный быстрый путь ниже
+	}
 	if (targetDesc.Width == sceneDesc.Width && targetDesc.Height == sceneDesc.Height &&
 		drawOffset.x == 0 && drawOffset.y == 0) {
 		// CopyResource overwrites the entire target, including its alpha. Clearing
@@ -1031,10 +1081,131 @@ void Renderer::_CopySceneToTarget(ID3D11Texture2D* scene, ID3D11Texture2D* targe
 		context->ClearRenderTargetView(rtv, BLACK);
 		VRRPerformance::Record(VRRPerformance::Event::TargetClear);
 		context->CopySubresourceRegion(target, 0,
-			drawOffset.x + _destRect.left - rendererRect.left,
-			drawOffset.y + _destRect.top - rendererRect.top, 0, scene, 0, nullptr);
+			drawOffset.x + _frontendDestRect.left - rendererRect.left,
+			drawOffset.y + _frontendDestRect.top - rendererRect.top, 0, scene, 0, nullptr);
 		VRRPerformance::Record(VRRPerformance::Event::RegionSceneCopy);
 	}
+}
+
+// Прорисовка сцены фото-сессии масштабированной в view: полноэкранный треугольник,
+// вершинный буфер один раз, линейный сэмплер с clamp (координаты треугольника выходят
+// за [0,1] — сэмплер их обрезает, w=1 даёт точную аффинную развёртку). Состояния
+// создаются лениво на фронт-устройстве; SRV кэшируется по объекту текстуры.
+void Renderer::_DrawPhotoSceneScaled(ID3D11Texture2D* scene, ID3D11RenderTargetView* rtv,
+	const RECT& view) noexcept {
+	ID3D11Device* device = _frontendResources.GetD3DDevice();
+	ID3D11DeviceContext* dc = _frontendResources.GetD3DDC();
+
+	if (!_photoBlitVS) {
+		if (FAILED(device->CreateVertexShader(SimpleVS, std::size(SimpleVS), nullptr,
+			_photoBlitVS.put()))) {
+			Logger::Get().Error("CreateVertexShader(SimpleVS) for photo presentation failed");
+			return;
+		}
+		if (FAILED(device->CreatePixelShader(SimplePS, std::size(SimplePS), nullptr,
+			_photoBlitPS.put()))) {
+			Logger::Get().Error("CreatePixelShader(SimplePS) for photo presentation failed");
+			_photoBlitVS = nullptr;
+			return;
+		}
+		static constexpr D3D11_INPUT_ELEMENT_DESC elems[] = {
+			{ "POSITION", 0, DXGI_FORMAT_R32G32_FLOAT, 0, 0, D3D11_INPUT_PER_VERTEX_DATA, 0 },
+			{ "TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT, 0, 8, D3D11_INPUT_PER_VERTEX_DATA, 0 },
+		};
+		if (FAILED(device->CreateInputLayout(elems, static_cast<UINT>(std::size(elems)),
+			SimpleVS, std::size(SimpleVS), _photoBlitIL.put()))) {
+			Logger::Get().Error("CreateInputLayout for photo presentation failed");
+			return;
+		}
+		struct Vertex { float pos[2]; float uv[2]; };
+		static constexpr Vertex FULLSCREEN_TRI[3] = {
+			{ {-1.f, -1.f}, { 0.f,  1.f } },
+			{ { 3.f, -1.f}, { 2.f,  1.f } },
+			{ {-1.f,  3.f}, { 0.f, -1.f } },
+		};
+		const D3D11_BUFFER_DESC vbDesc{ sizeof(FULLSCREEN_TRI), D3D11_USAGE_IMMUTABLE,
+			D3D11_BIND_VERTEX_BUFFER, 0, 0, 0 };
+		const D3D11_SUBRESOURCE_DATA vbData{ FULLSCREEN_TRI };
+		if (FAILED(device->CreateBuffer(&vbDesc, &vbData, _photoBlitVB.put()))) {
+			Logger::Get().Error("CreateBuffer for photo presentation failed");
+			return;
+		}
+		const D3D11_SAMPLER_DESC samDesc{ D3D11_FILTER_MIN_MAG_MIP_LINEAR,
+			D3D11_TEXTURE_ADDRESS_CLAMP, D3D11_TEXTURE_ADDRESS_CLAMP, D3D11_TEXTURE_ADDRESS_CLAMP,
+			0.f, 0, D3D11_COMPARISON_LESS_EQUAL,
+			{ 1.f, 1.f, 1.f, 1.f }, -FLT_MAX, FLT_MAX };
+		if (FAILED(device->CreateSamplerState(&samDesc, _photoBlitSampler.put()))) {
+			Logger::Get().Error("CreateSamplerState for photo presentation failed");
+			return;
+		}
+		const D3D11_RASTERIZER_DESC rsDesc{
+			.FillMode = D3D11_FILL_SOLID,
+			.CullMode = D3D11_CULL_NONE,
+			.DepthClipEnable = TRUE,
+			.ScissorEnable = TRUE,
+		};
+		if (FAILED(device->CreateRasterizerState(&rsDesc, _photoBlitRS.put()))) {
+			Logger::Get().Error("CreateRasterizerState for photo presentation failed");
+			return;
+		}
+	}
+
+	// Копия обязательно приватной текстурой: общая (ключевой мьютекс) допускает
+	// только копирование с себя, SRV на ней создаётся с отказом каждый кадр.
+	// Приватная — того же размера и формата (требование CopyResource), пересоздаётся
+	// при их изменении: в сессии это только смена размера окна.
+	D3D11_TEXTURE2D_DESC sceneDesc{};
+	scene->GetDesc(&sceneDesc);
+	D3D11_TEXTURE2D_DESC copyDesc{};
+	if (_photoSceneCopy) {
+		_photoSceneCopy->GetDesc(&copyDesc);
+	}
+	if (!_photoSceneCopy || copyDesc.Width != sceneDesc.Width
+		|| copyDesc.Height != sceneDesc.Height || copyDesc.Format != sceneDesc.Format) {
+		_photoSceneSrv = nullptr;
+		copyDesc = sceneDesc;
+		copyDesc.Usage = D3D11_USAGE_DEFAULT;
+		copyDesc.BindFlags = D3D11_BIND_SHADER_RESOURCE;
+		copyDesc.CPUAccessFlags = 0;
+		copyDesc.MiscFlags = 0;
+		if (HRESULT hr = device->CreateTexture2D(&copyDesc, nullptr, _photoSceneCopy.put());
+			FAILED(hr)) {
+			Logger::Get().ComError("CreateTexture2D for photo presentation failed", hr);
+			return;
+		}
+		if (HRESULT hr = device->CreateShaderResourceView(_photoSceneCopy.get(), nullptr,
+			_photoSceneSrv.put()); FAILED(hr)) {
+			Logger::Get().ComError("CreateShaderResourceView for photo presentation failed", hr);
+			_photoSceneCopy = nullptr;
+			return;
+		}
+	}
+	dc->CopyResource(_photoSceneCopy.get(), scene);
+
+	ID3D11RenderTargetView* targets[] = { rtv };
+	dc->OMSetRenderTargets(1, targets, nullptr);
+	dc->RSSetState(_photoBlitRS.get());
+	const D3D11_VIEWPORT vp{
+		static_cast<FLOAT>(view.left), static_cast<FLOAT>(view.top),
+		static_cast<FLOAT>(view.right - view.left), static_cast<FLOAT>(view.bottom - view.top),
+		0.f, 1.f
+	};
+	dc->RSSetViewports(1, &vp);
+	const D3D11_RECT sc{ view.left, view.top, view.right, view.bottom };
+	dc->RSSetScissorRects(1, &sc);
+	dc->IASetInputLayout(_photoBlitIL.get());
+	const UINT stride = 16, offset = 0;
+	ID3D11Buffer* vb = _photoBlitVB.get();
+	dc->IASetVertexBuffers(0, 1, &vb, &stride, &offset);
+	dc->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+	dc->VSSetShader(_photoBlitVS.get(), nullptr, 0);
+	dc->PSSetShader(_photoBlitPS.get(), nullptr, 0);
+	ID3D11ShaderResourceView* srv = _photoSceneSrv.get();
+	dc->PSSetShaderResources(0, 1, &srv);
+	ID3D11SamplerState* sampler = _photoBlitSampler.get();
+	dc->PSSetSamplers(0, 1, &sampler);
+	dc->Draw(3, 0);
+	dc->ClearState(); // следующие проходы (оверлей, курсор) стартуют из чистого контекста, как и раньше
 }
 
 bool Renderer::_FrontendRender(
@@ -1138,10 +1309,10 @@ bool Renderer::_FrontendRender(
 	POINT drawOffset{};
 	const RECT& rendererRect = ScalingWindow::Get().RendererRect();
 	const RECT guidanceDestination{
-		_destRect.left - rendererRect.left,
-		_destRect.top - rendererRect.top,
-		_destRect.right - rendererRect.left,
-		_destRect.bottom - rendererRect.top
+		_frontendDestRect.left - rendererRect.left,
+		_frontendDestRect.top - rendererRect.top,
+		_frontendDestRect.right - rendererRect.left,
+		_frontendDestRect.bottom - rendererRect.top
 	};
 	const auto& sourceMetadata = stableBaseOnly ? _frontendPresentedFrameMetadata : _frontendFrameMetadata;
 	// A live parameter edit can publish new color for the same captured frame.
@@ -1982,6 +2153,7 @@ bool Renderer::OnResize() noexcept {
 	_synchronousFramePresentationEnabled.store(true, std::memory_order_release);
 
 	_UpdateDestRect();
+	_frontendDestRect = _destRect;
 	return true;
 }
 
@@ -1999,6 +2171,7 @@ void Renderer::OnMove() noexcept {
 	_cursorDrawer.ResetVisual();
 	_UpdateOverlayRefreshRate();
 	_UpdateDestRect();
+	_frontendDestRect = _destRect;
 }
 
 void Renderer::InvokeOverlayAction(OverlayAction action) noexcept {
@@ -2029,6 +2202,14 @@ void Renderer::RestoreOverlayState(const OverlaySessionState& state) noexcept {
 }
 
 bool Renderer::SetPassThroughActive(bool value) noexcept {
+	if (value && ScalingWindow::Get().Options().photoSession) {
+		// Сравнение — инструмент непрерывных захватов: опорный кадр живёт на событиях
+		// захвата, а фото-источник между страницами спит. Включённый pass-through
+		// вешает показ следующей фотографии на слоте опорного кадра, поэтому в
+		// фото-сессии он не включается вовсе (кнопки «глаз» в HUD там тоже нет).
+		Logger::Get().Info("Pass-through в фото-сессии выключен (Compare рассчитан на непрерывный захват)");
+		return false;
+	}
 	if (value && !_passThroughFrames.FrontendTexture(true)) {
 		const auto& window = ScalingWindow::Get();
 		if (const auto& report = window.Options().reportErrorDetails) {
@@ -2083,11 +2264,47 @@ void Renderer::SwitchToolbarState() noexcept {
 }
 
 const RECT& Renderer::SrcRect() const noexcept {
+	if (ScalingWindow::Get().Options().photoSession) {
+		// В фото-режиме окна-источника нет; прямоугольник источника — собственный размер текущей фотографии
+		// Значение готовит _UpdatePhotoSrcRect на бэкенд-потоке; здесь только
+		// читаем — две точки записи оставляли держателя ссылки с изменённым
+		// под ним прямоугольником.
+		return _photoSrcRect;
+	}
 	return ScalingWindow::Get().SrcTracker().SrcRect();
 }
 
+// Единственный писатель _photoSrcRect: бэкенд-поток, перед расчётом целевого
+// прямоугольника. Читателям (окно показа, оверлей) допустимо увидеть прошлую
+// страницу, но не значение, которое меняется прямо во время использования —
+// так же, как с _destRect.
+void Renderer::_UpdatePhotoSrcRect() noexcept {
+	D3D11_TEXTURE2D_DESC desc{};
+	if (_frameSource) {
+		if (ID3D11Texture2D* texture = _frameSource->GetPipelineTexture()) {
+			texture->GetDesc(&desc);
+		}
+	}
+	_photoSrcRect = { 0, 0, static_cast<LONG>(desc.Width), static_cast<LONG>(desc.Height) };
+}
+
+void Renderer::RequestPhotoFile(std::wstring path) noexcept {
+	if (_frameSource) {
+		_frameSource->RequestPhotoFile(std::move(path));
+	}
+}
+
+void Renderer::RequestPhotoPrefetch(std::wstring path) noexcept {
+	if (_frameSource) {
+		_frameSource->RequestPhotoPrefetch(std::move(path));
+	}
+}
+
 bool Renderer::_InitFrameSource() noexcept {
-	switch (ScalingWindow::Get().Options().captureMethod) {
+	if (ScalingWindow::Get().Options().photoSession) {
+		// В фото-режиме нет захвата окна: вход — декодированное исходное изображение
+		_frameSource = std::make_unique<PhotoFrameSource>();
+	} else switch (ScalingWindow::Get().Options().captureMethod) {
 	case CaptureMethod::GraphicsCapture:
 		_frameSource = std::make_unique<GraphicsCaptureFrameSource>();
 		break;
@@ -2222,7 +2439,9 @@ ID3D11Texture2D* Renderer::_BuildEffects() noexcept {
 		_frameSource->GetHdrFrameMetadata().color.isInferred));
 
 	const std::vector<EffectOption>& effects = _runtimeEffectOptions;
-	assert(!effects.empty());
+	// Фото-сессия допускает ноль стадий увеличения: когда фото уже не меньше экрана, остаётся лишь уменьшение,
+	// а завершающая нормализующая стадия всё равно добавляется через _ShouldAppendBicubic
+	assert(!effects.empty() || ScalingWindow::Get().Options().photoSession);
 	const uint32_t effectCount = (uint32_t)effects.size();
 	_vfxExecutionPlan = PlanNvidiaVfxExecution(effects, _runtimeHdrComponents);
 	if (_vfxExecutionPlan.error != NvidiaVfxPlanError::None) {
@@ -2774,6 +2993,20 @@ void Renderer::_UpdateActiveEffectDescs() noexcept {
 
 bool Renderer::_ShouldAppendBicubic(ID3D11Texture2D* outTexture) noexcept {
 	const ScalingOptions& options = ScalingWindow::Get().Options();
+	if (options.photoSession) {
+		// Фото-сессия: каким бы ни оказался размер после этапов, последний шаг приводит его к размеру кадра.
+		// Общие текстуры представления создаются один раз при старте сессии (или при смене размера окна) под выход цепи:
+		// изменение размера сломает каждый последующий CopyResource, и фронт больше не увидит нового содержимого —
+		// ровно причина «показывается только первая страница» и «чёрный экран» в альбоме (соотношения сторон у фото разные).
+		// Вписывание с сохранением пропорций и чёрные поля — ответственность _UpdateDestRect по настоящему аспекту фото.
+		// Добавляем и когда фото ровно равно кадру: тогда в цепи нет ни одной стадии и _effectDrawers
+		// пуст — back() был бы неопределённым поведением (наблюдалось: эта страница не показывается, экран остаётся на прошлой).
+		// Проход 1:1 — просто копия того же размера, цена пренебрежима.
+		// Проверка стоит до разбора Nvidia VFX: с upscaleMode=0 тот путь выходит с
+		// return false, а фото-сессии нормализующий проход нужен всегда.
+		return true;
+	}
+
 	for (auto it = _runtimeEffectOptions.rbegin(); it != _runtimeEffectOptions.rend(); ++it) {
 		if (it->name == NVIDIA_VFX_UPSCALE_ID) {
 			const auto mode = it->parameters.find("upscaleMode");
@@ -2810,7 +3043,11 @@ bool Renderer::_AppendBicubic(ID3D11Texture2D** inOutTexture) noexcept {
 			{"paramB", 0.0f},
 			{"paramC", 0.5f}
 		},
-		.scalingType = options.IsWindowedMode() ? ScalingType::Fill : ScalingType::Fit
+		.scalingType = options.photoSession || options.IsWindowedMode()
+			// Фото-сессия обязана закончить размером кадра (вписывание делает фронтовый _destRect),
+			// см. пояснение в _ShouldAppendBicubic
+			? ScalingType::Fill
+			: ScalingType::Fit
 	};
 	if (std::ranges::any_of(_runtimeEffectOptions, [](const auto& effect) { return effect.name == NVIDIA_VFX_UPSCALE_ID; })) {
 		D3D11_TEXTURE2D_DESC td{}; (*inOutTexture)->GetDesc(&td);
@@ -2861,6 +3098,9 @@ bool Renderer::_AppendBicubic(ID3D11Texture2D** inOutTexture) noexcept {
 }
 
 ID3D11Texture2D* Renderer::_ResizeEffects() noexcept {
+	if (ScalingWindow::Get().Options().photoSession) {
+		return _ResizePhotoEffects();
+	}
 	if (_nvidiaVfxFrameGenerator || std::ranges::any_of(_runtimeEffectOptions, [](const auto& effect) { return effect.name == NVIDIA_VFX_UPSCALE_ID; })) {
 		if (!_DrainNgxConsumers()) return nullptr;
 		if (!_ReleaseNgxConsumers()) return nullptr;
@@ -3024,6 +3264,151 @@ ID3D11Texture2D* Renderer::_ResizeEffects() noexcept {
 	_effectOutputFrames.resize(_effectDrawers.size());
 	_UpdateNvidiaVfxDescriptions();
 	return inOutTexture;
+}
+
+// Сколько начальных этапов цепии эффектов нужно этой фотографии. Цель — размер
+// «вписать в экран»: сверх него пиксели не видны, а каждый лишний этап стоит кадра
+// и может упереться в предел текстуры. 0 — апскейл не нужен (фото уже не меньше
+// экрана); это допустимый результат: финальный нормализующий проход в фото-сессии
+// добавляется всегда, поэтому цепь не бывает пустой (пустая цепь — это «показалась
+// предыдущая фотография» и вылет в D3D).
+// Считает по ПОЛНОМУ списку эффектов, а не по текущему: активный список может быть
+// укорочен предыдущей фотографией.
+size_t CalcPhotoEffectStages(const std::vector<EffectOption>& effects,
+	const std::vector<EffectDesc>& descs, SIZE srcSize, SIZE rendererSize) noexcept {
+	if (effects.size() != descs.size() || srcSize.cx <= 0 || srcSize.cy <= 0
+		|| rendererSize.cx <= 0 || rendererSize.cy <= 0) {
+		// размеры предсказать нельзя — оставляем все этапы, как было до этой логики
+		return effects.size();
+	}
+
+	// Дальше вписанного в этот экран размера фотография не покажет ни пикселя — лишних просто не видно
+	const float fitScale = std::min(
+		float(rendererSize.cx) / srcSize.cx, float(rendererSize.cy) / srcSize.cy);
+	const SIZE target = {
+		std::max(1L, static_cast<LONG>(std::lround(srcSize.cx * fitScale))),
+		std::max(1L, static_cast<LONG>(std::lround(srcSize.cy * fitScale)))
+	};
+	// Согласовано с «предохранителем» в EffectDrawer: промежуточная текстура больше этой стороны сжимается пропорционально,
+	// а эффекты с кратностью в UV (ACNet и т. п.) при сжатии дают сдвиг увеличения и обрезку.
+	constexpr LONG MAX_CHAIN_TEXTURE_DIM = 8192;
+
+	SIZE size = srcSize;
+	for (size_t i = 0; i < effects.size(); ++i) {
+		if (size.cx >= target.cx && size.cy >= target.cy) {
+			// Уже достаточно велико: последующие стадии — пустая работа
+			return i;
+		}
+		const SIZE next = EffectDrawer::CalcOutputSize(descs[i], effects[i], size);
+		if (next.cx <= 0 || next.cy <= 0
+			|| next.cx > MAX_CHAIN_TEXTURE_DIM || next.cy > MAX_CHAIN_TEXTURE_DIM) {
+			// Размер непредсказуем или даёт промежуточный выход за предел: оставляем прочие стадии —
+			// закроет цепь нормализующая стадия; это лучше, чем деформировать работающие
+			break;
+		}
+		size = next;
+	}
+	return effects.size();
+}
+
+// Эффект-цепь фото-сессии. На каждую фотографию заново решается «сколько нужно стадий увеличения»;
+// полный перестрой — только если число стадий или размер фото действительно изменились — страницы альбома обычно одного размера,
+// перестрой на каждой странице тормозит листание и повторной компиляцией/аллокациями ведёт процесс к исчерпанию ресурсов (на практике декод
+// начинал отвечать ошибками WINCODEC).
+ID3D11Texture2D* Renderer::_ResizePhotoEffects() noexcept {
+	if (_photoEffectOptionsAll.empty()) {
+		_photoEffectOptionsAll = _runtimeEffectOptions;
+	}
+	if (_photoEffectDescsAll.empty() && _effectDescs.size() == _photoEffectOptionsAll.size()) {
+		// Для предсказания размеров стадий нужны описания эффектов, по одному на полный список.
+		// При инициализации сессии _BuildEffects строит именно по полному списку — берём один раз и переиспользуем
+		// (сбрасывается только при смене группы эффектов).
+		_photoEffectDescsAll = _effectDescs;
+	}
+
+	D3D11_TEXTURE2D_DESC srcDesc{};
+	if (ID3D11Texture2D* src = _frameSource ? _frameSource->GetPipelineTexture() : nullptr) {
+		src->GetDesc(&srcDesc);
+	}
+
+	const SIZE srcSize = { static_cast<LONG>(srcDesc.Width), static_cast<LONG>(srcDesc.Height) };
+	const size_t keep = CalcPhotoEffectStages(_photoEffectOptionsAll, _photoEffectDescsAll,
+		srcSize, Win32Helper::GetSizeOfRect(ScalingWindow::Get().RendererRect()));
+
+	// Ни нужное число стадий, ни размер фото не изменились: цепь уже подходящая, меняются только пиксели.
+	// Страницы альбома обычно одного размера — этот шаг целиком снимает постраничный перестрой (компиляция эффектов, аллокация текстур).
+	if (!_effectDrawers.empty() && keep == _effectDescs.size()
+		&& srcDesc.Width == static_cast<UINT>(_photoChainSource.cx)
+		&& srcDesc.Height == static_cast<UINT>(_photoChainSource.cy)) {
+		// Логируем только первый раз: писать на каждую страницу при быстром листании бессмысленно
+		static bool reuseLogged = false;
+		if (!reuseLogged) {
+			reuseLogged = true;
+			Logger::Get().Info("Фото-сессия: размер и число этапов не менялись — цепь переиспользуется");
+		}
+		return _effectDrawers.back().GetExternalOutputTexture();
+	}
+
+	// Только здесь (число нужных стадий действительно изменилось) трогаем _runtimeEffectOptions:
+	// этот список читает и фронт (оверлей), переприсваивание на каждое фото воюет с её обходом —
+	// на быстром листании наблюдался ровно такой access violation. Список — всегда префикс полной конфигурации,
+	// поэтому добавляем/снимаем только с хвоста.
+	if (keep < _runtimeEffectOptions.size()) {
+		_runtimeEffectOptions.resize(keep);
+	} else if (keep > _runtimeEffectOptions.size()) {
+		_runtimeEffectOptions.insert(_runtimeEffectOptions.end(),
+			_photoEffectOptionsAll.begin() + static_cast<long long>(_runtimeEffectOptions.size()),
+			_photoEffectOptionsAll.begin() + static_cast<long long>(keep));
+	}
+
+	// Тот же путь, что у Nvidia VFX: сначала осушить и освободить нативные эффекты, потом полная перестройка
+	if (!_DrainNgxConsumers()) return nullptr;
+	if (!_ReleaseNgxConsumers()) return nullptr;
+	_effectDrawers.clear();
+	_effectFrameStates.clear();
+	_effectOutputFrames.clear();
+
+	ID3D11Texture2D* result = _BuildEffects();
+	if (!result) {
+		Logger::Get().Error("Не удалось перестроить цепь эффектов фото-сессии");
+		return nullptr;
+	}
+	_photoChainSource = { static_cast<LONG>(srcDesc.Width), static_cast<LONG>(srcDesc.Height) };
+	_overlayDrawer.UpdateAfterActiveEffectsChanged();
+	if (_effectsProfiler.IsProfiling()) {
+		uint32_t passes = 0;
+		for (auto* desc : _activeEffectDescs) passes += uint32_t(desc->passes.size());
+		_effectsProfiler.SetPassCount(_backendResources.GetD3DDevice(), passes,
+			_hasFrameGeneration || std::ranges::any_of(_nativeEffectBackends, [](const auto& backend) { return bool(backend); }));
+	}
+
+	// Диагностика: геометрия кадра в фото-сессии складывается из трёх звеньев —
+	// «источник → выход каждой стадии → кадр»; любое расхождение даёт «больше экрана»
+	// или обрезку. Целевой прямоугольник печатается отдельно: здесь он ещё от прошлой
+	// страницы (пересчитывается после перестроения цепи).
+	// Логируем по разу на перестроение, чтобы находить отклонение по журналу.
+	{
+		D3D11_TEXTURE2D_DESC outDesc{};
+		result->GetDesc(&outDesc);
+		const RECT frame = ScalingWindow::Get().RendererRect();
+		std::string stageSizes;
+		for (auto& drawer : _effectDrawers) {
+			if (ID3D11Texture2D* t = drawer.GetExternalOutputTexture()) {
+				D3D11_TEXTURE2D_DESC d{};
+				t->GetDesc(&d);
+				stageSizes += fmt::format("{}x{},", d.Width, d.Height);
+			} else {
+				stageSizes += "null,";
+			}
+		}
+		Logger::Get().Info(fmt::format(
+			"Геометрия фото-сессии: источник={}x{} этапы={}/{} стадии=[{}] выход_цепи={}x{} кадр={}x{}",
+			srcDesc.Width, srcDesc.Height, _runtimeEffectOptions.size(),
+			_photoEffectOptionsAll.size(), stageSizes, outDesc.Width, outDesc.Height,
+			frame.right - frame.left, frame.bottom - frame.top));
+	}
+
+	return result;
 }
 
 std::string Renderer::NvidiaVfxProcessDescription(size_t effect) const {
@@ -3319,7 +3704,25 @@ void Renderer::_UpdateDestRect() noexcept {
 
 	LONG destWidth;
 	LONG destHeight;
-	{
+	if (ScalingWindow::Get().Options().photoSession) {
+		// Выход эффект-цепи фото-сессии всегда равен размеру кадра (содержимое растянуто в нём), поэтому целевой
+		// прямоугольник надо считать по собственному аспекту фотографии: в композиции получается ровно вписанное с сохранением
+		// пропорций и чёрными полями изображение. Иначе прямоугольник останется от прошлой фотографии,
+		// и портрет или другой аспект растянется на весь экран («больше экрана», края отрезаны).
+		const LONG frameWidth = rendererRect.right - rendererRect.left;
+		const LONG frameHeight = rendererRect.bottom - rendererRect.top;
+		_UpdatePhotoSrcRect();
+		const RECT src = _photoSrcRect;
+		if (src.right > 0 && src.bottom > 0) {
+			const float scale = std::min(float(frameWidth) / src.right, float(frameHeight) / src.bottom);
+			destWidth = std::max(1L, static_cast<LONG>(std::lround(src.right * scale)));
+			destHeight = std::max(1L, static_cast<LONG>(std::lround(src.bottom * scale)));
+		} else {
+			// Фотографии ещё нет (сессия только стартовала): на первое время — весь кадр
+			destWidth = frameWidth;
+			destHeight = frameHeight;
+		}
+	} else {
 		D3D11_TEXTURE2D_DESC desc;
 		_frontendSharedTextures[0]->GetDesc(&desc);
 		destWidth = (LONG)desc.Width;
@@ -3352,6 +3755,16 @@ void Renderer::_UpdateDestRect() noexcept {
 
 	assert(_destRect.left + destWidth == _destRect.right);
 	assert(_destRect.top + destHeight == _destRect.bottom);
+
+	if (ScalingWindow::Get().Options().photoSession) {
+		// Истина момента: прямоугольник, с которым страница уходит на экран.
+		// Строка «Геометрия» печатается до этого пересчёта — в ней прямоугольник
+		// ещё прошлой страницы, не путать.
+		Logger::Get().Info(fmt::format(
+			"Фото-сессия: применённый прямоугольник={}x{} (источник {}x{}, кадр {}x{})",
+			destWidth, destHeight, _photoSrcRect.right, _photoSrcRect.bottom,
+			rendererRect.right - rendererRect.left, rendererRect.bottom - rendererRect.top));
+	}
 }
 
 HANDLE Renderer::_CreateSharedTexture(ID3D11Texture2D* effectsOutput) noexcept {
@@ -3621,6 +4034,11 @@ void Renderer::_BackendThreadProc() noexcept {
 				}
 				window.Stop();
 			});
+			// Выходить сразу нельзя: cleanupBackend сбросил бы _frameSource параллельно лямбдам фото-очереди
+			// фронта. Ждём WM_QUIT от ~Renderer — как и при штатной остановке, join сериализует освобождение.
+			while (GetMessage(&msg, NULL, 0, 0) > 0) {
+				DispatchMessage(&msg);
+			}
 			return;
 		}
 		if (_sessionLifetime->IsStopping()) {
@@ -3844,10 +4262,25 @@ void Renderer::_BackendThreadProc() noexcept {
 				}
 			}
 			_forceNextRender = false;
+			if (frameSourceState == FrameSourceState::NewFrame && _frameSource->RequiresRebind()) {
+				// Смена фотографии: у входной текстуры мог смениться объект или размер — сначала перестроить цепь
+				// под новый размер, затем рисовать только что загруженную фотографию
+				if (!_ResizeEffects()) {
+					Logger::Get().Error("После смены фотографии цепь эффектов не перестроена — кадр пропущен");
+					break;
+				}
+				// Целевой прямоугольник считается по аспекту самой фотографии — после её смены обязано пересчитаться,
+				// иначе останется пропорция прошлой страницы (картинка растянет или отрежет края).
+				// Та же принятая в файле практика записи _destRect из другого потока, что и у _MoveRenderer.
+				_UpdateDestRect();
+			}
 			_backendContentInFlight.store(true, std::memory_order_release);
 			_backendMayDeferFG = true;
-			_BackendRender(
-				_effectDrawers.back().GetExternalOutputTexture(),
+			// Пустая эффект-цепь возможна только в фото-сессии (фото и так не меньше экрана). Нормализующая стадия
+			// уже гарантирует непустое в этом случае, но страхуемся ещё раз — иначе back() на пустом векторе даст дикий указатель
+			_BackendRender(_effectDrawers.empty()
+				? _frameSource->GetPipelineTexture()
+				: _effectDrawers.back().GetExternalOutputTexture(),
 				updateReason);
 			_backendMayDeferFG = false;
 			if (!_pendingFrameGenerationInput && !_pendingFrameSyncOutput)
@@ -4000,6 +4433,10 @@ HANDLE Renderer::_InitBackend() noexcept {
 	}
 
 	_runtimeEffectOptions = ScalingWindow::Get().Options().effects;
+	// Группа эффектов сменилась (например, способ увеличения фотографии): база среза фото-сессии строится заново
+	_photoEffectOptionsAll.clear();
+	_photoEffectDescsAll.clear();
+	_photoChainSource = {};
 	_runtimeHdrComponents = ScalingWindow::Get().Options().hdrComponents;
 	ScalingWindow::Get().Options().parameterSession->Applied(_runtimeEffectOptions);
 

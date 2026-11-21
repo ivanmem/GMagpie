@@ -687,6 +687,18 @@ void ScalingWindow::SwitchToolbarState() noexcept {
 	}
 }
 
+void ScalingWindow::RequestPhotoFile(std::wstring path) noexcept {
+	if (_renderer && _options.photoSession) {
+		_renderer->RequestPhotoFile(std::move(path));
+	}
+}
+
+void ScalingWindow::RequestPhotoPrefetch(std::wstring path) noexcept {
+	if (_renderer && _options.photoSession) {
+		_renderer->RequestPhotoPrefetch(std::move(path));
+	}
+}
+
 void ScalingWindow::Render() noexcept {
 	FrameTrace::Scope traceTick(FrameTrace::Event::FrontendTick);
 	_frontendRenderPending = false;
@@ -1884,6 +1896,11 @@ bool ScalingWindow::_Show() noexcept {
 			_RepostionBorderHelperWindows();
 		}
 	}
+
+	// У фото-сессии нет настоящего окна-источника, и невидимый PhotoStage никто не выведет на передний план;
+	// активируем его сами перед первым показом — тогда штатный путь переднего плана ниже поднимет scaling-окно, иначе фото
+	// окажется под главным окном и прочими
+	if (_options.photoSession) _srcTracker.SetFocus(nullptr);
 
 	// 如果源窗口位于前台则将缩放窗口置顶
 	if (_srcTracker.IsSessionForeground()) _UpdateFocusStateAsync();

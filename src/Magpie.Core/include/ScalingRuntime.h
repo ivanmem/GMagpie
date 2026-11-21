@@ -31,6 +31,12 @@ public:
 	void SwitchToolbarState();
 	void InvokeOverlayAction(OverlayAction action);
 
+	// В фото-сессии — сменить фотографию; в остальных состояниях игнорируется
+	void RequestPhotoFile(std::wstring path);
+
+	// В фото-сессии — намёк заранее декодировать следующую фотографию; в остальных состояниях игнорируется
+	void RequestPhotoPrefetch(std::wstring path);
+
 	void Stop();
 	// Main-thread system-key notification; cancels pending fullscreen restarts too.
 	bool StopForTaskSwitch();
@@ -76,6 +82,8 @@ private:
 	std::atomic<ScalingState> _state = ScalingState::Idle;
 	std::atomic<uint64_t> _commandGeneration = 0;
 	std::atomic<bool> _quitting = false;
+	// Номер последней заявки на перезапуск цепи: все более ранние заявки в очереди пропускаются
+	std::atomic<uint64_t> _restartSerial = 0;
 };
 
 }

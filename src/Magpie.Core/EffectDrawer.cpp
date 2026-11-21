@@ -692,6 +692,21 @@ bool EffectDrawer::UpdateParameters(
 	);
 }
 
+// Предельная длина стороны промежуточных текстур эффект-цепи фото-сессии (заметно ниже D3D11 16384, заодно ограничивает VRAM).
+// Это просто предохранитель от того, чтобы большая фотография убила сессию, а не политика качества картинки.
+constexpr LONG MAX_PHOTO_EFFECT_TEXTURE_DIM = 8192;
+
+SIZE EffectDrawer::CalcOutputSize(
+	const EffectDesc& desc,
+	const EffectOption& option,
+	SIZE inputSize
+) noexcept {
+	// Переиспользуем метод экземпляра, чтобы не появляется вторая реализация правил; от него здесь только парсер выражений —
+	// никаких GPU-ресурсов не создаётся, деструктор пустого состояния — пустое действие.
+	EffectDrawer probe;
+	return probe._CalcOutputSize(desc, option, inputSize);
+}
+
 SIZE EffectDrawer::_CalcOutputSize(
 	const EffectDesc& desc,
 	const EffectOption& option,
@@ -786,6 +801,26 @@ SIZE EffectDrawer::_CalcOutputSize(
 			inputSize.cx, inputSize.cy, plan.native.width, plan.native.height,
 			NVIDIA_VFX_UPSCALE_RATIOS[plan.ratioIndex].numerator, NVIDIA_VFX_UPSCALE_RATIOS[plan.ratioIndex].denominator,
 			outputSize.cx, outputSize.cy, int(mode == 0 ? plan.adaptation : NvidiaVfxAdaptation::None)));
+	}
+	// «Предохранитель» фото-сессии: фотография входит в цепь в своём размере, и многократные эффекты увеличения могут посчитать больший
+	// за D3D11-предел текстур (16384) промежуточный размер; CreateTexture2D упадёт с E_INVALIDARG и
+	// убьёт всю сессию (наблюдаемый симптом: процесс выходит на большой фотографии).
+	// Здесь нельзя поджимать выход каждой стадии до размера кадра: у шейдеров эффектов вроде ACNet коэффициент зашит
+	// в UV/перекомпоновку пикселей: если отношение входа и выхода перестанет равняться объявленной кратности, увеличение уйдёт в сторону и картинку отрежет.
+	// Поэтому уменьшаем пропорционально только при упоре в жёсткий предел; обычное масштабирование не тронуто. «Не увеличивать дальше экрана»
+	// делается пропуском лишних стадий, а не математическим сжатием работающих.
+	if (ScalingWindow::Get().Options().photoSession
+		&& outputSize.cx > 0 && outputSize.cy > 0
+		&& (outputSize.cx > MAX_PHOTO_EFFECT_TEXTURE_DIM || outputSize.cy > MAX_PHOTO_EFFECT_TEXTURE_DIM)) {
+		const double k = std::min(
+			(double)MAX_PHOTO_EFFECT_TEXTURE_DIM / outputSize.cx,
+			(double)MAX_PHOTO_EFFECT_TEXTURE_DIM / outputSize.cy);
+		outputSize = { (LONG)std::floor(outputSize.cx * k), (LONG)std::floor(outputSize.cy * k) };
+		static bool clampedLogged = false;
+		if (!clampedLogged) {
+			clampedLogged = true;
+			Logger::Get().Info("Фото-сессия: промежуточный размер цепи превысил предел текстуры — уменьшен пропорционально");
+		}
 	}
 	_exprParser.DefineConst("OUTPUT_WIDTH", outputSize.cx);
 	_exprParser.DefineConst("OUTPUT_HEIGHT", outputSize.cy);

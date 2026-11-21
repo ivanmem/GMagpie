@@ -40,6 +40,12 @@ enum class CaptureMethod {
 	COUNT
 };
 
+// Параметры показа фотографий. Изображения не проходят через захват окна: декодируются в собственном разрешении и сразу попадают в эффект-цепь;
+// плейлист, автолистание и ввод ведёт фронт, переключение кадра — ScalingRuntime::RequestPhotoFile.
+struct PhotoSessionOptions {
+	std::wstring firstFile;
+};
+
 enum class MultiMonitorUsage {
 	Closest,
 	Intersected,
@@ -509,6 +515,8 @@ struct ScalingOptions {
 	std::function<void(uint32_t runId, uint32_t effectIndex, const DlssNrStatus&)> dlssNrStatusChanged;
 	std::function<void(uint32_t effectIndex)> openDlssNrHelp;
 	std::wstring scalingModeName;
+	// Показ фотографий. При наличии отключает путь захвата окна, используется PhotoFrameSource.
+	std::optional<PhotoSessionOptions> photoSession;
 	uint32_t flags = ScalingFlags::AdjustCursorSpeed;
 	Cropping cropping{};
 	GraphicsCardId graphicsCardId;

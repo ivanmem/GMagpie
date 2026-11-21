@@ -194,6 +194,28 @@ void ScalingRuntime::UpdateScreenshotContent(ScreenshotContent content) {
 	});
 }
 
+void ScalingRuntime::RequestPhotoFile(std::wstring path) {
+	if (State() == ScalingState::Idle || State() == ScalingState::Stopping) return;
+	const uint64_t generation = _commandGeneration.load(std::memory_order_acquire);
+	_Dispatcher().TryEnqueue([this, generation, path = std::move(path)]() mutable {
+		if (_commandGeneration.load(std::memory_order_acquire) != generation) return;
+		auto& window = ScalingWindow::Get();
+		if (!window) return;
+		window.RequestPhotoFile(std::move(path));
+	});
+}
+
+void ScalingRuntime::RequestPhotoPrefetch(std::wstring path) {
+	if (State() == ScalingState::Idle || State() == ScalingState::Stopping) return;
+	const uint64_t generation = _commandGeneration.load(std::memory_order_acquire);
+	_Dispatcher().TryEnqueue([this, generation, path = std::move(path)]() mutable {
+		if (_commandGeneration.load(std::memory_order_acquire) != generation) return;
+		auto& window = ScalingWindow::Get();
+		if (!window) return;
+		window.RequestPhotoPrefetch(std::move(path));
+	});
+}
+
 void ScalingRuntime::UpdateMainUI(SessionWindowIdentity identity) {
 	if (State() == ScalingState::Idle || State() == ScalingState::Stopping) return;
 	const uint64_t generation = _commandGeneration.load(std::memory_order_acquire);
@@ -297,10 +319,14 @@ bool ScalingRuntime::RestartWithEffectParameters(
 ) {
 	if (_quitting.load(std::memory_order_acquire)) return false;
 	const uint64_t generation = _commandGeneration.load(std::memory_order_acquire);
+	const uint64_t serial = ++_restartSerial;
 	return _Dispatcher().TryEnqueue([
-		this, hwndSource, hwndScaling, scalingRunId, generation,
+		this, hwndSource, hwndScaling, scalingRunId, generation, serial,
 		effects = std::move(effects), frameRefresh
 	]() mutable {
+		// Первая заявка пересоздаёт окно и меняет RunId — остальные из очереди гибли бы на проверках ниже.
+		// Поэтому исполняется только самая свежая: её состояние и должно оказаться на экране.
+		if (serial != _restartSerial.load(std::memory_order_acquire)) return;
 		if (_quitting.load(std::memory_order_acquire) ||
 			_commandGeneration.load(std::memory_order_acquire) != generation ||
 			State() != ScalingState::Scaling) return;

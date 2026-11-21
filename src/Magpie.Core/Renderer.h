@@ -35,6 +35,13 @@ enum class DLSSFGFrameRenderResult : uint8_t {
 	Dropped
 };
 
+// Сколько начальных этапов цепии нужно фотографии заданного размера, чтобы дойти до
+// «вписать в экран» (0 — апскейл не нужен). Чистая функция предсказания: только
+// размеры и правила EffectDrawer::CalcOutputSize, без окна и устройства — ей есть
+// что проверять тестам без запуска показа (tests/Run-PhotoGalleryTests.ps1)
+size_t CalcPhotoEffectStages(const std::vector<EffectOption>& effects,
+	const std::vector<EffectDesc>& descs, SIZE srcSize, SIZE rendererSize) noexcept;
+
 class Renderer {
 public:
 	Renderer() noexcept;
@@ -87,6 +94,10 @@ public:
 
 	void SwitchToolbarState() noexcept;
 	void InvokeOverlayAction(OverlayAction action) noexcept;
+	// В фото-сессии — перейти к следующей фотографии; вне её — ничего
+	void RequestPhotoFile(std::wstring path) noexcept;
+	// В фото-сессии — намёк заранее декодировать следующую фотографию; вне её — ничего
+	void RequestPhotoPrefetch(std::wstring path) noexcept;
 	OverlaySessionState CaptureOverlayState() const noexcept { return _overlayDrawer.CaptureSessionState(); }
 	bool IsToolbarAt(POINT point) const noexcept { return _overlayDrawer.IsToolbarAt(point); }
 	bool IsToolbarMoveCursor() const noexcept { return _overlayDrawer.IsToolbarMoveCursor(); }
@@ -287,6 +298,11 @@ private:
 	void _ResetDLSSFGSlotEvents() noexcept;
 	void _CopySceneToTarget(ID3D11Texture2D* scene, ID3D11Texture2D* target,
 		ID3D11RenderTargetView* rtv, POINT drawOffset) noexcept;
+	// Фото-сессия: кадр всегда размера экрана (растянут в нём), вписывание делает
+	// масштабированная прорисовка сцены вцелевой прямоугольник — копия 1:1 его бы
+	// игнорировала («фото растягивается на весь экран»). Вызывается из _CopySceneToTarget.
+	void _DrawPhotoSceneScaled(ID3D11Texture2D* scene, ID3D11RenderTargetView* rtv,
+		const RECT& view) noexcept;
 	void _RecordDLSSFGFrontendTimings(
 		bool usesFrameLatencyWaitableObject,
 		const PresentationJobTiming& timings,
@@ -319,6 +335,18 @@ private:
 
 	ID3D11Texture2D* _ResizeEffects() noexcept;
 
+	// Перестройка эффект-цепи для фото-сессии: остаются только стадии, нужные чтобы «увеличить это фото до предела экрана»,
+	// финальный выход нормализуется к размеру кадра (см. пояснение в _ShouldAppendBicubic).
+	// Размер фотографии может меняться на каждой странице, поэтому здесь всегда полная перестройка, без инкрементального изменения размера.
+	ID3D11Texture2D* _ResizePhotoEffects() noexcept;
+
+	// Полный список эффектов конфигурации сессии и их описания. Фото-сессия берёт из него префикс под текущий размер фото;
+	// отсечённый хвост не теряется — на фотографии побольше он возвращается.
+	std::vector<EffectOption> _photoEffectOptionsAll;
+	std::vector<EffectDesc> _photoEffectDescsAll;
+	// Под какой размер фото построена текущая цепь: совпадает — переиспользуем, не перестраивая
+	SIZE _photoChainSource = {};
+
 	void _BuildEffectParameterRuntimeInfos() noexcept;
 	void _SetDlssNrStatus(uint32_t index, DlssNrState state, DlssNrFailure failure = {}) noexcept;
 	std::vector<DlssNrStatus> _dlssNrStatuses;
@@ -329,6 +357,9 @@ private:
 	void _UpdateFrameRateLimits() noexcept;
 
 	void _UpdateDestRect() noexcept;
+	// Готовит _photoSrcRect (размер текущей фотографии) перед расчётом целевого
+	// прямоугольника. Только бэкенд-поток — см. поле _photoSrcRect.
+	void _UpdatePhotoSrcRect() noexcept;
 
 	HANDLE _CreateSharedTexture(ID3D11Texture2D* effectsOutput) noexcept;
 
@@ -402,6 +433,25 @@ private:
 	bool _frontendPresentedBaseValid = false;
 	bool _frontendBaseNeedsPresent = false;
 	RECT _destRect{};
+	// Геометрия, привязанная к кадру, который лежит во фронтенд-базе (только фронт-поток): backend обновляет
+	// _destRect под новую фотографию раньше, чем фронт заберёт её кадр, и перерисовка со старым кадром
+	// рисовала бы старое фото в новых полосах («вспышка пропорций»).
+	RECT _frontendDestRect{};
+	// Копия сцены фото-сессии с масштабированием (только фронт-поток, лениво):
+	// маленькие ресурсы живут всё время сессии, SRV — по объекту текстуры-источника
+	// (сам SRV держит текстуру, поэтому адрес не переиспользуется другим объектом).
+	winrt::com_ptr<ID3D11VertexShader> _photoBlitVS;
+	winrt::com_ptr<ID3D11PixelShader> _photoBlitPS;
+	winrt::com_ptr<ID3D11InputLayout> _photoBlitIL;
+	winrt::com_ptr<ID3D11Buffer> _photoBlitVB;
+	winrt::com_ptr<ID3D11SamplerState> _photoBlitSampler;
+	winrt::com_ptr<ID3D11RasterizerState> _photoBlitRS;
+	// Общая текстура представления (открыта по keyed mutex) непригодна как ресурс
+	// шейдера — на ней разрешено только копирование, CreateShaderResourceView
+	// падает каждый кадр и фото остаётся чёрным после очистки фона. Поэтому сцена
+	// сначала копируется в приватную текстуру, а прорисовывается уже из неё.
+	winrt::com_ptr<ID3D11Texture2D> _photoSceneCopy;
+	winrt::com_ptr<ID3D11ShaderResourceView> _photoSceneSrv;
 	
 	const std::shared_ptr<ScalingSessionLifetime> _sessionLifetime;
 	std::thread _backendThread;
@@ -412,6 +462,11 @@ private:
 	DeviceResources _backendResources;
 	Magpie::BackendDescriptorStore _backendDescriptorStore;
 	std::unique_ptr<FrameSourceBase> _frameSource;
+	// Виртуальный прямоугольник источника фото-сессии (собственный размер текущей фото), возвращается SrcRect().
+	// Единственный писатель — _UpdatePhotoSrcRect на бэкенд-потоке, там же, где
+	// пересчитывается _destRect: запись из двух потоков оставляла держателя
+	// `const RECT&` с изменённым под ним значением.
+	RECT _photoSrcRect{};
 	FrameGuidanceService _frameGuidanceService;
 	bool _sourceFocusHistoryResetPending = false;
 	bool _hasFrameGeneration = false;

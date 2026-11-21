@@ -78,6 +78,12 @@ public:
 
 	void SwitchToolbarState() noexcept;
 
+	// В фото-сессии — перейти к следующей фотографии; в остальных режимах игнорируется
+	void RequestPhotoFile(std::wstring path) noexcept;
+
+	// В фото-сессии — намёк заранее декодировать следующую фотографию; в остальных режимах игнорируется
+	void RequestPhotoPrefetch(std::wstring path) noexcept;
+
 	void Render() noexcept;
 	void RenderOverlay() noexcept;
 	bool RenderNextDLSSFGFrame() noexcept;

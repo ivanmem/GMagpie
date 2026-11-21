@@ -1026,13 +1026,17 @@ bool OverlayDrawer::_DrawToolbar(uint32_t fps, int& itemId) noexcept {
 		bool parametersVisible = _isEffectParametersVisible;
 		drawToggleButton(parametersVisible, OverlayHelper::SegoeIcons::Parameters, parametersStr.c_str());
 		if (parametersVisible != _isEffectParametersVisible) InvokeAction(OverlayAction::EffectParameters);
-		ImGui::SameLine();
-		Renderer& renderer = ScalingWindow::Get().Renderer();
-		bool passThrough = renderer.IsPassThroughActive();
-		const std::string comparisonTip = tooltip(L"Overlay_Toolbar_PassThrough", shortcuts.comparison);
-		drawToggleButton(passThrough, OverlayHelper::SegoeIcons::View, comparisonTip.c_str());
-		if (passThrough != renderer.IsPassThroughActive() && renderer.SetPassThroughActive(passThrough)) {
-			_ShowComparisonStatus(passThrough);
+		// В фото-сессии сравнение невозможно (Renderer::SetPassThroughActive), поэтому
+		// и кнопку не показываем: иначе клик «меняет картинку» без видимого смысла
+		if (!ScalingWindow::Get().Options().photoSession) {
+			ImGui::SameLine();
+			Renderer& renderer = ScalingWindow::Get().Renderer();
+			bool passThrough = renderer.IsPassThroughActive();
+			const std::string comparisonTip = tooltip(L"Overlay_Toolbar_PassThrough", shortcuts.comparison);
+			drawToggleButton(passThrough, OverlayHelper::SegoeIcons::View, comparisonTip.c_str());
+			if (passThrough != renderer.IsPassThroughActive() && renderer.SetPassThroughActive(passThrough)) {
+				_ShowComparisonStatus(passThrough);
+			}
 		}
 #ifdef _DEBUG
 		ImGui::SameLine();
