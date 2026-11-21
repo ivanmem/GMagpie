@@ -2898,7 +2898,19 @@
     <value>放大算法：{0}</value>
   </data>
   <data name="Gallery_PickerHeader" xml:space="preserve">
-    <value>放大算法 — ↑↓ 选择 · Esc/F11 关闭</value>
+    <value>放大算法</value>
+  </data>
+  <data name="Gallery_Menu_Pause" xml:space="preserve">
+    <value>暂停幻灯片</value>
+  </data>
+  <data name="Gallery_Menu_Resume" xml:space="preserve">
+    <value>继续幻灯片</value>
+  </data>
+  <data name="Gallery_Menu_Delete" xml:space="preserve">
+    <value>移到回收站</value>
+  </data>
+  <data name="Gallery_Menu_Stop" xml:space="preserve">
+    <value>关闭图库</value>
   </data>
   <data name="Gallery_DeletedToast" xml:space="preserve">
     <value>文件已删除</value>

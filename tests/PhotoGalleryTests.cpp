@@ -282,54 +282,32 @@ void TestScalePercent() {
 
 void TestGalleryKeys() {
 	using A = GalleryKeyAction;
-	// Список закрыт: стрелки листают страницы, Num6 открывает список, Esc выходит
-	assert(DecideGalleryKey(VK_LEFT, false) == A::PagePrev);
-	assert(DecideGalleryKey(VK_UP, false) == A::PagePrev);
-	assert(DecideGalleryKey(VK_RIGHT, false) == A::PageNext);
-	assert(DecideGalleryKey(VK_DOWN, false) == A::PageNext);
-	assert(DecideGalleryKey(VK_HOME, false) == A::First);
-	assert(DecideGalleryKey(VK_END, false) == A::Last);
-	assert(DecideGalleryKey(VK_SPACE, false) == A::TogglePause);
-	assert(DecideGalleryKey(VK_NUMPAD6, false) == A::TogglePicker);
-	assert(DecideGalleryKey(VK_ESCAPE, false) == A::Stop);
+	// Стрелки листают страницы, Num6 открывает контекстное меню, Esc и F11 выходят.
+	// Пока меню открыто, клавиши принадлежат ему: хук вообще не зовёт эту карту
+	assert(DecideGalleryKey(VK_LEFT) == A::PagePrev);
+	assert(DecideGalleryKey(VK_UP) == A::PagePrev);
+	assert(DecideGalleryKey(VK_RIGHT) == A::PageNext);
+	assert(DecideGalleryKey(VK_DOWN) == A::PageNext);
+	assert(DecideGalleryKey(VK_HOME) == A::First);
+	assert(DecideGalleryKey(VK_END) == A::Last);
+	assert(DecideGalleryKey(VK_SPACE) == A::TogglePause);
+	assert(DecideGalleryKey(VK_NUMPAD6) == A::OpenMenu);
+	assert(DecideGalleryKey(VK_DELETE) == A::DeletePhoto);
+	assert(DecideGalleryKey(VK_ESCAPE) == A::Stop);
+	// F11 останавливает показ, как Esc: от «полноэкранной» клавиши ждут выхода из просмотра;
+	// во время показа чужой полноэкранный недоступен
+	assert(DecideGalleryKey(VK_F11) == A::Stop);
 
-	// Список открыт: стрелки выбирают способ, Esc и F11 только закрывают список —
-	// показ не останавливают
-	assert(DecideGalleryKey(VK_UP, true) == A::PickerUp);
-	assert(DecideGalleryKey(VK_LEFT, true) == A::PickerUp);
-	assert(DecideGalleryKey(VK_DOWN, true) == A::PickerDown);
-	assert(DecideGalleryKey(VK_RIGHT, true) == A::PickerDown);
-	assert(DecideGalleryKey(VK_ESCAPE, true) == A::ClosePicker);
-	assert(DecideGalleryKey(VK_F11, true) == A::ClosePicker);
-	assert(DecideGalleryKey(VK_NUMPAD6, true) == A::TogglePicker);
-
-	// Delete удаляет файл и при открытом списке: в списке он ничему не мешает
-	assert(DecideGalleryKey(VK_DELETE, false) == A::DeletePhoto);
-	assert(DecideGalleryKey(VK_DELETE, true) == A::DeletePhoto);
-
-	// Навигация и пауза работают одинаково в обоих состояниях
-	for (bool open : { false, true }) {
-		assert(DecideGalleryKey(VK_HOME, open) == A::First);
-		assert(DecideGalleryKey(VK_END, open) == A::Last);
-		assert(DecideGalleryKey(VK_SPACE, open) == A::TogglePause);
-	}
-
-	// F11 вне списка останавливает показ, как Esc: от «полноэкранной» клавиши
-	// ждут выхода из просмотра; во время показа чужой полноэкранный недоступен
-	assert(DecideGalleryKey(VK_F11, false) == A::Stop);
-
-	// Всё остальное должно доставаться обычным программам в любом состоянии:
+	// Всё остальное должно доставаться обычным программам:
 	// Enter в диалоге, цифры и буквы, правый Shift, F1
 	for (unsigned vk : { (unsigned)VK_RETURN, (unsigned)VK_TAB, (unsigned)VK_BACK,
 		(unsigned)VK_F1, (unsigned)VK_SHIFT, (unsigned)VK_CONTROL, (unsigned)VK_LWIN,
 		(unsigned)VK_NUMPAD5, (unsigned)VK_ADD, (unsigned)'A', (unsigned)'6', 0xFFu }) {
-		for (bool open : { false, true }) {
-			assert(DecideGalleryKey(vk, open) == A::PassThrough);
-		}
+		assert(DecideGalleryKey(vk) == A::PassThrough);
 	}
 
-	std::cout << "Gallery keys: paging vs picker choices are mapped, Esc/F11 stop the show "
-		"(close the list while it is open), Delete removes the file, everything else passes through.\n";
+	std::cout << "Gallery keys: paging, Num6 opens the context menu, Esc/F11 stop the show, "
+		"Delete removes the file, everything else passes through.\n";
 }
 
 void TestPhotoDeleteIndex() {
@@ -431,64 +409,6 @@ void TestExifOrientationSwap() {
 
 	std::cout << "EXIF orientation: only 5..8 swap the displayed width and height, the "
 		"status percent matches the rotated frame.\n";
-}
-
-void TestUpscalerCycle() {
-	// Num6 листает «как в профиле» (-1) и безопасные ресемплеры (0..n-1).
-	// Полный круг вперёд обязан пройти все состояния по одному разу и вернуться
-	for (int size : {1, 2, 3, 4}) {
-		std::vector<int> visited;
-		int position = -1;
-		for (int i = 0; i <= size; ++i) {
-			position = NextUpscalerCycle(position, size, +1);
-			visited.push_back(position);
-		}
-		assert(position == -1);
-		assert(visited.size() == (size_t)size + 1);
-		auto once = visited;
-		std::ranges::sort(once);
-		// все состояния ровно по одному разу: -1 и 0..n-1
-		for (int i = 0; i < (int)once.size(); ++i) {
-			assert(once[i] == i - 1);
-		}
-		assert(visited.front() == 0);  // из «как в профиле» — первый ресемплер
-
-		// тот же круг назад
-		position = -1;
-		for (int i = 0; i <= size; ++i) {
-			position = NextUpscalerCycle(position, size, -1);
-			assert(position >= -1 && position < size);
-		}
-		assert(position == -1);
-
-		// шаг назад отменяет шаг вперёд из любой позиции
-		for (int from = -1; from < size; ++from) {
-			assert(NextUpscalerCycle(NextUpscalerCycle(from, size, +1), size, -1) == from);
-			assert(NextUpscalerCycle(NextUpscalerCycle(from, size, -1), size, +1) == from);
-			// два нажатия = шаг 2
-			assert(NextUpscalerCycle(from, size, +2)
-				== NextUpscalerCycle(NextUpscalerCycle(from, size, +1), size, +1));
-		}
-	}
-
-	// Ничего не найдено (нет HLSL-ресемплеров) — цикл из одного состояния, позиция
-	// не меняется, вызывающий выходит по «next == position»
-	for (int direction : { -1, +1, +7 }) {
-		assert(NextUpscalerCycle(-1, 0, direction) == -1);
-	}
-
-	// Позиция всегда в диапазоне, даже на случайном большом шаге
-	for (int size : {1, 3}) {
-		for (int direction : { -9, -1, 0, 1, 9 }) {
-			for (int from = -1; from < size; ++from) {
-				const int next = NextUpscalerCycle(from, size, direction);
-				assert(next >= -1 && next < size);
-			}
-		}
-	}
-
-	std::cout << "Upscaler cycle: full circle forward and back, no repeats, inverse steps, "
-		"empty cycle and out-of-range steps passed.\n";
 }
 
 void TestWheelPaging() {
@@ -623,7 +543,6 @@ int main() {
 	TestPhotoDeleteIndex();
 	TestGalleryLiteArgument();
 	TestExifOrientationSwap();
-	TestUpscalerCycle();
 	TestWheelPaging();
 	TestStagePlacement();
 	TestPhotoSceneViewport();

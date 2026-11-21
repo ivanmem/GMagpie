@@ -14,10 +14,9 @@ enum class GalleryStartFailure {
 	Other
 };
 
-// Что означает клавиша галереи. Решение зависит от того, открыт ли список выбора
-// апскейлера: со списком стрелки выбирают способ, а не листают страницы. Чистое
-// сопоставление — реализация в DecideGalleryKey (GalleryService.cpp), проверяется
-// тестами на CPU без показа.
+// Что означает клавиша галереи. Чистое сопоставление — реализация в DecideGalleryKey
+// (GalleryService.cpp), проверяется тестами на CPU без показа. Пока открыто контекстное
+// меню, клавиши принадлежат ему, а не этому сопоставлению.
 enum class GalleryKeyAction {
 	PassThrough,    // не наша — пусть достанется обычным приложениям
 	PagePrev,       // ← / ↑
@@ -25,12 +24,9 @@ enum class GalleryKeyAction {
 	First,          // Home
 	Last,           // End
 	TogglePause,    // Space
-	TogglePicker,   // Num6 — показать/скрыть список апскейлеров
-	ClosePicker,    // Esc / F11 при открытом списке
-	PickerUp,       // ↑ в списке — выбрать предыдущий способ
-	PickerDown,     // ↓ в списке — выбрать следующий способ
+	OpenMenu,       // Num6 — контекстное меню (как правая кнопка мыши)
 	DeletePhoto,    // Delete — удалить файл текущей фотографии в корзину
-	Stop,           // Esc при закрытом списке
+	Stop,           // Esc / F11
 };
 
 // Фотогалерея поверх фото-сессии ScalingService: плейлист по папке (включая
@@ -98,16 +94,18 @@ private:
 	void _SetPaused(bool paused);
 	bool _IsSessionForeground() const noexcept;
 	bool _TryFocusFromPhotoClick(POINT pt) noexcept;
-	void _CycleUpscaler(int direction, bool silent = false);
+	// Выбрать апскейлер по позиции списка (-1 - оригинал профиля, иначе индекс в _upscalerCycle)
+	void _ApplyUpscaler(int position, bool silent = false);
+	// Подготовить снимок цепи профиля и убрать его эффект из цикла; false - применять нечего
+	bool _EnsureUpscalerSnapshot();
 	// Delete: текущий файл в корзину, плейлист и страница — следом за ним
 	void _DeleteCurrentPhoto();
 	// На время модального SHFileOperationW блокирует реентер навигации/удаления из
 	// LL-хуков и таймера (они живут на том же UI-потоке во время насоса сообщений)
 	bool _deleting = false;
-	// Список апскейлеров (Num6): показать и скрыть (скрытие — Num6 повторно,
-	// Esc/F11 или остановка показа; выбор стрелкой список НЕ закрывает)
-	void _ShowUpscalerPicker();
-	void _HideUpscalerPicker() noexcept;
+	// Контекстное меню (правая кнопка, Num6): апскейлеры, пауза, удаление, выход. Модальное:
+	// вызывать из очереди диспетчера, не из LL-хука
+	void _ShowContextMenu(POINT screenPoint);
 	void _Navigate(long long delta);
 	void _Cleanup() noexcept;
 
@@ -137,12 +135,8 @@ private:
 	std::vector<EffectOption> _originalFirst;
 	std::vector<std::string> _upscalerCycle;
 	int _cyclePos = -2;
-	// Список апскейлеров открыт (Num6). Он не прячется сам — только выбор,
-	// повторный Num6, Esc или F11
-	bool _pickerVisible = false;
-	// Удерживаемый Num6 шлёт автоповтор: список должен переключаться один раз
-	// на нажатие, поэтому флаг живёт до key-up
-	bool _num6Held = false;
+	// Контекстное меню открыто: хуки пропускают ввод ему (иначе стрелки листали бы страницы)
+	bool _menuOpen = false;
 
 	wil::unique_hhook _keyboardHook;
 	wil::unique_hhook _mouseHook;

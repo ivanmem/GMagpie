@@ -164,33 +164,33 @@ def run_checks():
     gallery = text("GMagpie/GalleryService.cpp")
     keyboard = body(gallery, "LRESULT CALLBACK GalleryService::_KeyboardHookProc(")
     check("keys-come-from-tested-map",
-          "DecideGalleryKey(vkCode, self._pickerVisible)" in keyboard
+          "DecideGalleryKey(((KBDLLHOOKSTRUCT*)lParam)->vkCode)" in keyboard
           and "case VK_" not in keyboard,
-          "the meaning of a key must come from the tested map (it depends on the picker "
-          "state), not from an inline switch in the hook")
+          "the meaning of a key must come from the tested map, not from an inline switch in the hook")
     check("keys-need-focus", guarded_by(keyboard, "self._OnKeyAction(action)", "_IsSessionForeground()"),
           "hotkeys including Esc must reach ordinary applications while the slideshow is "
           "not in the foreground")
-    check("num6-single-toggle",
-          "_num6Held = false;" in keyboard and "WM_KEYUP" in keyboard
-          and "if (self._num6Held)" in keyboard,
-          "a held Num6 sends auto-repeat: without consuming it the picker flickers "
-          "open/closed while the key is down")
-
-    key_action = body(gallery, "void GalleryService::_OnKeyAction(GalleryKeyAction action)")
-    picker_cases = key_action[key_action.index("PickerUp"):key_action.index("case GalleryKeyAction::Stop")]
-    check("picker-stays-open-on-choice",
-          picker_cases.count("_CycleUpscaler(") == 2
-          and "_HideUpscalerPicker" not in picker_cases,
-          "choosing with the arrows must apply the effect but KEEP the list open: the "
-          "user compares modes in place; the list closes only on Num6/Esc/F11")
-    check("picker-no-self-hide",
-          gallery.count("gallery_picker::Hide()") == 2
-          and "gallery_picker::Hide()" in body(gallery, "void GalleryService::_HideUpscalerPicker() noexcept")
-          and "gallery_picker::Hide()" in body(gallery, "void GalleryService::_Cleanup() noexcept"),
-          "the list must never disappear by itself (no timer): only the explicit hide on "
-          "Num6/Esc/F11 and on cleanup")
+    check("menu-owns-input-while-open",
+          "!self._menuOpen" in keyboard and "!self._menuOpen" in body(gallery, "LRESULT CALLBACK GalleryService::_MouseHookProc("),
+          "while the context menu is open the arrows/Enter/Esc/wheel belong to it: without the "
+          "pass-through the keys paged the album behind the menu")
+    menu = body(gallery, "void GalleryService::_ShowContextMenu(")
+    check("menu-is-native-and-modal-safe",
+          "TrackPopupMenuEx" in menu and "TPM_RETURNCMD" in menu and "_menuOpen = true" in menu
+          and "_menuOpen = false" in menu
+          and "_ShowContextMenu(" in body(gallery, "LRESULT CALLBACK GalleryService::_MouseHookProc(")
+          and "Dispatcher().TryEnqueue" in body(gallery, "LRESULT CALLBACK GalleryService::_MouseHookProc("),
+          "the menu is the system popup menu (mouse and keyboard for free); it is modal, so it may only "
+          "be opened from the dispatcher queue, never from inside the LL hook (LowLevelHooksTimeout)")
+    check("right-click-opens-menu",
+          "(wParam == WM_RBUTTONDOWN || wParam == WM_RBUTTONUP)"
+              in body(gallery, "LRESULT CALLBACK GalleryService::_MouseHookProc(")
+          and "OpenMenu" in body(gallery, "void GalleryService::_OnKeyAction("),
+          "the right mouse button and Num6 both open the same context menu")
     candidates = body(gallery, "static const std::vector<std::string> UPSCALER_CANDIDATES")
+    check("acnet-in-upscaler-cycle", '"ACNet"' in candidates and '"Lanczos"' not in candidates,
+          "ACNet is the only competitor to VSR and must stay in the menu; the plain resamplers "
+          "(Lanczos, Jinc, NIS) were hidden at the user's request")
     check("vsr-in-upscaler-cycle",
           "#ifdef MP_ENABLE_RTX_VIDEO_DENOISE" in candidates
           and "NVIDIA_VFX_VSR_ID" in candidates
@@ -208,28 +208,17 @@ def run_checks():
     check("wheel-need-focus", guarded_by(mouse, "self._OnMouseWheel(", "_IsSessionForeground()"),
           "the wheel must page only while the slideshow is in the foreground")
 
-    check("cycle-uses-tested-index",
-          "NextUpscalerCycle(_cyclePos," in body(gallery, "void GalleryService::_CycleUpscaler("),
-          "the Num6 index must come from the tested cycle function")
-    cycle_body = body(gallery, "void GalleryService::_CycleUpscaler(int direction, bool silent)")
+    cycle_body = body(gallery, "void GalleryService::_ApplyUpscaler(int next, bool silent)")
     check("restart-keeps-page",
-          "NextUpscalerCycle(_cyclePos," in cycle_body
-          and "RestartPhotoEffects(std::move(effects))" in cycle_body
+          "RestartPhotoEffects(std::move(effects))" in cycle_body
           and "RequestPhoto(_playlist[_index])" in cycle_body
           and cycle_body.index("RestartPhotoEffects(std::move(effects))")
               < cycle_body.index("RequestPhoto(_playlist[_index])"),
           "picking an upscaler rebuilds the session, which loads the album's first photo; "
           "the gallery must re-request the current page immediately after the restart")
-    check("picker-highlight-follows-choice",
-          "_pickerVisible" in cycle_body and "_ShowUpscalerPicker();" in cycle_body,
-          "the arrows choose without closing the list, so the highlight must move there: "
-          "the picker window only repaints on Update(), and without a refresh the "
-          "highlight stayed on the old row until the list was hidden and shown again")
     check("cycle-dedup-profile-effect",
           "std::erase(_upscalerCycle, _originalFirst[0].name)" in
-              body(gallery, "void GalleryService::_CycleUpscaler(int direction, bool silent)")
-          and "std::erase(_upscalerCycle, _originalFirst[0].name)" in
-              body(gallery, "void GalleryService::_ShowUpscalerPicker("),
+              body(gallery, "bool GalleryService::_EnsureUpscalerSnapshot()"),
           "when the profile mode's first effect is also a cycle entry (the shipped "
           "default profile is RTX VSR Ultra), the list showed the same upscaler twice "
           "and the cycle copy silently dropped the profile's parameters; the original "
@@ -333,8 +322,8 @@ def run_checks():
           "LL hooks and the auto timer are alive: without the re-entry guard and "
           "erasing by identity (not by a possibly moved index), a held Delete key "
           "erased the wrong entry or ran erase past end() (UB)")
-    overlay_bodies = [body(gallery, "void Update(const std::wstring& text"),
-                      body(gallery, "void Update(std::wstring header")]
+    # единственное GDI-окно показа - строка состояния; список апскейлеров теперь системное меню
+    overlay_bodies = [body(gallery, "void Update(const std::wstring& text")]
     check("overlay-owned-reanchors-below-photo",
           all("GW_OWNER" not in update_body and "0, 0, 0, 0, owner" not in update_body
               and "0, 0, 0, 0, nullptr" in update_body for update_body in overlay_bodies),
@@ -353,9 +342,9 @@ def run_checks():
           "must sit at the top of the topmost band")
     gallery_text = text("GMagpie/GalleryService.cpp")
     check("overlay-reasserts-topmost",
-          gallery_text.count("WM_TIMER:") == 2
+          gallery_text.count("WM_TIMER:") == 1
           and gallery_text.count(
-              "SetTimer(g_hwnd.get(), Z_REASSERT_TIMER, 200, nullptr)") == 2
+              "SetTimer(g_hwnd.get(), Z_REASSERT_TIMER, 200, nullptr)") == 1
           and "IsBelowOutputWindow" in gallery_text,
           "the scaling output re-asserts its z-order whenever a page is shown, so a "
           "one-shot placement loses (the probe screenshot showed the photo with "
@@ -467,23 +456,27 @@ REGRESSIONS = {
         [("!_photoSessionActive && AppSettings::Get().IsSmoothMotionCompatibilityMode()",
           "AppSettings::Get().IsSmoothMotionCompatibilityMode()")]),
     "keys-come-from-tested-map": ("GMagpie/GalleryService.cpp",
-        [("const auto action = DecideGalleryKey(vkCode, self._pickerVisible);",
-          "const auto action = vkCode == VK_LEFT || vkCode == VK_UP\n"
-          "\t\t\t\t? GalleryKeyAction::PagePrev : GalleryKeyAction::PassThrough;")]),
+        [("const auto action = DecideGalleryKey(((KBDLLHOOKSTRUCT*)lParam)->vkCode);",
+          "const auto vkCode = ((KBDLLHOOKSTRUCT*)lParam)->vkCode;\n"
+          "\t\tconst auto action = vkCode == VK_LEFT || vkCode == VK_UP\n"
+          "\t\t\t? GalleryKeyAction::PagePrev : GalleryKeyAction::PassThrough;")]),
     "keys-need-focus": ("GMagpie/GalleryService.cpp",
         [("if (action != GalleryKeyAction::PassThrough && self._IsSessionForeground()) {",
           "if (action != GalleryKeyAction::PassThrough) {")]),
-    "num6-single-toggle": ("GMagpie/GalleryService.cpp",
-        [("\t\t\tself._num6Held = false;", "")]),
-    "picker-stays-open-on-choice": ("GMagpie/GalleryService.cpp",
-        [("\t\t_CycleUpscaler(+1, true);\n\t\tbreak;",
-          "\t\t_CycleUpscaler(+1, true);\n\t\t_HideUpscalerPicker();\n\t\tbreak;")]),
+    "menu-owns-input-while-open": ("GMagpie/GalleryService.cpp",
+        [("if (nCode >= 0 && self._running && !self._menuOpen &&\n\t\t(wParam == WM_KEYDOWN",
+          "if (nCode >= 0 && self._running &&\n\t\t(wParam == WM_KEYDOWN")]),
+    "menu-is-native-and-modal-safe": ("GMagpie/GalleryService.cpp",
+        [("App::Get().Dispatcher().TryEnqueue([pt] { GalleryService::Get()._ShowContextMenu(pt); });",
+          "GalleryService::Get()._ShowContextMenu(pt);")]),
+    "right-click-opens-menu": ("GMagpie/GalleryService.cpp",
+        [("(wParam == WM_RBUTTONDOWN || wParam == WM_RBUTTONUP)", "(wParam == WM_RBUTTONDOWN)")]),
     "vsr-in-upscaler-cycle": ("GMagpie/GalleryService.cpp",
         [("\t, std::string(NVIDIA_VFX_VSR_ID)", "")]),
-    "picker-highlight-follows-choice": ("GMagpie/GalleryService.cpp",
-        [("\t\t_ShowUpscalerPicker();\n\t}", "\t}")]),
+    "acnet-in-upscaler-cycle": ("GMagpie/GalleryService.cpp",
+        [("\t\"ACNet\"\n", "\t\"Bicubic\"\n")]),
     "cycle-dedup-profile-effect": ("GMagpie/GalleryService.cpp",
-        [("\t\tstd::erase(_upscalerCycle, _originalFirst[0].name);\n", "")]),
+        [("\tstd::erase(_upscalerCycle, _originalFirst[0].name);\n", "")]),
     "delete-goes-to-recycle-bin": ("GMagpie/GalleryService.cpp",
         [("FOF_ALLOWUNDO | ", "")]),
     "delete-keeps-page-position": ("GMagpie/GalleryService.cpp",
@@ -535,9 +528,7 @@ REGRESSIONS = {
           "WS_EX_NOACTIVATE | WS_EX_TRANSPARENT | WS_EX_LAYERED,")]),
     "overlay-insert-after-owner-sinks": ("GMagpie/GalleryService.cpp",
         [("SetWindowPos(g_hwnd.get(), HWND_TOPMOST, x, y, w, h",
-          "SetWindowPos(g_hwnd.get(), owner ? owner : HWND_TOPMOST, x, y, w, h"),
-         ("SetWindowPos(g_hwnd.get(), HWND_TOPMOST, x, py, w, h",
-          "SetWindowPos(g_hwnd.get(), owner ? owner : HWND_TOPMOST, x, py, w, h")]),
+          "SetWindowPos(g_hwnd.get(), owner ? owner : HWND_TOPMOST, x, y, w, h")]),
     "overlay-reasserts-topmost": ("GMagpie/GalleryService.cpp",
         [("SetTimer(g_hwnd.get(), Z_REASSERT_TIMER, 200, nullptr); // см. IsBelowOutputWindow\n",
           "")]),
@@ -545,18 +536,11 @@ REGRESSIONS = {
         [("\t\t\tprofile.scalingMode = static_cast<int>(*fallback);", "")]),
     "restart-keeps-page": ("GMagpie/GalleryService.cpp",
         [("\t\tScalingService::Get().RequestPhoto(_playlist[_index]);", "")]),
-    "picker-no-self-hide": ("GMagpie/GalleryService.cpp",
-        [("\t\t\t_ResourceString(_paused ? L\"Gallery_PausedToast\" : L\"Gallery_AutoPlayToast\"), scalingWindow);",
-          "\t\t\t_ResourceString(_paused ? L\"Gallery_PausedToast\" : L\"Gallery_AutoPlayToast\"), scalingWindow);\n"
-          "\t\tgallery_picker::Hide();  // дефект: список прячется не по выбору пользователя")]),
     "wheel-data-source": ("GMagpie/GalleryService.cpp",
         [("HIWORD(((MSLLHOOKSTRUCT*)lParam)->mouseData)", "GET_WHEEL_DELTA_WPARAM(wParam)")]),
     "wheel-need-focus": ("GMagpie/GalleryService.cpp",
         [("if (delta != 0 && self._IsSessionForeground()) {\n\t\t\t\tself._OnMouseWheel",
           "if (delta != 0) {\n\t\t\t\tself._OnMouseWheel")]),
-    "cycle-uses-tested-index": ("GMagpie/GalleryService.cpp",
-        [("NextUpscalerCycle(_cyclePos, (int)_upscalerCycle.size(), direction)",
-          "(((_cyclePos + 1) + direction) % (int)_upscalerCycle.size() + 1) - 1")]),
     "resume-page-clamped": ("GMagpie/GalleryService.cpp",
         [("PhotoResumeIndex(startIndex, _playlist.size())", "startIndex")]),
     "state-saved-before-reset": ("GMagpie/GalleryService.cpp",

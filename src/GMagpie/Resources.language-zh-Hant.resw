@@ -2732,7 +2732,19 @@
     <value>放大演算法：{0}</value>
   </data>
   <data name="Gallery_PickerHeader" xml:space="preserve">
-    <value>放大演算法 — ↑↓ 選擇 · Esc/F11 關閉</value>
+    <value>放大演算法</value>
+  </data>
+  <data name="Gallery_Menu_Pause" xml:space="preserve">
+    <value>暫停幻燈片</value>
+  </data>
+  <data name="Gallery_Menu_Resume" xml:space="preserve">
+    <value>繼續幻燈片</value>
+  </data>
+  <data name="Gallery_Menu_Delete" xml:space="preserve">
+    <value>移到資源回收筒</value>
+  </data>
+  <data name="Gallery_Menu_Stop" xml:space="preserve">
+    <value>關閉圖庫</value>
   </data>
   <data name="Gallery_DeletedToast" xml:space="preserve">
     <value>檔案已刪除</value>

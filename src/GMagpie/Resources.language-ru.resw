@@ -1500,7 +1500,19 @@
     <value>Апскейлер: {0}</value>
   </data>
   <data name="Gallery_PickerHeader" xml:space="preserve">
-    <value>Апскейлер — ↑↓ выбрать · Esc/F11 закрыть</value>
+    <value>Апскейлер</value>
+  </data>
+  <data name="Gallery_Menu_Pause" xml:space="preserve">
+    <value>Пауза слайдшоу</value>
+  </data>
+  <data name="Gallery_Menu_Resume" xml:space="preserve">
+    <value>Продолжить слайдшоу</value>
+  </data>
+  <data name="Gallery_Menu_Delete" xml:space="preserve">
+    <value>Удалить в корзину</value>
+  </data>
+  <data name="Gallery_Menu_Stop" xml:space="preserve">
+    <value>Закрыть галерею</value>
   </data>
   <data name="Gallery_DeletedToast" xml:space="preserve">
     <value>Файл удалён</value>

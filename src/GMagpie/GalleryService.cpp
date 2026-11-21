@@ -50,8 +50,10 @@ bool IsSupportedPhoto(std::wstring_view path) {
 // сборках с включённым RTX Video (MP_ENABLE_RTX_VIDEO_DENOISE), иначе выбор убивал
 // сессию на инициализации рендерера. Остальные проверяются на доступность при
 // запуске галереи (GetEffect + CanScale); отсутствующий — пропускается с логом.
+// В меню остались только ACNet (нейросетевой апскейлер, единственный конкурент VSR) и VSR; прочие
+// ресемплеры (Lanczos, Jinc, NIS) скрыты по просьбе пользователя. Оригинал профиля - всегда первая строка.
 static const std::vector<std::string> UPSCALER_CANDIDATES = {
-	"Bicubic", "Lanczos", "Jinc", "NIS\\NIS"
+	"ACNet"
 #ifdef MP_ENABLE_RTX_VIDEO_DENOISE
 	, std::string(NVIDIA_VFX_VSR_ID)
 #endif
@@ -290,195 +292,17 @@ void Hide() noexcept {
 
 } // namespace gallery_status
 
-// Список выбора апскейлера (Num6): в отличие от строки состояния — многострочный,
-// с заголовком и подсветкой текущей позиции. Сам он не исчезает: закрывается только
-// повторным Num6, Esc или F11 — выбор стрелкой оставляет список открытым. Окно такое
-// же, как у gallery_status: topmost, click-through, не видно в Alt+Tab; всё GDI.
-// Доступ только с UI-потока.
-namespace gallery_picker {
+// Контекстное меню галереи (правая кнопка мыши и Num6) - обычное системное меню: мышь и клавиатура
+// работают штатно. Оно модальное, поэтому открывается из очереди диспетчера, не из LL-хука.
+// Пока меню открыто, хуки галереи пропускают ввод мимо (_menuOpen).
+namespace gallery_menu {
 
-constexpr wchar_t CLASS_NAME[] = L"GMagpie.GalleryPicker";
+constexpr UINT ID_UPSCALER_BASE = 1000;  // + строка списка (0 - оригинал профиля)
+constexpr UINT ID_PAUSE = 2000;
+constexpr UINT ID_DELETE = 2001;
+constexpr UINT ID_STOP = 2002;
 
-constexpr int PADDING_X = 20;
-constexpr int PADDING_Y = 14;
-constexpr int ROW_GAP = 4;        // между строками, в DIP
-constexpr int SEL_INSET = 8;      // подсветка шире текста
-constexpr COLORREF BG_COLOR = RGB(16, 16, 16);
-constexpr COLORREF FG_COLOR = RGB(225, 225, 225);
-constexpr COLORREF HEADER_COLOR = RGB(150, 150, 150);
-constexpr COLORREF SEL_BG_COLOR = RGB(240, 240, 240);
-constexpr COLORREF SEL_FG_COLOR = RGB(16, 16, 16);
-
-std::wstring g_header;
-std::vector<std::wstring> g_rows;
-int g_selected = -1;
-// Геометрия считается в Update (там есть DC и dpi), WndProc только рисует по ней
-RECT g_headerPos{};
-std::vector<RECT> g_rowBg;      // прямоугольник подсветки строки
-std::vector<POINT> g_rowText;   // левый верх текста строки
-int g_rowH = 0;
-wil::unique_hwnd g_hwnd;
-wil::unique_hfont g_font;
-
-LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam) {
-	switch (msg) {
-	case WM_PAINT:
-	{
-		PAINTSTRUCT ps;
-		HDC hdc = BeginPaint(hWnd, &ps);
-		RECT rc;
-		GetClientRect(hWnd, &rc);
-		static const wil::unique_hbrush background{ CreateSolidBrush(BG_COLOR) };
-		static const wil::unique_hbrush selection{ CreateSolidBrush(SEL_BG_COLOR) };
-		FillRect(hdc, &rc, background.get());
-		if (g_font) {
-			SetBkMode(hdc, TRANSPARENT);
-			const auto oldFont = SelectObject(hdc, g_font.get());
-			// NODRAWTEXT в Common.Post.props — только TextOutW по заранее посчитанным позициям
-			SetTextColor(hdc, HEADER_COLOR);
-			TextOutW(hdc, g_headerPos.left, g_headerPos.top,
-				g_header.c_str(), static_cast<int>(g_header.size()));
-			for (size_t i = 0; i < g_rows.size() && i < g_rowBg.size(); ++i) {
-				if (static_cast<int>(i) == g_selected) {
-					FillRect(hdc, &g_rowBg[i], selection.get());
-					SetTextColor(hdc, SEL_FG_COLOR);
-				} else {
-					SetTextColor(hdc, FG_COLOR);
-				}
-				TextOutW(hdc, g_rowText[i].x, g_rowText[i].y,
-					g_rows[i].c_str(), static_cast<int>(g_rows[i].size()));
-			}
-			SelectObject(hdc, oldFont);
-		}
-		EndPaint(hWnd, &ps);
-		return 0;
-	}
-	case WM_TIMER:
-		// Страховка z-порядка: если окно вывода перетянул на себя кадр, вернуться
-		if (IsBelowOutputWindow(hWnd)) {
-			Logger::Get().Info("Галерея: z-страховка вернула окно показа над кадром");
-			SetWindowPos(hWnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE);
-		}
-		return 0;
-	case WM_NCHITTEST:
-		return HTTRANSPARENT;
-	}
-	return DefWindowProcW(hWnd, msg, wParam, lParam);
-}
-
-void Update(std::wstring header, std::vector<std::wstring> rows, int selected, const RECT& frameRect) {
-	g_header = std::move(header);
-	g_rows = std::move(rows);
-	g_selected = selected;
-
-	static std::once_flag s_classOnce;
-	std::call_once(s_classOnce, [] {
-		WNDCLASSEXW wc{ .cbSize = sizeof(wc) };
-		wc.lpfnWndProc = WndProc;
-		wc.hInstance = GetModuleHandle(nullptr);
-		wc.lpszClassName = CLASS_NAME;
-		if (!RegisterClassExW(&wc) && GetLastError() != ERROR_CLASS_ALREADY_EXISTS) {
-			Logger::Get().Win32Error("Регистрация класса окна выбора апскейлера не удалась");
-		}
-	});
-
-	// См. окно состояния: без владельца, topmost-полоса + таймер; layered тонул под
-	// DComp-представлением (замерено зондом)
-	if (!g_hwnd) {
-		g_hwnd.reset(CreateWindowExW(
-			WS_EX_TOPMOST | WS_EX_TOOLWINDOW | WS_EX_NOACTIVATE | WS_EX_TRANSPARENT,
-			CLASS_NAME, L"", WS_POPUP,
-			0, 0, 0, 0, nullptr, nullptr, GetModuleHandle(nullptr), nullptr));
-		if (!g_hwnd) {
-			Logger::Get().Win32Error("Создание окна выбора апскейлера не удалось");
-			return;
-		}
-	}
-
-	if (!g_font) {
-		const int fontDpi = GetDpiForWindow(g_hwnd.get());
-		g_font.reset(CreateFontW(-MulDiv(14, fontDpi, 96), 0, 0, 0, FW_SEMIBOLD,
-			FALSE, FALSE, FALSE,
-			DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS,
-			CLEARTYPE_QUALITY, DEFAULT_PITCH | FF_DONTCARE, L"Segoe UI"));
-	}
-
-	const int dpi = GetDpiForWindow(g_hwnd.get());
-	const int padx = PADDING_X * dpi / 96;
-	const int pady = PADDING_Y * dpi / 96;
-	const int gap = ROW_GAP * dpi / 96;
-	const int inset = SEL_INSET * dpi / 96;
-
-	// Замеряем все строки тем же шрифтом, каким рисуем (GetDC(nullptr) освобождается
-	// только через ReleaseDC — не обёрткой DeleteDC)
-	std::vector<SIZE> sizes(g_rows.size() + 1);
-	HDC hdc = GetDC(nullptr);
-	const HGDIOBJ oldFont = g_font ? SelectObject(hdc, g_font.get()) : nullptr;
-	GetTextExtentPoint32W(hdc, g_header.c_str(), static_cast<int>(g_header.size()), &sizes[0]);
-	for (size_t i = 0; i < g_rows.size(); ++i) {
-		GetTextExtentPoint32W(hdc, g_rows[i].c_str(), static_cast<int>(g_rows[i].size()), &sizes[i + 1]);
-	}
-	if (oldFont) {
-		SelectObject(hdc, oldFont);
-	}
-	ReleaseDC(nullptr, hdc);
-
-	g_rowH = sizes[0].cy;
-	for (const auto& s : sizes) {
-		g_rowH = std::max(g_rowH, static_cast<int>(s.cy));
-	}
-	int maxTextW = 0;
-	for (const auto& s : sizes) {
-		maxTextW = std::max(maxTextW, static_cast<int>(s.cx));
-	}
-
-	const int w = maxTextW + 2 * padx;
-	const int rowsTotal = static_cast<int>(g_rows.size()) + 1; // заголовок включительно
-	const int h = 2 * pady + rowsTotal * g_rowH + (rowsTotal - 1) * gap;
-
-	g_headerPos = { padx, pady, 0, 0 };
-	g_rowBg.clear();
-	g_rowText.clear();
-	g_rowBg.reserve(g_rows.size());
-	g_rowText.reserve(g_rows.size());
-	int y = pady + g_rowH + gap;
-	for (size_t i = 0; i < g_rows.size(); ++i) {
-		// подсветка — через всю ширину списка, отступами от краёв окна
-		g_rowBg.push_back({ padx - inset, y - gap / 2, w - padx + inset, y + g_rowH + gap / 2 });
-		g_rowText.push_back({ padx, y });
-		y += g_rowH + gap;
-	}
-
-	// по центру кадра, чуть выше середины — список не должен перекрывать строку состояния
-	const int fw = frameRect.right - frameRect.left;
-	const int fh = frameRect.bottom - frameRect.top;
-	const int x = frameRect.left + (fw - w) / 2;
-	const int py = frameRect.top + (fh - h) / 3;
-
-	if (!SetWindowPos(g_hwnd.get(), HWND_TOPMOST, x, py, w, h, SWP_NOACTIVATE)) {
-		Logger::Get().Win32Error("Размещение окна выбора апскейлера не удалось");
-		return;
-	}
-	Logger::Get().Info(fmt::format(
-		"Галерея: окно выбора размещено, topmost={}, окно=0x{:X}",
-		(GetWindowLongPtrW(g_hwnd.get(), GWL_EXSTYLE) & WS_EX_TOPMOST) != 0,
-		reinterpret_cast<uintptr_t>(g_hwnd.get())));
-	ShowWindow(g_hwnd.get(), SW_SHOWNOACTIVATE);
-	SetTimer(g_hwnd.get(), Z_REASSERT_TIMER, 200, nullptr); // см. IsBelowOutputWindow
-	InvalidateRect(g_hwnd.get(), nullptr, FALSE);
-}
-
-void Hide() noexcept {
-	g_hwnd.reset();
-	g_font.reset();
-	g_header.clear();
-	g_rows.clear();
-	g_rowBg.clear();
-	g_rowText.clear();
-	g_selected = -1;
-}
-
-} // namespace gallery_picker
+} // namespace gallery_menu
 
 // Плейлист альбома: все поддерживаемые растровые файлы рекурсивно, в стабильном
 // порядке по полному пути; регистр расширения не важен. Порядок — это то, что
@@ -925,11 +749,6 @@ void GalleryService::_SetPaused(bool paused) {
 // через край в обе стороны — им же листается список (Num6). Отдельная функция
 // потому, что арифметика со «-1 как первым элементом» — классическое место
 // off-by-one. silent=true — без тоста: при выборе из списка список и есть отклик.
-static int NextUpscalerCycle(int position, int cycleSize, int direction) noexcept {
-	const int count = cycleSize + 1;  // -1..n-1 => n вариантов + оригинал
-	return (((position + 1) + direction) % count + count) % count - 1;
-}
-
 // Какую страницу показать после удаления текущего файла из плейлиста: на её место
 // встаёт следующая (тот же индекс), с последней страницы — сдвиг на одну назад.
 // nullopt — альбом опустел, показ нужно остановить.
@@ -947,22 +766,26 @@ static std::optional<size_t> PhotoIndexAfterDelete(size_t index, size_t oldSize)
 	return index;
 }
 
-void GalleryService::_CycleUpscaler(int direction, bool silent) {
-	if (_upscalerCycle.empty()) return;
+bool GalleryService::_EnsureUpscalerSnapshot() {
+	if (_upscalerCycle.empty()) return false;
+	if (_cyclePos != -2) return true;
 
-	if (_cyclePos == -2) {
-		_originalFirst = ScalingService::Get().PhotoEffectsSnapshot();
-		if (_originalFirst.empty()) return;
-		// Эффект профиля и строка цикла с тем же id — одна и та же строка списка:
-		// для профиля «RTX Video VSR Ultra» список показывал два «RTX VSR», а выбор
-		// из цикловой копии терял параметры профиля. Оригинал остаётся первой строкой
-		// (_cyclePos = -1), из цикла такой id убирается.
-		std::erase(_upscalerCycle, _originalFirst[0].name);
-		_cyclePos = -1;
+	_originalFirst = ScalingService::Get().PhotoEffectsSnapshot();
+	if (_originalFirst.empty()) return false;
+	// Эффект профиля и строка цикла с тем же id — одна и та же строка списка:
+	// для профиля «RTX Video VSR Ultra» список показывал два «RTX VSR», а выбор
+	// из цикловой копии терял параметры профиля. Оригинал остаётся первой строкой
+	// (_cyclePos = -1), из цикла такой id убирается.
+	std::erase(_upscalerCycle, _originalFirst[0].name);
+	_cyclePos = -1;
+	return true;
+}
+
+void GalleryService::_ApplyUpscaler(int next, bool silent) {
+	if (!_EnsureUpscalerSnapshot() || next == _cyclePos ||
+		next < -1 || next >= static_cast<int>(_upscalerCycle.size())) {
+		return;
 	}
-
-	const int next = NextUpscalerCycle(_cyclePos, (int)_upscalerCycle.size(), direction);
-	if (next == _cyclePos) return;
 
 	std::vector<EffectOption> effects = _originalFirst;
 	std::wstring displayName;
@@ -983,13 +806,6 @@ void GalleryService::_CycleUpscaler(int direction, bool silent) {
 		return;
 	}
 	_cyclePos = next;
-
-	// Список открыт — подсвечиваем выбранный немедленно: выбор применяется, не
-	// закрывая список, и до перерисовки подсветка оставалась на прошлой строке
-	// (видно было только после Num6→Num6)
-	if (_pickerVisible) {
-		_ShowUpscalerPicker();
-	}
 
 	// Смена эффекта делается пересозданием сессии, а новая сессия загружает первую
 	// фотографию — сразу наводим обратно на текущую страницу, иначе выбор апскейлера
@@ -1061,44 +877,56 @@ void GalleryService::_DeleteCurrentPhoto() {
 	}
 }
 
-// Список апскейлеров: оригинал профиля сверху (это то, с чем запускали сессию),
-// ниже — цикл доступных способов (включая RTX VSR, если он есть в системе).
-// Подсвечена текущая позиция (_cyclePos = -1 — первая строка). Инициализация
-// снимка общая с _CycleUpscaler: список можно открыть и до первой замены.
-void GalleryService::_ShowUpscalerPicker() {
-	if (_upscalerCycle.empty()) return;
+// Контекстное меню: апскейлеры (оригинал профиля сверху - то, с чем запускали сессию, ниже доступные
+// способы), затем пауза, удаление и выход. Системное меню даёт мышь и клавиатуру само. Выбор применяется
+// после закрытия меню.
+void GalleryService::_ShowContextMenu(POINT screenPoint) {
+	using namespace gallery_menu;
+	if (!_running || _menuOpen) return;
+	const HWND stage = FindWindowW(ScalingService::PHOTO_STAGE_CLASS_NAME, nullptr);
+	if (!stage) return;
 
-	if (_cyclePos == -2) {
-		_originalFirst = ScalingService::Get().PhotoEffectsSnapshot();
-		if (_originalFirst.empty()) return;
-		// См. _CycleUpscaler: цикловая копия эффекта профиля из списка убирается,
-		// оригинал — первая строка (_cyclePos = -1)
-		std::erase(_upscalerCycle, _originalFirst[0].name);
-		_cyclePos = -1;
+	wil::unique_hmenu menu(CreatePopupMenu());
+	if (!menu) {
+		Logger::Get().Win32Error("Меню галереи не создано");
+		return;
 	}
-
-	std::vector<std::wstring> rows;
-	rows.reserve(_upscalerCycle.size() + 1);
-	rows.push_back(UpscalerDisplayName(_originalFirst[0].name));
-	for (const auto& name : _upscalerCycle) {
-		rows.push_back(UpscalerDisplayName(name));
+	if (_EnsureUpscalerSnapshot()) {
+		AppendMenuW(menu.get(), MF_STRING | MF_DISABLED, 0, _ResourceString(L"Gallery_PickerHeader").c_str());
+		AppendMenuW(menu.get(), MF_STRING, ID_UPSCALER_BASE, UpscalerDisplayName(_originalFirst[0].name).c_str());
+		for (size_t i = 0; i < _upscalerCycle.size(); ++i) {
+			AppendMenuW(menu.get(), MF_STRING, ID_UPSCALER_BASE + 1 + static_cast<UINT>(i),
+				UpscalerDisplayName(_upscalerCycle[i]).c_str());
+		}
+		CheckMenuRadioItem(menu.get(), ID_UPSCALER_BASE, ID_UPSCALER_BASE + static_cast<UINT>(_upscalerCycle.size()),
+			ID_UPSCALER_BASE + static_cast<UINT>(_cyclePos + 1), MF_BYCOMMAND);
+		AppendMenuW(menu.get(), MF_SEPARATOR, 0, nullptr);
 	}
+	AppendMenuW(menu.get(), MF_STRING, ID_PAUSE,
+		_ResourceString(_paused ? L"Gallery_Menu_Resume" : L"Gallery_Menu_Pause").c_str());
+	AppendMenuW(menu.get(), MF_STRING, ID_DELETE, _ResourceString(L"Gallery_Menu_Delete").c_str());
+	AppendMenuW(menu.get(), MF_SEPARATOR, 0, nullptr);
+	AppendMenuW(menu.get(), MF_STRING, ID_STOP, _ResourceString(L"Gallery_Menu_Stop").c_str());
 
-	RECT frameRect{};
-	if (HWND output = FindWindowW(CommonSharedConstants::SCALING_WINDOW_CLASS_NAME, nullptr);
-		output && IsWindowVisible(output)) {
-		GetWindowRect(output, &frameRect);
-	} else {
-		frameRect = { 0, 0, GetSystemMetrics(SM_CXSCREEN), GetSystemMetrics(SM_CYSCREEN) };
+	// Окно-владелец обязано быть на переднем плане, иначе меню не закрывается кликом мимо
+	_menuOpen = true;
+	SetForegroundWindow(stage);
+	const UINT command = static_cast<UINT>(TrackPopupMenuEx(menu.get(),
+		TPM_RETURNCMD | TPM_NONOTIFY | TPM_RIGHTBUTTON | TPM_LEFTALIGN | TPM_TOPALIGN,
+		screenPoint.x, screenPoint.y, stage, nullptr));
+	PostMessageW(stage, WM_NULL, 0, 0);
+	_menuOpen = false;
+
+	if (!_running) return;  // показ могли остановить, пока меню было открыто
+	if (command >= ID_UPSCALER_BASE && command < ID_PAUSE) {
+		_ApplyUpscaler(static_cast<int>(command - ID_UPSCALER_BASE) - 1);
+	} else if (command == ID_PAUSE) {
+		_SetPaused(!_paused);
+	} else if (command == ID_DELETE) {
+		_DeleteCurrentPhoto();
+	} else if (command == ID_STOP) {
+		Stop();
 	}
-
-	_pickerVisible = true;
-	gallery_picker::Update(_ResourceString(L"Gallery_PickerHeader"), std::move(rows), _cyclePos + 1, frameRect);
-}
-
-void GalleryService::_HideUpscalerPicker() noexcept {
-	_pickerVisible = false;
-	gallery_picker::Hide();
 }
 
 void GalleryService::_Cleanup() noexcept {
@@ -1108,7 +936,6 @@ void GalleryService::_Cleanup() noexcept {
 	}
 	try {
 		gallery_status::Hide();
-		gallery_picker::Hide();
 		_keyboardHook.reset();
 		_mouseHook.reset();
 		if (_autoTimer) {
@@ -1127,8 +954,6 @@ void GalleryService::_Cleanup() noexcept {
 	_index = 0;
 	_intervalSeconds = 0;
 	_cyclePos = -2;
-	_pickerVisible = false;
-	_num6Held = false;
 	_wheelAccum = 0;
 	_lastPersistTick = 0;
 	_stepDirection = 1;
@@ -1142,16 +967,15 @@ void GalleryService::_Cleanup() noexcept {
 	}
 }
 
-// Что делает клавиша галереи в зависимости от состояния списка апскейлеров —
-// вся карта здесь (тип — в GalleryService.h), проверяется тестами на CPU.
-// Список намеренно короткий: всё остальное (включая Esc в чужих приложениях)
-// должно доставаться обычным программам.
-static GalleryKeyAction DecideGalleryKey(unsigned vkCode, bool pickerVisible) noexcept {
+// Что делает клавиша галереи — вся карта здесь (тип — в GalleryService.h), проверяется
+// тестами на CPU. Список намеренно короткий: всё остальное (включая Esc в чужих
+// приложениях) должно доставаться обычным программам.
+static GalleryKeyAction DecideGalleryKey(unsigned vkCode) noexcept {
 	switch (vkCode) {
 	case VK_LEFT: case VK_UP:
-		return pickerVisible ? GalleryKeyAction::PickerUp : GalleryKeyAction::PagePrev;
+		return GalleryKeyAction::PagePrev;
 	case VK_RIGHT: case VK_DOWN:
-		return pickerVisible ? GalleryKeyAction::PickerDown : GalleryKeyAction::PageNext;
+		return GalleryKeyAction::PageNext;
 	case VK_HOME:
 		return GalleryKeyAction::First;
 	case VK_END:
@@ -1159,18 +983,14 @@ static GalleryKeyAction DecideGalleryKey(unsigned vkCode, bool pickerVisible) no
 	case VK_SPACE:
 		return GalleryKeyAction::TogglePause;
 	case VK_NUMPAD6:
-		return GalleryKeyAction::TogglePicker;
+		return GalleryKeyAction::OpenMenu;
 	case VK_DELETE:
-		// в списке Delete не занят (он только выбирает стрелками), так что удаляем
-		// фото при любом состоянии
 		return GalleryKeyAction::DeletePhoto;
 	case VK_ESCAPE:
-		return pickerVisible ? GalleryKeyAction::ClosePicker : GalleryKeyAction::Stop;
 	case VK_F11:
-		// как Esc: со списком — закрыть список, без него — остановить показ.
-		// Пользователь ждёт от F11 (полноэкранный) выхода из просмотра, а «чужой»
+		// F11 как Esc: пользователь ждёт от F11 (полноэкранный) выхода из просмотра, а «чужой»
 		// полноэкранный во время показа недоступен в принципе — перехват ничего не отнимает
-		return pickerVisible ? GalleryKeyAction::ClosePicker : GalleryKeyAction::Stop;
+		return GalleryKeyAction::Stop;
 	default:
 		return GalleryKeyAction::PassThrough;
 	}
@@ -1178,25 +998,15 @@ static GalleryKeyAction DecideGalleryKey(unsigned vkCode, bool pickerVisible) no
 
 LRESULT CALLBACK GalleryService::_KeyboardHookProc(int nCode, WPARAM wParam, LPARAM lParam) {
 	auto& self = Get();
-	if (nCode >= 0 && self._running) {
-		const auto vkCode = ((KBDLLHOOKSTRUCT*)lParam)->vkCode;
-		if (wParam == WM_KEYUP && vkCode == VK_NUMPAD6) {
-			// удержание Num6 присылает автоповтор: переключение — одно на нажатие
-			self._num6Held = false;
-		} else if (wParam == WM_KEYDOWN || wParam == WM_SYSKEYDOWN) {
-			const auto action = DecideGalleryKey(vkCode, self._pickerVisible);
-			// хоткеи принадлежат галерее только пока она в фокусе — иначе клавиши
-			// (включая Esc) достаются обычным приложениям
-			if (action != GalleryKeyAction::PassThrough && self._IsSessionForeground()) {
-				if (action == GalleryKeyAction::TogglePicker) {
-					if (self._num6Held) {
-						return 1;  // автоповтор удерживаемой клавиши: ничего не переключаем
-					}
-					self._num6Held = true;
-				}
-				self._OnKeyAction(action);
-				return 1;
-			}
+	// Пока открыто контекстное меню, клавиши (стрелки, Enter, Esc) принадлежат ему
+	if (nCode >= 0 && self._running && !self._menuOpen &&
+		(wParam == WM_KEYDOWN || wParam == WM_SYSKEYDOWN)) {
+		const auto action = DecideGalleryKey(((KBDLLHOOKSTRUCT*)lParam)->vkCode);
+		// хоткеи принадлежат галерее только пока она в фокусе — иначе клавиши
+		// (включая Esc) достаются обычным приложениям
+		if (action != GalleryKeyAction::PassThrough && self._IsSessionForeground()) {
+			self._OnKeyAction(action);
+			return 1;
 		}
 	}
 	return CallNextHookEx(nullptr, nCode, wParam, lParam);
@@ -1204,7 +1014,7 @@ LRESULT CALLBACK GalleryService::_KeyboardHookProc(int nCode, WPARAM wParam, LPA
 
 LRESULT CALLBACK GalleryService::_MouseHookProc(int nCode, WPARAM wParam, LPARAM lParam) {
 	auto& self = Get();
-	if (nCode >= 0 && self._running) {
+	if (nCode >= 0 && self._running && !self._menuOpen) {
 		if (wParam == WM_MOUSEWHEEL) {
 			// В WH_MOUSE_LL данные приходят в MSLLHOOKSTRUCT, а не в wParam: величина
 			// колеса — старшее слово mouseData (в wParam здесь просто код сообщения,
@@ -1228,6 +1038,14 @@ LRESULT CALLBACK GalleryService::_MouseHookProc(int nCode, WPARAM wParam, LPARAM
 				self._TryFocusFromPhotoClick(((MSLLHOOKSTRUCT*)lParam)->pt)) {
 				return 1;
 			}
+		} else if ((wParam == WM_RBUTTONDOWN || wParam == WM_RBUTTONUP) && self._IsSessionForeground()) {
+			// Правая кнопка открывает контекстное меню. Меню модальное, а LL-хуку нельзя блокироваться
+			// (LowLevelHooksTimeout отключит хук), поэтому открываем его из очереди диспетчера
+			if (wParam == WM_RBUTTONUP) {
+				const POINT pt = ((MSLLHOOKSTRUCT*)lParam)->pt;
+				App::Get().Dispatcher().TryEnqueue([pt] { GalleryService::Get()._ShowContextMenu(pt); });
+			}
+			return 1;
 		}
 	}
 	return CallNextHookEx(nullptr, nCode, wParam, lParam);
@@ -1330,24 +1148,20 @@ void GalleryService::_OnKeyAction(GalleryKeyAction action) {
 	case GalleryKeyAction::TogglePause:
 		_SetPaused(!_paused);
 		break;
-	case GalleryKeyAction::TogglePicker:
-		if (_pickerVisible) {
-			_HideUpscalerPicker();
+	case GalleryKeyAction::OpenMenu:
+	{
+		// Num6: меню по центру кадра (у правой кнопки точка - курсор). Из хука нельзя блокироваться - через диспетчер
+		RECT frame{};
+		if (HWND output = FindWindowW(CommonSharedConstants::SCALING_WINDOW_CLASS_NAME, nullptr);
+			output && IsWindowVisible(output)) {
+			GetWindowRect(output, &frame);
 		} else {
-			_ShowUpscalerPicker();
+			frame = { 0, 0, GetSystemMetrics(SM_CXSCREEN), GetSystemMetrics(SM_CYSCREEN) };
 		}
+		const POINT center{ (frame.left + frame.right) / 2, (frame.top + frame.bottom) / 3 };
+		App::Get().Dispatcher().TryEnqueue([center] { GalleryService::Get()._ShowContextMenu(center); });
 		break;
-	case GalleryKeyAction::ClosePicker:
-		_HideUpscalerPicker();
-		break;
-	// Выбор применяется сразу, список остаётся открытым: эффект виден на фото,
-	// а список позволяет, не листая страницы, попробовать следующий способ
-	case GalleryKeyAction::PickerUp:
-		_CycleUpscaler(-1, true);
-		break;
-	case GalleryKeyAction::PickerDown:
-		_CycleUpscaler(+1, true);
-		break;
+	}
 	case GalleryKeyAction::DeletePhoto:
 		_DeleteCurrentPhoto();
 		break;

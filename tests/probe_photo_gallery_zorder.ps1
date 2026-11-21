@@ -91,7 +91,6 @@ public static class WinZ {
 $SCALING_CLASS = 'Window_Magpie_967EB565-6F73-4E94-AE53-00CC42592A22'
 $STAGE_CLASS = 'GMagpie.PhotoStage'
 $STATUS_CLASS = 'GMagpie.GalleryStatus'
-$PICKER_CLASS = 'GMagpie.GalleryPicker'
 
 $rows = [WinZ]::TopDown()
 
@@ -123,7 +122,7 @@ foreach ($w in $mine) {
 
 $failures = @()
 $checked = 0
-foreach ($name in @($STATUS_CLASS, $PICKER_CLASS)) {
+foreach ($name in @($STATUS_CLASS)) {  # список апскейлеров теперь системное меню, своего окна нет
     $all_of_class = @($mine | Where-Object { $_.Class -eq $name })
     $overlay = @($all_of_class | Where-Object { $_.Visible })
     if ($name -eq $STATUS_CLASS -and -not $overlay) {

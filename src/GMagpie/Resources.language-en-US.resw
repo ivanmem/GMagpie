@@ -2898,7 +2898,19 @@
     <value>Upscaler: {0}</value>
   </data>
   <data name="Gallery_PickerHeader" xml:space="preserve">
-    <value>Upscaler — ↑/↓ choose · Esc/F11 close</value>
+    <value>Upscaler</value>
+  </data>
+  <data name="Gallery_Menu_Pause" xml:space="preserve">
+    <value>Pause slideshow</value>
+  </data>
+  <data name="Gallery_Menu_Resume" xml:space="preserve">
+    <value>Resume slideshow</value>
+  </data>
+  <data name="Gallery_Menu_Delete" xml:space="preserve">
+    <value>Move to Recycle Bin</value>
+  </data>
+  <data name="Gallery_Menu_Stop" xml:space="preserve">
+    <value>Close gallery</value>
   </data>
   <data name="Gallery_DeletedToast" xml:space="preserve">
     <value>File deleted</value>
