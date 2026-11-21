@@ -158,10 +158,11 @@
 					<HyperlinkButton NavigateUri="https://github.com/SAOG0721/Magpie">
 						<TextBlock x:Uid="About_OtherLinks_Repository" />
 					</HyperlinkButton>
-					<HyperlinkButton Click="FAQ_Click">
+					<!-- ЧаВо и руководство по содействию вели на файлы чужого форка: скрыты до своих документов -->
+					<HyperlinkButton Click="FAQ_Click" Visibility="Collapsed">
 						<TextBlock x:Uid="About_OtherLinks_FAQ" />
 					</HyperlinkButton>
-					<HyperlinkButton Click="ContributionGuidelines_Click">
+					<HyperlinkButton Click="ContributionGuidelines_Click" Visibility="Collapsed">
 						<TextBlock x:Uid="About_OtherLinks_ContributionGuidelines" />
 					</HyperlinkButton>
 					<HyperlinkButton NavigateUri="https://github.com/SAOG0721/Magpie/blob/experimental/LICENSE">

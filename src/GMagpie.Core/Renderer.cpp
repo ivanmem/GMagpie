@@ -3700,7 +3700,9 @@ bool Renderer::_ReleaseNgxConsumers() noexcept {
 
 void Renderer::_UpdateDestRect() noexcept {
 	const RECT& rendererRect = ScalingWindow::Get().RendererRect();
-	DestAlignment alignment = ScalingWindow::Get().Options().destAlignment;
+	// Фото всегда вписывается по центру: настройка выравнивания относится к обычному масштабированию
+	DestAlignment alignment = ScalingWindow::Get().Options().photoSession ?
+		DestAlignment::Center : ScalingWindow::Get().Options().destAlignment;
 
 	LONG destWidth;
 	LONG destHeight;

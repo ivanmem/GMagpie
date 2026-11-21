@@ -294,7 +294,7 @@
 					IsOpen="{x:Bind ViewModel.ShowGraphicsCardUnavailableWarning, Mode=OneWay}"
 					Severity="Warning"/>
 			</local:SettingsGroup>
-			<StackPanel x:Name="FrameRefreshGroup" Spacing="8">
+			<StackPanel x:Name="FrameRefreshGroup" Spacing="8" Visibility="Collapsed">
 				<Grid Margin="1,0,0,0" ColumnSpacing="16" SizeChanged="FrameRefreshHeader_SizeChanged">
 					<Grid.RowDefinitions>
 						<RowDefinition Height="Auto"/>
@@ -1002,7 +1002,7 @@
 					<ToggleSwitch x:Uid="ToggleSwitch" IsOn="{x:Bind ViewModel.IsAdjustCursorSpeed, Mode=TwoWay}"/>
 				</local:SettingsCard>
 			</local:SettingsGroup>
-			<local:SettingsGroup x:Uid="Profile_Advanced">
+			<local:SettingsGroup x:Uid="Profile_Advanced" Visibility="Collapsed">
 				<local:SettingsCard Style="{StaticResource ProfileCardStyle}"
 					Loaded="ProfileCard_Loaded"
 					SizeChanged="ProfileCard_SizeChanged"
@@ -1021,7 +1021,7 @@
 						</TextBox.ContextFlyout>
 					</TextBox>
 				</local:SettingsCard>
-				<local:SettingsCard Style="{StaticResource ProfileCardStyle}" Loaded="ProfileCard_Loaded" SizeChanged="ProfileCard_SizeChanged" x:Uid="Profile_Advanced_DestAlignment">
+				<local:SettingsCard Style="{StaticResource ProfileCardStyle}" Loaded="ProfileCard_Loaded" SizeChanged="ProfileCard_SizeChanged" x:Uid="Profile_Advanced_DestAlignment" Visibility="Collapsed">
 					<local:SettingsCard.HeaderIcon>
 						<FontIcon Glyph="&#xE799;"/>
 					</local:SettingsCard.HeaderIcon>
