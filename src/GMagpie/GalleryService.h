@@ -42,6 +42,9 @@ enum class GalleryKeyAction {
 // фокуса ввод уходит обычным приложениям, а клик по фото возвращает фокус
 // галерее. Все методы — с UI-потока. Папка и страница последней сессии
 // сохраняются в конфигурации, чтобы с них можно было продолжить просмотр.
+// Поддерживаемый ли растровый формат (по расширению, регистр не важен)
+bool IsSupportedPhoto(std::wstring_view path);
+
 class GalleryService {
 public:
 	static GalleryService& Get() noexcept {
@@ -54,7 +57,13 @@ public:
 
 	// intervalSeconds = 0 — автолистание выключено; scalingModeIdx = -1 — режим из профиля;
 	// startIndex — первая страница (0), нужен для восстановления прошлой сессии
-	bool Start(std::wstring folder, uint32_t intervalSeconds, int scalingModeIdx, size_t startIndex = 0);
+	// openFile — открыть одно фото «как в обычных галереях»: плейлист из его папки (без подпапок),
+	// старт со страницы этого файла; startIndex при этом игнорируется
+	bool Start(std::wstring folder, uint32_t intervalSeconds, int scalingModeIdx, size_t startIndex = 0,
+		std::wstring openFile = {});
+	// Пункт «Открыть в галерее» в контекстном меню Проводника и запись в «Открыть с помощью» для
+	// всех поддерживаемых форматов (HKCU, без прав администратора); enable=false — убрать
+	static bool RegisterShell(bool enable);
 	// Продолжить прошлый просмотр: папка и страница из сохранённого состояния
 	bool StartLast(uint32_t intervalSeconds);
 	void Stop();
@@ -71,7 +80,7 @@ public:
 private:
 	GalleryService() = default;
 
-	void _BuildPlaylist(const std::wstring& folder);
+	void _BuildPlaylist(const std::wstring& folder, bool recursive);
 	void _ShowCurrent();
 	void _PersistSession(bool force) noexcept;
 	void _PrefetchNext();

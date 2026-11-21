@@ -210,6 +210,9 @@ void TestPlaylist() {
 	// зависит от того, в каком порядке их вернул обход диска
 	assert(std::ranges::is_sorted(playlist));
 	assert(BuildPhotoPlaylist(root.native()) == playlist);
+	// одно фото из Проводника: только соседи по папке, без подпапок
+	assert((BuildPhotoPlaylist(root.native(), false) == std::vector<std::wstring>{
+		PagePath(root, "001.bmp").native(), PagePath(root, "002.PNG").native() }));
 	// внутри одной папки номер страницы совпадает с именем файла
 	assert(std::ranges::find(playlist, fs::path(root / "a" / "010.jpg").native())
 		< std::ranges::find(playlist, fs::path(root / "a" / "010.tiff").native()));
@@ -374,6 +377,28 @@ void TestGalleryLiteArgument() {
 	{
 		wchar_t* argv[] = { (wchar_t*)L"GMagpie.exe" };
 		assert(!HasGalleryArgument(1, argv));
+	}
+
+	// Проводник открывает одно фото: «GMagpie.exe "<файл>"»; значения опций файлом не считаются
+	{
+		wchar_t* argv[] = { (wchar_t*)L"GMagpie.exe", (wchar_t*)L"D:\\album\\Photo.JPG" };
+		assert(FindPhotoArgument(2, argv) == L"D:\\album\\Photo.JPG");
+	}
+	{
+		wchar_t* argv[] = { (wchar_t*)L"GMagpie.exe", (wchar_t*)L"--mode", (wchar_t*)L"x.jpg", (wchar_t*)L"-t" };
+		assert(FindPhotoArgument(4, argv).empty());
+	}
+	{
+		wchar_t* argv[] = { (wchar_t*)L"GMagpie.exe", (wchar_t*)L"D:\\doc\\readme.txt" };
+		assert(FindPhotoArgument(2, argv).empty());
+	}
+	{
+		wchar_t* argv[] = { (wchar_t*)L"GMagpie.exe", (wchar_t*)L"--register-shell" };
+		assert(FindShellCommand(2, argv) == std::optional<bool>(true));
+		wchar_t* argv2[] = { (wchar_t*)L"GMagpie.exe", (wchar_t*)L"--unregister-shell" };
+		assert(FindShellCommand(2, argv2) == std::optional<bool>(false));
+		wchar_t* argv3[] = { (wchar_t*)L"GMagpie.exe", (wchar_t*)L"-t" };
+		assert(!FindShellCommand(2, argv3).has_value());
 	}
 
 	std::cout << "Gallery lite mode: only --gallery with a folder makes the instance lite "

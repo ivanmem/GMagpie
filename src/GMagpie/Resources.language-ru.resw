@@ -1478,6 +1478,9 @@
   <data name="Home_Gallery_Header" xml:space="preserve">
     <value>Фотогалерея</value>
   </data>
+  <data name="Home_Gallery_ShellMenu" xml:space="preserve">
+    <value>Открыть в галерее GMagpie</value>
+  </data>
   <data name="Home_Gallery_NotResumable" xml:space="preserve">
     <value>Продолжить нечего: папка последнего просмотра недоступна. Выберите папку заново.</value>
   </data>

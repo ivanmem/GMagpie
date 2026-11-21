@@ -134,11 +134,50 @@ static bool HasGalleryArgument(int argc, LPWSTR* argv) noexcept {
 	return false;
 }
 
-// Фотогалерея из командной строки: GMagpie.exe --gallery <папка> [--interval сек] [--mode имя]
+// Открытие одного фото: Проводник запускает «GMagpie.exe "<файл>"» (двойной щелчок, «Открыть с
+// помощью», пункт контекстного меню). Значения опций пропускаются: имя режима может кончаться на «.jpg».
+static std::wstring FindPhotoArgument(int argc, LPWSTR* argv) {
+	for (int i = 1; i < argc; ++i) {
+		const std::wstring_view arg(argv[i]);
+		if (arg == L"--interval" || arg == L"--mode" || arg == L"--gallery") {
+			++i;
+		} else if (!arg.starts_with(L'-') && IsSupportedPhoto(arg)) {
+			return std::wstring(arg);
+		}
+	}
+	return {};
+}
+
+// --register-shell / --unregister-shell: пункт контекстного меню и «Открыть с помощью» (true — добавить)
+static std::optional<bool> FindShellCommand(int argc, LPWSTR* argv) noexcept {
+	for (int i = 1; i < argc; ++i) {
+		if (const std::wstring_view arg(argv[i]); arg == L"--register-shell") {
+			return true;
+		} else if (arg == L"--unregister-shell") {
+			return false;
+		}
+	}
+	return std::nullopt;
+}
+
+// Фотогалерея из командной строки: GMagpie.exe --gallery <папка|файл> [--interval сек] [--mode имя]
+// или просто GMagpie.exe <файл>
 static void _TryStartGalleryFromCommandLine() {
 	int argc = 0;
 	LPWSTR* argv = CommandLineToArgvW(GetCommandLineW(), &argc);
 	if (!argv) return;
+
+	if (const auto shell = FindShellCommand(argc, argv)) {
+		LocalFree(argv);
+		App::Get().Dispatcher().TryEnqueue([enable = *shell] {
+			Logger::Get().Info(fmt::format("Оболочка: {} пункт контекстного меню галереи", enable ? "добавляем" : "убираем"));
+			if (!GalleryService::RegisterShell(enable)) {
+				Logger::Get().Error("Оболочка: регистрация не удалась, см. предыдущие записи лога");
+			}
+			App::Get().Quit();
+		});
+		return;
+	}
 
 	std::wstring folder;
 	uint32_t interval = 0;
@@ -168,24 +207,34 @@ static void _TryStartGalleryFromCommandLine() {
 			}
 		}
 	}
-	if (!hasGallery) {
-		LocalFree(argv);
-		return;
+	// Открываемый файл: либо «голый» путь, либо файл после --gallery; показ идёт по его папке
+	std::wstring openFile = FindPhotoArgument(argc, argv);
+	if (openFile.empty() && hasGallery && std::filesystem::is_regular_file(folder)) {
+		openFile = folder;
 	}
-
-	if (!std::filesystem::is_directory(folder)) {
+	LocalFree(argv);
+	if (!openFile.empty()) {
+		std::error_code ec;
+		const std::filesystem::path file = std::filesystem::absolute(openFile, ec).lexically_normal();
+		if (ec || !std::filesystem::is_regular_file(file, ec)) {
+			Logger::Get().Error(fmt::format("Галерея: файл не найден ({})", StrHelper::UTF16ToUTF8(openFile)));
+			return;
+		}
+		openFile = file.wstring();
+		folder = file.parent_path().wstring();
+	} else if (!hasGallery) {
+		return;
+	} else if (!std::filesystem::is_directory(folder)) {
 		Logger::Get().Error(fmt::format("Галерея: папка не найдена ({})", StrHelper::UTF16ToUTF8(folder)));
-		LocalFree(argv);
 		return;
 	}
 
 	// Запуск после полного завершения Initialize через очередь диспетчера
-	App::Get().Dispatcher().TryEnqueue([folder = std::move(folder), interval, modeIdx]() mutable {
-		if (!GalleryService::Get().Start(std::move(folder), interval, modeIdx)) {
+	App::Get().Dispatcher().TryEnqueue([folder = std::move(folder), openFile = std::move(openFile), interval, modeIdx]() mutable {
+		if (!GalleryService::Get().Start(std::move(folder), interval, modeIdx, 0, std::move(openFile))) {
 			Logger::Get().Error("Галерея: запуск не удался, см. предыдущие записи лога");
 		}
 	});
-	LocalFree(argv);
 }
 
 bool App::Initialize(const wchar_t* arguments) {
@@ -197,7 +246,8 @@ bool App::Initialize(const wchar_t* arguments) {
 	{
 		int argc = 0;
 		if (LPWSTR* argv = CommandLineToArgvW(GetCommandLineW(), &argc)) {
-			_galleryLiteMode = HasGalleryArgument(argc, argv);
+			_galleryLiteMode = HasGalleryArgument(argc, argv) || !FindPhotoArgument(argc, argv).empty() ||
+				FindShellCommand(argc, argv).has_value();
 			LocalFree(argv);
 		}
 	}

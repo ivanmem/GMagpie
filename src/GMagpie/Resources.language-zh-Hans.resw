@@ -2876,6 +2876,9 @@
   <data name="Home_Gallery_Header" xml:space="preserve">
     <value>照片幻灯片</value>
   </data>
+  <data name="Home_Gallery_ShellMenu" xml:space="preserve">
+    <value>在 GMagpie 图库中打开</value>
+  </data>
   <data name="Home_Gallery_NotResumable" xml:space="preserve">
     <value>没有可继续的内容：上次放映的文件夹已不可用，请重新选择文件夹。</value>
   </data>

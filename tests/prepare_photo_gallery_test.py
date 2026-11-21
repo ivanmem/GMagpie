@@ -43,7 +43,7 @@ parts = [
              "// Цикл апскейлеров для Num6")),
     ("GalleryService.cpp: album scan (recursion, extension filter, order)",
      extract(gallery, "static std::vector<std::wstring> BuildPhotoPlaylist(",
-             "// Сохранённая страница")),
+             "// Контекстное меню и")),
     ("GalleryService.cpp: restoring a page from a changed album",
      extract(gallery, "static size_t PhotoResumeIndex(",
              "bool GalleryService::Start(")),

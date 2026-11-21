@@ -12,6 +12,7 @@
 #include "Win32Helper.h"
 #include <optional>
 #include <shellapi.h>
+#include <shlobj_core.h>
 #include <unordered_set>
 #include <wincodec.h>
 
@@ -37,6 +38,12 @@ static const std::unordered_set<std::wstring> SUPPORTED_EXTENSIONS = {
 	L".jpg", L".jpeg", L".jpe", L".jfif", L".png", L".bmp",
 	L".gif", L".tif", L".tiff", L".webp", L".heic", L".heif", L".avif"
 };
+
+bool IsSupportedPhoto(std::wstring_view path) {
+	std::wstring ext = fs::path(path).extension().wstring();
+	std::ranges::transform(ext, ext.begin(), [](wchar_t c) { return (wchar_t)std::towlower(c); });
+	return SUPPORTED_EXTENSIONS.contains(ext);
+}
 
 // Цикл апскейлеров для Num6: HLSL-ресемплеры без сторонних SDK плюс RTX VSR
 // (по явной просьбе пользователя). VSR — нативный эффект: он участвует только в
@@ -476,25 +483,81 @@ void Hide() noexcept {
 // Плейлист альбома: все поддерживаемые растровые файлы рекурсивно, в стабильном
 // порядке по полному пути; регистр расширения не важен. Порядок — это то, что
 // пользователь видит как «номера страниц», поэтому он обязан быть детерминированным.
-static std::vector<std::wstring> BuildPhotoPlaylist(const std::wstring& folder) {
+static std::vector<std::wstring> BuildPhotoPlaylist(const std::wstring& folder, bool recursive = true) {
 	std::vector<std::wstring> playlist;
 	std::error_code ec;
-	fs::recursive_directory_iterator it(folder,
-		fs::directory_options::skip_permission_denied, ec);
+	const auto options = fs::directory_options::skip_permission_denied;
+	const auto collect = [&](auto it) {
+		for (const auto& entry : it) {
+			std::error_code ignore;
+			if (!entry.is_regular_file(ignore) || ignore) continue;
+			if (!IsSupportedPhoto(entry.path().native())) continue;
+			playlist.push_back(entry.path().wstring());
+		}
+	};
+	if (recursive) {
+		fs::recursive_directory_iterator it(folder, options, ec);
+		if (!ec) collect(it);
+	} else {
+		fs::directory_iterator it(folder, options, ec);
+		if (!ec) collect(it);
+	}
 	if (ec) {
 		Logger::Get().Error(fmt::format("Галерея: не удалось открыть папку ({})", StrHelper::UTF16ToUTF8(folder)));
 		return playlist;
 	}
-	for (const auto& entry : it) {
-		std::error_code ignore;
-		if (!entry.is_regular_file(ignore) || ignore) continue;
-		std::wstring ext = entry.path().extension().wstring();
-		std::ranges::transform(ext, ext.begin(), [](wchar_t c) { return (wchar_t)std::towlower(c); });
-		if (!SUPPORTED_EXTENSIONS.contains(ext)) continue;
-		playlist.push_back(entry.path().wstring());
-	}
 	std::ranges::sort(playlist);
 	return playlist;
+}
+
+// Контекстное меню и «Открыть с помощью»: HKCU\Software\Classes, права администратора не нужны.
+// Динамический пункт на каждом поддерживаемом расширении (SystemFileAssociations не трогает
+// программу по умолчанию), плюс Applications\GMagpie.exe для списка «Открыть с помощью».
+bool GalleryService::RegisterShell(bool enable) {
+	static constexpr const wchar_t* VERB = L"GMagpie.Gallery";
+	static constexpr const wchar_t* APP_KEY = L"Software\\Classes\\Applications\\GMagpie.exe";
+
+	const std::wstring exe = Win32Helper::GetExePath().native();
+	const std::wstring command = fmt::format(L"\"{}\" \"%1\"", exe);
+	const std::wstring icon = fmt::format(L"\"{}\",0", exe);
+	bool ok = true;
+	const auto setValue = [&](const std::wstring& key, const wchar_t* name, const std::wstring& value) {
+		const LSTATUS status = RegSetKeyValueW(HKEY_CURRENT_USER, key.c_str(), name, REG_SZ,
+			value.c_str(), static_cast<DWORD>((value.size() + 1) * sizeof(wchar_t)));
+		if (status != ERROR_SUCCESS) {
+			Logger::Get().Win32Error(fmt::format("Запись в реестр не удалась ({})", StrHelper::UTF16ToUTF8(key)));
+			ok = false;
+		}
+	};
+	const auto deleteTree = [&](const std::wstring& key) {
+		const LSTATUS status = RegDeleteTreeW(HKEY_CURRENT_USER, key.c_str());
+		if (status != ERROR_SUCCESS && status != ERROR_FILE_NOT_FOUND) {
+			Logger::Get().Win32Error(fmt::format("Удаление из реестра не удалось ({})", StrHelper::UTF16ToUTF8(key)));
+			ok = false;
+		}
+	};
+
+	if (enable) {
+		const std::wstring label = _ResourceString(L"Home_Gallery_ShellMenu");
+		setValue(APP_KEY, L"FriendlyAppName", L"GMagpie");
+		setValue(std::wstring(APP_KEY) + L"\\shell\\open", L"MUIVerb", label);
+		setValue(std::wstring(APP_KEY) + L"\\shell\\open\\command", nullptr, command);
+	} else {
+		deleteTree(APP_KEY);
+	}
+	for (const std::wstring& ext : SUPPORTED_EXTENSIONS) {
+		const std::wstring verbKey = fmt::format(L"Software\\Classes\\SystemFileAssociations\\{}\\shell\\{}", ext, VERB);
+		if (enable) {
+			setValue(std::wstring(APP_KEY) + L"\\SupportedTypes", ext.c_str(), L"");
+			setValue(verbKey, nullptr, _ResourceString(L"Home_Gallery_ShellMenu"));
+			setValue(verbKey, L"Icon", icon);
+			setValue(verbKey + L"\\command", nullptr, command);
+		} else {
+			deleteTree(verbKey);
+		}
+	}
+	SHChangeNotify(SHCNE_ASSOCCHANGED, SHCNF_IDLIST, nullptr, nullptr);
+	return ok;
 }
 
 // Сохранённая страница может оказаться за пределами текущего альбома (файлы
@@ -503,14 +566,26 @@ static size_t PhotoResumeIndex(size_t saved, size_t count) noexcept {
 	return count == 0 ? 0 : std::min(saved, count - 1);
 }
 
-bool GalleryService::Start(std::wstring folder, uint32_t intervalSeconds, int scalingModeIdx, size_t startIndex) {
+bool GalleryService::Start(std::wstring folder, uint32_t intervalSeconds, int scalingModeIdx, size_t startIndex,
+	std::wstring openFile) {
 	_lastStartFailure = GalleryStartFailure::Other;
 	if (_running) {
 		Logger::Get().Warn("Галерея уже запущена; сначала остановите текущую сессию");
 		return false;
 	}
 
-	_BuildPlaylist(folder);
+	_BuildPlaylist(folder, openFile.empty());
+	if (!openFile.empty()) {
+		// Открыть одно фото: страница — сам файл (в плейлисте тот же префикс папки, регистр имени не важен)
+		const auto it = std::ranges::find_if(_playlist, [&](const std::wstring& path) {
+			return _wcsicmp(path.c_str(), openFile.c_str()) == 0;
+		});
+		if (it == _playlist.end()) {
+			Logger::Get().Warn(fmt::format("Галерея: открываемый файл не найден в папке ({}), начинаем с первого",
+				StrHelper::UTF16ToUTF8(openFile)));
+		}
+		startIndex = it == _playlist.end() ? 0 : static_cast<size_t>(it - _playlist.begin());
+	}
 	if (_playlist.empty()) {
 		Logger::Get().Error(fmt::format("Галерея: в папке нет поддерживаемых изображений ({})",
 			StrHelper::UTF16ToUTF8(folder)));
@@ -637,8 +712,8 @@ void GalleryService::Stop() {
 	ScalingService::Get().StopPhotoSession();
 }
 
-void GalleryService::_BuildPlaylist(const std::wstring& folder) {
-	_playlist = BuildPhotoPlaylist(folder);
+void GalleryService::_BuildPlaylist(const std::wstring& folder, bool recursive) {
+	_playlist = BuildPhotoPlaylist(folder, recursive);
 }
 
 void GalleryService::_ShowCurrent() {

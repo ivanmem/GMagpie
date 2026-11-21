@@ -2876,6 +2876,9 @@
   <data name="Home_Gallery_Header" xml:space="preserve">
     <value>Photo Gallery</value>
   </data>
+  <data name="Home_Gallery_ShellMenu" xml:space="preserve">
+    <value>Open in GMagpie gallery</value>
+  </data>
   <data name="Home_Gallery_NotResumable" xml:space="preserve">
     <value>Nothing to continue: the folder of the last slideshow is not available. Choose the folder again.</value>
   </data>
