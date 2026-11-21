@@ -5,6 +5,7 @@
 #include "Logger.h"
 #include "ScalingWindow.h"
 #include "Renderer.h"
+#include "CursorManager.h"
 #include "EffectParameterValue.h"
 #include "DLSSNRPerformanceParameters.h"
 #include "Win32Helper.h"
@@ -202,6 +203,29 @@ void ScalingRuntime::RequestPhotoFile(std::wstring path) {
 		auto& window = ScalingWindow::Get();
 		if (!window) return;
 		window.RequestPhotoFile(std::move(path));
+	});
+}
+
+void ScalingRuntime::SetPhotoMenuOpen(bool value) {
+	if (State() == ScalingState::Idle || State() == ScalingState::Stopping) return;
+	const uint64_t generation = _commandGeneration.load(std::memory_order_acquire);
+	_Dispatcher().TryEnqueue([this, generation, value] {
+		if (_commandGeneration.load(std::memory_order_acquire) != generation) return;
+		auto& window = ScalingWindow::Get();
+		if (!window) return;
+		if (auto* cursorManager = window.TryGetCursorManager()) cursorManager->IsPopupMenuOpen(value);
+	});
+}
+
+void ScalingRuntime::SavePhotoUpscaled(std::filesystem::path savePath, std::wstring sourcePath) {
+	if (State() == ScalingState::Idle || State() == ScalingState::Stopping) return;
+	const uint64_t generation = _commandGeneration.load(std::memory_order_acquire);
+	_Dispatcher().TryEnqueue([this, generation, savePath = std::move(savePath),
+		sourcePath = std::move(sourcePath)]() mutable {
+		if (_commandGeneration.load(std::memory_order_acquire) != generation) return;
+		auto& window = ScalingWindow::Get();
+		if (!window) return;
+		window.SavePhotoUpscaled(std::move(savePath), std::move(sourcePath));
 	});
 }
 

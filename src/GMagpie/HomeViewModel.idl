@@ -43,6 +43,14 @@ namespace GMagpie {
 		Boolean HasGalleryResume { get; };
 		String GalleryResumeInfo { get; };
 		String GalleryProgressText { get; };
+		Boolean IsGalleryRunning { get; };
+		Boolean ShowGalleryContinue { get; };
+		Boolean ShowGalleryEmpty { get; };
+		String GalleryAlbumName { get; };
+		String GalleryFavoriteFolder { get; };
+		Boolean HasCustomFavoriteFolder { get; };
+		void PickGalleryFavoriteFolder();
+		void ResetGalleryFavoriteFolder();
 
 		Boolean IsTouchSupportEnabled;
 		Windows.Foundation.Uri TouchSupportLearnMoreUrl { get; };

@@ -37,6 +37,11 @@ public:
 	// В фото-сессии — намёк заранее декодировать следующую фотографию; в остальных состояниях игнорируется
 	void RequestPhotoPrefetch(std::wstring path);
 
+	// Фото-сессия: «Сохранить как» - апскейл показываемой страницы (sourcePath) в файл savePath
+	void SavePhotoUpscaled(std::filesystem::path savePath, std::wstring sourcePath);
+	// Контекстное меню галереи открыто: курсор на это время отпускается из захвата
+	void SetPhotoMenuOpen(bool value);
+
 	void Stop();
 	// Main-thread system-key notification; cancels pending fullscreen restarts too.
 	bool StopForTaskSwitch();

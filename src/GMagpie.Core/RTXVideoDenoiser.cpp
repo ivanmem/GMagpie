@@ -5,6 +5,7 @@
 #include "Logger.h"
 #include "ScalingWindow.h"
 #include "StrHelper.h"
+#include "Win32Helper.h"
 
 #ifdef MP_ENABLE_RTX_VIDEO_DENOISE
 
@@ -123,6 +124,10 @@ struct RTXVideoDenoiser::Impl {
 	uint64_t drawCount = 0;
 	float inputScale = 1.0f;
 	float outputScale = 1.0f;
+	// Под что загружена модель - ключ кэша
+	uint32_t inputWidth = 0;
+	uint32_t inputHeight = 0;
+	uint32_t qualityLevel = 0;
 
 	~Impl() {
 		if (effect) {
@@ -147,8 +152,229 @@ struct RTXVideoDenoiser::Impl {
 	}
 };
 
+// Кэш загруженных моделей (фото-сессия). Модель привязана к размерам входа и выхода, и NvVFX_Load под каждый
+// новый размер занимает ~2 с - на листании альбома это была основная задержка. Модель + её CUDA-поток и
+// GPU-буферы переживают драйвер эффекта; D3D-обёртки (привязка к текстурам цепи) создаются заново.
+namespace {
+struct ModelKey {
+	uint32_t inputWidth, inputHeight, outputWidth, outputHeight, qualityLevel;
+	bool operator==(const ModelKey&) const = default;
+};
+
+struct ModelCache {
+	std::mutex mutex;
+	std::condition_variable loaded;
+	// Порядок - давность использования: в конце самая свежая
+	std::vector<std::pair<ModelKey, std::unique_ptr<RTXVideoDenoiser::Impl>>> models;
+	std::vector<ModelKey> loading;
+	// Рантайм NVIDIA (DLL, переменные окружения) поднимает только обычный Initialize
+	std::atomic<bool> runtimeReady = false;
+	// Адаптер последнего Initialize - по нему меряем запас видеопамяти (под mutex)
+	winrt::com_ptr<IDXGIAdapter4> adapter;
+	bool lastTight = false;
+};
+}
+
+static ModelCache& Models() noexcept {
+	// Намеренно без деструктора: освобождать модели при выходе процесса, после выгрузки DLL NVIDIA, нельзя
+	static ModelCache& cache = *new ModelCache;
+	return cache;
+}
+
+// shortcut: держим не больше 6 моделей (сотни МБ видеопамяти каждая), старые вытесняются; хватает на
+// чередование размеров одного альбома
+static constexpr size_t MODEL_CACHE_LIMIT = 6;
+
+// Видеопамяти мало (рядом работает, например, локальная нейросеть): лишние модели только вытесняют чужие
+// ресурсы и разгоняют подкачку - тогда заранее не грузим и в кэше держим одну. Вызывать под cache.mutex.
+static constexpr double TIGHT_VIDEO_MEMORY_SHARE = 0.8;
+static bool VideoMemoryTight(ModelCache& cache) noexcept {
+	DXGI_QUERY_VIDEO_MEMORY_INFO info{};
+	const bool vramKnown = cache.adapter &&
+		SUCCEEDED(cache.adapter->QueryVideoMemoryInfo(0, DXGI_MEMORY_SEGMENT_GROUP_LOCAL, &info)) && info.Budget != 0;
+	const bool vramTight = vramKnown && double(info.CurrentUsage) > double(info.Budget) * TIGHT_VIDEO_MEMORY_SHARE;
+	// Модель держит и буферы в оперативной памяти; при её нехватке запас тоже не копим
+	const bool ramTight = Win32Helper::IsSystemMemoryTight();
+	const bool tight = vramTight || ramTight;
+	if (tight != cache.lastTight) {
+		cache.lastTight = tight;
+		Logger::Get().Info(fmt::format("RTX Video: память {} - видеопамять занято {} из {} МБ, оперативная {}",
+			tight ? "на исходе, подготовка моделей заранее выключена" : "в норме, подготовка моделей заранее включена",
+			info.CurrentUsage >> 20, info.Budget >> 20, ramTight ? "на исходе" : "в норме"));
+	}
+	return tight;
+}
+
+static size_t ModelCacheLimit(ModelCache& cache) noexcept {
+	return VideoMemoryTight(cache) ? 1 : MODEL_CACHE_LIMIT;
+}
+
+static ModelKey KeyOf(const RTXVideoDenoiser::Impl& impl) noexcept {
+	return { impl.inputWidth, impl.inputHeight, impl.outputWidth, impl.outputHeight, impl.qualityLevel };
+}
+
+static auto FindModel(ModelCache& cache, const ModelKey& key) noexcept {
+	return std::ranges::find_if(cache.models, [&](const auto& slot) { return slot.first == key; });
+}
+
+// Модель с её потоком и GPU-буферами - без привязки к D3D-текстурам. Самая дорогая часть - NvVFX_Load.
+static std::unique_ptr<RTXVideoDenoiser::Impl> LoadModel(const ModelKey& key, ScalingError* error) noexcept {
+	const auto started = std::chrono::steady_clock::now();
+	auto impl = std::make_unique<RTXVideoDenoiser::Impl>();
+	impl->inputWidth = key.inputWidth;
+	impl->inputHeight = key.inputHeight;
+	impl->outputWidth = key.outputWidth;
+	impl->outputHeight = key.outputHeight;
+	impl->qualityLevel = key.qualityLevel;
+	// Keep the native model in an explicit RGBA order. D3D11's endpoint is
+	// BGRA8, so the boundary performs the channel swizzle exactly once.
+	impl->nativePixelFormat = NVCV_RGBA;
+	if (!VFXSucceeded(NvVFX_CudaStreamCreate(&impl->stream), "NvVFX_CudaStreamCreate") ||
+		!VFXSucceeded(NvCVImage_Alloc(&impl->inputGPU, key.inputWidth, key.inputHeight,
+			impl->nativePixelFormat, NVCV_U8, NVCV_INTERLEAVED, NVCV_GPU, 32), "NvCVImage_Alloc(input)") ||
+		!VFXSucceeded(NvCVImage_Alloc(&impl->outputGPU, key.outputWidth, key.outputHeight,
+			impl->nativePixelFormat, NVCV_U8, NVCV_INTERLEAVED, NVCV_GPU, 32), "NvCVImage_Alloc(output)")) {
+		return nullptr;
+	}
+
+	const NvCV_Status createEffectStatus = NvVFX_CreateEffect("VideoSuperRes", &impl->effect);
+	if (!VFXSucceeded(createEffectStatus, "NvVFX_CreateEffect(VideoSuperRes)")) {
+		if (error && createEffectStatus == NVCV_ERR_UNIMPLEMENTED) {
+			*error = ScalingError::NvidiaVsrPathUnsupported;
+		}
+		return nullptr;
+	}
+	if (!VFXSucceeded(NvVFX_SetImage(impl->effect, NVVFX_INPUT_IMAGE, &impl->inputGPU),
+			"NvVFX_SetImage(input)") ||
+		!VFXSucceeded(NvVFX_SetImage(impl->effect, NVVFX_OUTPUT_IMAGE, &impl->outputGPU),
+			"NvVFX_SetImage(output)") ||
+		!VFXSucceeded(NvVFX_SetCudaStream(impl->effect, NVVFX_CUDA_STREAM, impl->stream),
+			"NvVFX_SetCudaStream") ||
+		!VFXSucceeded(NvVFX_SetU32(impl->effect, "QualityLevel", key.qualityLevel),
+			"NvVFX_SetU32(QualityLevel)") ||
+		!VFXSucceeded(NvVFX_Load(impl->effect), "NvVFX_Load(VideoSuperRes)")) {
+		return nullptr;
+	}
+
+	if (HMODULE module = GetModuleHandleW(L"NVVideoEffects.dll")) {
+		impl->synchronize = reinterpret_cast<NvVFXCudaStreamSynchronizeFn>(
+			GetProcAddress(module, "NvVFX_CudaStreamSynchronize"));
+	}
+	if (!impl->synchronize) {
+		Logger::Get().Error("NvVFX_CudaStreamSynchronize is unavailable");
+		return nullptr;
+	}
+	// Первый прогон новой модели стоит 2-5 с (прогрев NVIDIA), следующие - доли секунды. Платим его здесь,
+	// на пустом входе: при фоновой загрузке страница потом рисуется уже прогретой моделью
+	// Прогрев - только ускорение: его отказ (VSR не уменьшает - такой временный размер бывает при старте
+	// сессии на фото больше экрана) не делает модель негодной, обычный Draw решает сам
+	if (key.outputWidth >= key.inputWidth && key.outputHeight >= key.inputHeight) {
+		const auto warmStarted = std::chrono::steady_clock::now();
+		if (VFXSucceeded(NvVFX_Run(impl->effect, 0), "NvVFX_Run(warm-up)") &&
+			VFXSucceeded(impl->synchronize(impl->stream), "RTX Video warm-up synchronize")) {
+			Logger::Get().Info(fmt::format("RTX Video: прогрев модели {:.0f} мс",
+				std::chrono::duration<double, std::milli>(std::chrono::steady_clock::now() - warmStarted).count()));
+		} else {
+			Logger::Get().Warn("RTX Video: прогрев модели не удался - первый показ будет дольше");
+		}
+	}
+	Logger::Get().Info(fmt::format("RTX Video: модель {}x{} -> {}x{} quality={} загружена за {:.0f} мс",
+		key.inputWidth, key.inputHeight, key.outputWidth, key.outputHeight, key.qualityLevel,
+		std::chrono::duration<double, std::milli>(std::chrono::steady_clock::now() - started).count()));
+	return impl;
+}
+
+// Забрать готовую модель; если её как раз грузит фоновая подгрузка - дождаться, это быстрее новой загрузки
+static std::unique_ptr<RTXVideoDenoiser::Impl> TakeModel(const ModelKey& key) noexcept {
+	ModelCache& cache = Models();
+	std::unique_lock lock(cache.mutex);
+	cache.loaded.wait(lock, [&] { return std::ranges::find(cache.loading, key) == cache.loading.end(); });
+	const auto it = FindModel(cache, key);
+	if (it == cache.models.end()) return nullptr;
+	auto impl = std::move(it->second);
+	cache.models.erase(it);
+	return impl;
+}
+
+// Положить модель в кэш и вытеснить лишние (самые давние) сверх предела; вызывать под cache.mutex.
+// Вытесненные возвращаются - уничтожать их вне блокировки.
+static std::vector<std::unique_ptr<RTXVideoDenoiser::Impl>> InsertModel(
+	ModelCache& cache, const ModelKey& key, std::unique_ptr<RTXVideoDenoiser::Impl> impl) noexcept {
+	std::vector<std::unique_ptr<RTXVideoDenoiser::Impl>> evicted;
+	// Та же модель уже есть (две страницы одного размера подряд) - лишнюю освобождаем
+	if (FindModel(cache, key) != cache.models.end()) {
+		evicted.push_back(std::move(impl));
+	} else {
+		cache.models.emplace_back(key, std::move(impl));
+	}
+	const size_t limit = ModelCacheLimit(cache);
+	while (cache.models.size() > limit) {
+		evicted.push_back(std::move(cache.models.front().second));
+		cache.models.erase(cache.models.begin());
+	}
+	return evicted;
+}
+
+static void PutModel(std::unique_ptr<RTXVideoDenoiser::Impl> impl) noexcept {
+	ModelCache& cache = Models();
+	const ModelKey key = KeyOf(*impl);
+	std::vector<std::unique_ptr<RTXVideoDenoiser::Impl>> evicted;
+	{
+		std::scoped_lock lock(cache.mutex);
+		evicted = InsertModel(cache, key, std::move(impl));
+	}
+	// Уничтожение моделей - вне блокировки
+	evicted.clear();
+}
+
 RTXVideoDenoiser::RTXVideoDenoiser() = default;
-RTXVideoDenoiser::~RTXVideoDenoiser() = default;
+
+RTXVideoDenoiser::~RTXVideoDenoiser() {
+	_ReleaseModel();
+}
+
+void RTXVideoDenoiser::_ReleaseModel() noexcept {
+	if (!_impl) return;
+	if (!ScalingWindow::Get().Options().photoSession || !_impl->effect || !_impl->synchronize) {
+		_impl.reset();
+		return;
+	}
+	// Незавершённая работа потока не должна пережить отвязку от текстур
+	_impl->synchronize(_impl->stream);
+	// Обёртки D3D-текстур принадлежат этой цепи: отвязываем, модель и GPU-буферы оставляем
+	NvCVImage_Dealloc(&_impl->inputD3D);
+	NvCVImage_Dealloc(&_impl->outputD3D);
+	PutModel(std::move(_impl));
+}
+
+void RTXVideoDenoiser::Preload(uint32_t inputWidth, uint32_t inputHeight,
+	uint32_t outputWidth, uint32_t outputHeight, uint32_t qualityLevel) noexcept {
+	ModelCache& cache = Models();
+	if (!cache.runtimeReady.load(std::memory_order_acquire)) return;
+	const ModelKey key{ inputWidth, inputHeight, outputWidth, outputHeight, qualityLevel };
+	{
+		std::scoped_lock lock(cache.mutex);
+		if (std::ranges::find(cache.loading, key) != cache.loading.end() ||
+			FindModel(cache, key) != cache.models.end() || VideoMemoryTight(cache)) {
+			return;
+		}
+		cache.loading.push_back(key);
+	}
+	Logger::Get().Info(fmt::format("RTX Video: фоновая загрузка модели {}x{} -> {}x{}",
+		inputWidth, inputHeight, outputWidth, outputHeight));
+	auto impl = LoadModel(key, nullptr);
+	if (!impl) Logger::Get().Warn("RTX Video: фоновая загрузка модели не удалась - загрузится при показе");
+	std::vector<std::unique_ptr<RTXVideoDenoiser::Impl>> evicted;
+	{
+		// Снять отметку «грузится» и положить модель - одним шагом, иначе ждущий Initialize
+		// проснётся между ними, не найдёт модель и начнёт вторую загрузку
+		std::scoped_lock lock(cache.mutex);
+		std::erase(cache.loading, key);
+		if (impl) evicted = InsertModel(cache, key, std::move(impl));
+	}
+	cache.loaded.notify_all();
+	evicted.clear();
+}
 
 bool RTXVideoDenoiser::Initialize(
 	DeviceResources& resources,
@@ -157,7 +383,7 @@ bool RTXVideoDenoiser::Initialize(
 	uint32_t qualityLevel,
 	RtxVideoEffectKind kind
 ) noexcept {
-	_impl.reset();
+	_ReleaseModel();
 	_qualityLevel = qualityLevel;
 	_kind = kind;
 	_initializationError = ScalingError::NoError;
@@ -167,7 +393,9 @@ bool RTXVideoDenoiser::Initialize(
 	const bool validVsrQuality = isVsr && qualityLevel >= 1 && qualityLevel <= 4;
 	const bool validDenoiseQuality = isDenoise && qualityLevel >= 8 && qualityLevel <= 11;
 	const bool validHighBitrateQuality = isDenoise && qualityLevel >= 16 && qualityLevel <= 19;
-	if (!validVsrQuality && !validDenoiseQuality && !validHighBitrateQuality) {
+	// Deblur - тот же размер, что и Denoise
+	const bool validDeblurQuality = isDenoise && qualityLevel >= 12 && qualityLevel <= 15;
+	if (!validVsrQuality && !validDenoiseQuality && !validHighBitrateQuality && !validDeblurQuality) {
 		Logger::Get().Error(fmt::format("Invalid RTX Video {} quality level: {}",
 			isVsr ? "VSR" : "Denoise", qualityLevel));
 		return false;
@@ -218,7 +446,22 @@ bool RTXVideoDenoiser::Initialize(
 		runtimeVersion, (runtimeVersion >> 24) & 0xFF, (runtimeVersion >> 16) & 0xFF,
 		(runtimeVersion >> 8) & 0xFF));
 
-	auto impl = std::make_unique<Impl>();
+	{
+		ModelCache& cache = Models();
+		std::scoped_lock lock(cache.mutex);
+		cache.adapter.copy_from(resources.GetGraphicsAdapter());
+	}
+	Models().runtimeReady.store(true, std::memory_order_release);
+	const ModelKey key{ inputDesc.Width, inputDesc.Height, outputDesc.Width, outputDesc.Height, qualityLevel };
+	// Фото-сессия: модель под этот размер могла остаться от прошлой страницы или прийти из фоновой подгрузки
+	std::unique_ptr<Impl> impl = ScalingWindow::Get().Options().photoSession ? TakeModel(key) : nullptr;
+	if (impl) {
+		Logger::Get().Info(fmt::format("RTX Video: модель {}x{} -> {}x{} взята из кэша",
+			key.inputWidth, key.inputHeight, key.outputWidth, key.outputHeight));
+	} else {
+		impl = LoadModel(key, &_initializationError);
+		if (!impl) return false;
+	}
 	impl->d3dContext = resources.GetD3DDC();
 	if (ScalingWindow::Get().Options().IsHdrCompatibilityEnabled()) {
 		// The HDR boundary uses an explicit normalized-D3D/U8 bridge.
@@ -233,24 +476,10 @@ bool RTXVideoDenoiser::Initialize(
 		impl->inputScale = isFloatFormat(inputDesc.Format) ? 255.0f : 1.0f;
 		impl->outputScale = isFloatFormat(outputDesc.Format) ? (1.0f / 255.0f) : 1.0f;
 	}
-	// Keep the native model in an explicit RGBA order. D3D11's endpoint is
-	// BGRA8, so the boundary performs the channel swizzle exactly once.
-	const NvCVImage_PixelFormat pixelFormat = NVCV_RGBA;
-	impl->nativePixelFormat = pixelFormat;
-	impl->outputWidth = outputDesc.Width;
-	impl->outputHeight = outputDesc.Height;
-	Logger::Get().Info(fmt::format(
-		"RTX Video endpoint channel order: {}",
-		pixelFormat == NVCV_BGRA ? "BGRA" : "RGBA"));
-	if (!VFXSucceeded(NvVFX_CudaStreamCreate(&impl->stream), "NvVFX_CudaStreamCreate") ||
-		!VFXSucceeded(NvCVImage_InitFromD3D11Texture(&impl->inputD3D, input),
+	if (!VFXSucceeded(NvCVImage_InitFromD3D11Texture(&impl->inputD3D, input),
 			"NvCVImage_InitFromD3D11Texture(input)") ||
 		!VFXSucceeded(NvCVImage_InitFromD3D11Texture(&impl->outputD3D, output),
-			"NvCVImage_InitFromD3D11Texture(output)") ||
-		!VFXSucceeded(NvCVImage_Alloc(&impl->inputGPU, inputDesc.Width, inputDesc.Height,
-			pixelFormat, NVCV_U8, NVCV_INTERLEAVED, NVCV_GPU, 32), "NvCVImage_Alloc(input)") ||
-		!VFXSucceeded(NvCVImage_Alloc(&impl->outputGPU, outputDesc.Width, outputDesc.Height,
-			pixelFormat, NVCV_U8, NVCV_INTERLEAVED, NVCV_GPU, 32), "NvCVImage_Alloc(output)")) {
+			"NvCVImage_InitFromD3D11Texture(output)")) {
 		return false;
 	}
 	Logger::Get().Info(fmt::format(
@@ -268,37 +497,6 @@ bool RTXVideoDenoiser::Initialize(
 		static_cast<int>(impl->inputGPU.planar),
 		static_cast<int>(impl->outputD3D.planar),
 		static_cast<int>(impl->outputGPU.planar)));
-
-	const NvCV_Status createEffectStatus =
-		NvVFX_CreateEffect("VideoSuperRes", &impl->effect);
-	if (!VFXSucceeded(createEffectStatus, "NvVFX_CreateEffect(VideoSuperRes)")) {
-		if (createEffectStatus == NVCV_ERR_UNIMPLEMENTED) {
-			_initializationError = ScalingError::NvidiaVsrPathUnsupported;
-		}
-		return false;
-	}
-
-	if (!VFXSucceeded(NvVFX_SetImage(impl->effect, NVVFX_INPUT_IMAGE, &impl->inputGPU),
-			"NvVFX_SetImage(input)") ||
-		!VFXSucceeded(NvVFX_SetImage(impl->effect, NVVFX_OUTPUT_IMAGE, &impl->outputGPU),
-			"NvVFX_SetImage(output)") ||
-		!VFXSucceeded(NvVFX_SetCudaStream(impl->effect, NVVFX_CUDA_STREAM, impl->stream),
-			"NvVFX_SetCudaStream") ||
-		!VFXSucceeded(NvVFX_SetU32(impl->effect, "QualityLevel", qualityLevel),
-			"NvVFX_SetU32(QualityLevel)") ||
-		!VFXSucceeded(NvVFX_Load(impl->effect), "NvVFX_Load(VideoSuperRes)")) {
-		return false;
-	}
-
-	HMODULE module = GetModuleHandleW(L"NVVideoEffects.dll");
-	if (module) {
-		impl->synchronize = reinterpret_cast<NvVFXCudaStreamSynchronizeFn>(
-			GetProcAddress(module, "NvVFX_CudaStreamSynchronize"));
-	}
-	if (!impl->synchronize) {
-		Logger::Get().Error("NvVFX_CudaStreamSynchronize is unavailable");
-		return false;
-	}
 
 	Logger::Get().Info(fmt::format(
 		"RTX Video {} initialized: quality={}, {}x{}, inputFormat={}, outputFormat={}, scales={}/{} staging=CPU-U8",
@@ -342,6 +540,7 @@ bool RTXVideoDenoiser::ApplyParameters(const EffectOption& option,
 	}
 	std::swap(_impl->effect, candidate);
 	_qualityLevel = quality;
+	_impl->qualityLevel = quality;
 	Logger::Get().Info(fmt::format("RTX Video tier applied: quality={}", quality));
 	return true;
 }
@@ -484,6 +683,10 @@ struct RTXVideoDenoiser::Impl {};
 
 RTXVideoDenoiser::RTXVideoDenoiser() = default;
 RTXVideoDenoiser::~RTXVideoDenoiser() = default;
+
+void RTXVideoDenoiser::_ReleaseModel() noexcept {}
+
+void RTXVideoDenoiser::Preload(uint32_t, uint32_t, uint32_t, uint32_t, uint32_t) noexcept {}
 
 bool RTXVideoDenoiser::Initialize(
 	DeviceResources&, ID3D11Texture2D*, ID3D11Texture2D*, uint32_t, RtxVideoEffectKind) noexcept {

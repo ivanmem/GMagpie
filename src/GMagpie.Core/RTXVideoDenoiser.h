@@ -37,8 +37,22 @@ public:
 		std::span<const std::string> names) noexcept override;
 	ScalingError InitializationError() const noexcept { return _initializationError; }
 
+	// Фото-сессия: заранее загрузить модель под размеры следующей страницы (NvVFX_Load ~2 с на каждый
+	// новый размер). Вызывается с фонового потока; модель ложится в кэш, Initialize заберёт её готовой.
+	// Пока ни одна модель не инициализирована обычным путём (рантайм не загружен) - ничего не делает.
+	static void Preload(uint32_t inputWidth, uint32_t inputHeight,
+		uint32_t outputWidth, uint32_t outputHeight, uint32_t qualityLevel) noexcept;
+
 private:
+	// В фото-сессии модель не уничтожается, а возвращается в кэш - следующая страница того же размера
+	// получит её без повторной загрузки
+	void _ReleaseModel() noexcept;
+
+public:
+	// Открыт только ради кэша моделей в RTXVideoDenoiser.cpp; снаружи тип неполный
 	struct Impl;
+
+private:
 	[[maybe_unused]] std::unique_ptr<Impl> _impl;
 	[[maybe_unused]] uint32_t _qualityLevel = 8;
 	RtxVideoEffectKind _kind = RtxVideoEffectKind::Vsr;

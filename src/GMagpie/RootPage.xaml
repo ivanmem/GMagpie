@@ -212,8 +212,10 @@
 						<FontIcon Glyph="&#xE80F;" />
 					</muxc:NavigationViewItem.Icon>
 				</muxc:NavigationViewItem>
+				<!-- Режимы масштабирования галерея не применяет (апскейлеры выбираются в её меню): пункт скрыт -->
 				<muxc:NavigationViewItem x:Uid="Root_ScalingModes"
-				                         Tag="ScalingModes">
+				                         Tag="ScalingModes"
+				                         Visibility="Collapsed">
 					<muxc:NavigationViewItem.Icon>
 						<PathIcon Data="{StaticResource SpecialEffectSizeIconData}">
 							<!--  导航栏图标尺寸是 19x19  -->

@@ -1026,9 +1026,8 @@ bool OverlayDrawer::_DrawToolbar(uint32_t fps, int& itemId) noexcept {
 		bool parametersVisible = _isEffectParametersVisible;
 		drawToggleButton(parametersVisible, OverlayHelper::SegoeIcons::Parameters, parametersStr.c_str());
 		if (parametersVisible != _isEffectParametersVisible) InvokeAction(OverlayAction::EffectParameters);
-		// В фото-сессии сравнение невозможно (Renderer::SetPassThroughActive), поэтому
-		// и кнопку не показываем: иначе клик «меняет картинку» без видимого смысла
-		if (!ScalingWindow::Get().Options().photoSession) {
+		// В фото-сессии Compare показывает оригинал страницы без апскейла (Renderer::_PassThroughScene)
+		{
 			ImGui::SameLine();
 			Renderer& renderer = ScalingWindow::Get().Renderer();
 			bool passThrough = renderer.IsPassThroughActive();

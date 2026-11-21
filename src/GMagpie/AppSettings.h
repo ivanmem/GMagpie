@@ -71,6 +71,8 @@ struct _AppSettingsData {
 	// Последнее состояние показа: папка альбома и страница в ней (с нуля). Пустая папка — продолжать некуда
 	std::filesystem::path _galleryLastFolder;
 	uint32_t _galleryLastIndex = 0;
+	uint32_t _galleryLastTotal = 0;
+	std::filesystem::path _galleryFavoriteFolder;
 
 	OverlayOptions _overlayOptions;
 	
@@ -399,7 +401,13 @@ public:
 	// Меняются всегда вместе, поэтому сеттер один и сохранение происходит один раз.
 	const std::filesystem::path& GalleryLastFolder() const noexcept { return _galleryLastFolder; }
 	uint32_t GalleryLastIndex() const noexcept { return _galleryLastIndex; }
-	void GalleryLastSession(std::wstring folder, uint32_t index) noexcept;
+	// Сколько фото было в альбоме - для счётчика «N / M» у кнопки «Продолжить» (0 - неизвестно)
+	uint32_t GalleryLastTotal() const noexcept { return _galleryLastTotal; }
+	void GalleryLastSession(std::wstring folder, uint32_t index, uint32_t total) noexcept;
+
+	// Куда «В избранное» (Insert) перемещает фото. Пусто - по умолчанию: папка favorite рядом с папкой фото (..\favorite)
+	const std::filesystem::path& GalleryFavoriteFolder() const noexcept { return _galleryFavoriteFolder; }
+	void GalleryFavoriteFolder(std::filesystem::path value) noexcept;
 
 	OverlayOptions& OverlayOptions() noexcept {
 		return _overlayOptions;

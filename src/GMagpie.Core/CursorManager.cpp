@@ -176,6 +176,16 @@ void CursorManager::IsCursorOnOverlay(bool value) noexcept {
 	_UpdateCursorPos();
 }
 
+void CursorManager::IsPopupMenuOpen(bool value) noexcept {
+	if (_isPopupMenuOpen == value) {
+		return;
+	}
+	_isPopupMenuOpen = value;
+
+	_UpdateCursorState();
+	_UpdateCursorPos();
+}
+
 void CursorManager::IsCursorCapturedOnOverlay(bool value) noexcept {
 	if (_isCapturedOnOverlay == value) {
 		return;
@@ -767,6 +777,20 @@ void CursorManager::_UpdateCursorState() noexcept {
 	}
 
 	const ScalingOptions& options = ScalingWindow::Get().Options();
+	if (_isPopupMenuOpen) {
+		// Контекстное меню галереи открыто: захват переносил реальный курсор в координаты источника, и клик
+		// мышью не попадал в пункт меню. Пока меню открыто, курсор - обычный системный в настоящей позиции
+		if (_isUnderCapture) {
+			POINT cursorPos;
+			GetCursorPos(&cursorPos);
+			_StopCapture(cursorPos, true);
+			_ReliableSetCursorPos(cursorPos);
+		}
+		_shouldDrawCursor = false;
+		_ShowSystemCursor(true);
+		_RestoreClipCursor();
+		return;
+	}
 	const Renderer& renderer = ScalingWindow::Get().Renderer();
 	const RECT& srcRect = renderer.SrcRect();
 	const RECT& destRect = renderer.DestRect();

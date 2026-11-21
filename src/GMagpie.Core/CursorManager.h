@@ -60,6 +60,8 @@ public:
 		return _isCapturedOnOverlay;
 	}
 	void IsCursorCapturedOnOverlay(bool value) noexcept;
+	// Контекстное меню галереи открыто: курсор не захватывается
+	void IsPopupMenuOpen(bool value) noexcept;
 
 	int16_t SrcHitTest() const noexcept {
 		return _lastCompletedHitTestResult;
@@ -153,6 +155,7 @@ private:
 
 	bool _isOnOverlay = false;
 	bool _isCapturedOnOverlay = false;
+	bool _isPopupMenuOpen = false;
 
 	bool _isSystemCursorShown = true;
 

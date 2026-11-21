@@ -32,6 +32,7 @@
 #include "OverlayDrawer.h"
 #include "PhotoFrameSource.h"
 #include "Renderer.h"
+#include "RTXVideoDenoiser.h"
 #include "NgxRuntimeGuard.h"
 #include "ScalingOptions.h"
 #include "ScalingWindow.h"
@@ -741,7 +742,8 @@ void Renderer::StopProfile() noexcept {
 winrt::fire_and_forget Renderer::TakeScreenshot(
 	uint32_t effectIdx,
 	uint32_t passIdx,
-	uint32_t outputIdx
+	uint32_t outputIdx,
+	std::filesystem::path savePath
 ) noexcept {
 	assert(effectIdx < _activeEffectDescs.size() || effectIdx == std::numeric_limits<uint32_t>::max());
 
@@ -751,7 +753,7 @@ winrt::fire_and_forget Renderer::TakeScreenshot(
 	const auto report = options.reportErrorDetails;
 	const HWND target = ScalingWindow::Get().SrcTracker().Handle();
 	try {
-		co_await _TakeScreenshotImpl(effectIdx, passIdx, outputIdx);
+		co_await _TakeScreenshotImpl(std::move(savePath), effectIdx, passIdx, outputIdx);
 	} catch (const winrt::hresult_error& error) {
 		if (report) report(target, ScalingError::ScreenshotReadbackFailed,
 			"Screenshot task / dispatcher or GPU operation", static_cast<uint32_t>(error.code().value));
@@ -846,6 +848,14 @@ void Renderer::_ResetDLSSFGSlotEvents() noexcept {
 		if (_sharedTextureAvailableEvents[i]) {
 			SetEvent(_sharedTextureAvailableEvents[i].get());
 		}
+	}
+}
+
+// Строка состояния галереи красит процент по тому, что сейчас на экране: оригинал или результат апскейла.
+// state - CommonSharedConstants::PhotoUpscaleState
+static void NotifyPhotoUpscaleState(uintptr_t state) noexcept {
+	if (HWND status = FindWindowW(CommonSharedConstants::GALLERY_STATUS_WINDOW_CLASS_NAME, nullptr)) {
+		PostMessageW(status, CommonSharedConstants::WM_GALLERY_UPSCALE_STATE, state, 0);
 	}
 }
 
@@ -975,7 +985,15 @@ Renderer::FrontendBaseResult Renderer::_UpdateFrontendBase(uint32_t sharedTextur
 		_frontendMotionAvailability = _sharedMotionAvailability[sharedTextureSlot];
 		FrameTrace::SetFrame(_frontendCaptureFrameId);
 		traceBase.FrameId(_frontendCaptureFrameId);
-		if (!_passThroughFrames.Consume(sharedTextureSlot) && _isPassThroughActive) {
+		const bool photoSession = bool(ScalingWindow::Get().Options().photoSession);
+		// Апскейл показываемой страницы пришёл - процент зеленеет; апскейл пролистанной страницы экран
+		// не показывает (_IsPhotoOriginalShown), и цвет он не трогает
+		if (photoSession && _frontendPhotoOriginalValid &&
+			_frontendFrameMetadata.photoPage == _frontendPhotoOriginalPage) {
+			NotifyPhotoUpscaleState(_frontendFrameMetadata.photoUpscaleState);
+		}
+		// В фото-сессии Compare не зависит от опорного кадра захвата - его отсутствие сравнение не выключает
+		if (!_passThroughFrames.Consume(sharedTextureSlot) && _isPassThroughActive && !photoSession) {
 			SetPassThroughActive(false);
 			const auto& window = ScalingWindow::Get();
 			if (const auto& report = window.Options().reportErrorDetails) {
@@ -1058,13 +1076,33 @@ void Renderer::_CopySceneToTarget(ID3D11Texture2D* scene, ID3D11Texture2D* targe
 	target->GetDesc(&targetDesc);
 	scene->GetDesc(&sceneDesc);
 	if (ScalingWindow::Get().Options().photoSession) {
-		const RECT view = CalcPhotoSceneViewport(_frontendDestRect, rendererRect, drawOffset,
-			{ static_cast<LONG>(targetDesc.Width), static_cast<LONG>(targetDesc.Height) });
+		// Апскейла показываемой страницы ещё нет (или включён Compare) - рисуем её оригинал по его рамке;
+		// кадр бэкенда при этом может быть от пролистанной страницы и на экран не идёт
+		const bool original = _IsPhotoOriginalShown();
+		if (original && _isPassThroughActive && _frameSource) {
+			// Compare на анимации: оригинал тоже двигается - берём последний кадр источника
+			D3D11_TEXTURE2D_DESC originalDesc{};
+			_frontendPhotoOriginal->GetDesc(&originalDesc);
+			if (_frameSource->CopyAnimationFrame(_frontendPhotoOriginalPage, _frontendAnimationSerial,
+				_frontendAnimationPixels, originalDesc.Width, originalDesc.Height)) {
+				context->UpdateSubresource(_frontendPhotoOriginal.get(), 0, nullptr,
+					_frontendAnimationPixels.data(), originalDesc.Width * 4, 0);
+			}
+		}
+		RECT view = CalcPhotoSceneViewport(original ? _frontendPhotoOriginalDestRect : _frontendDestRect,
+			rendererRect, drawOffset, { static_cast<LONG>(targetDesc.Width), static_cast<LONG>(targetDesc.Height) });
+		if (original && view.left == 0 && view.top == 0 && view.right == 0 && view.bottom == 0) {
+			// Рамка совпала с целью: у оригинала нет быстрого пути копированием (другой размер) - рисуем на всю цель
+			view = { 0, 0, static_cast<LONG>(targetDesc.Width), static_cast<LONG>(targetDesc.Height) };
+		}
 		if (view.left != 0 || view.top != 0 || view.right != 0 || view.bottom != 0) {
 			context->ClearRenderTargetView(rtv, BLACK);
 			VRRPerformance::Record(VRRPerformance::Event::TargetClear);
 			if (view.left < view.right && view.top < view.bottom) {
-				_DrawPhotoSceneScaled(scene, rtv, view);
+				_DrawPhotoSceneScaled(scene, rtv, view, original ? _frontendPhotoOriginalSrv.get() : nullptr);
+			}
+			if (original && _photoOriginalOnScreenPage.load(std::memory_order_acquire) != _frontendPhotoOriginalPage) {
+				_WaitPhotoOriginalDrawn();
 			}
 			VRRPerformance::Record(VRRPerformance::Event::RegionSceneCopy);
 			return;
@@ -1092,7 +1130,7 @@ void Renderer::_CopySceneToTarget(ID3D11Texture2D* scene, ID3D11Texture2D* targe
 // за [0,1] — сэмплер их обрезает, w=1 даёт точную аффинную развёртку). Состояния
 // создаются лениво на фронт-устройстве; SRV кэшируется по объекту текстуры.
 void Renderer::_DrawPhotoSceneScaled(ID3D11Texture2D* scene, ID3D11RenderTargetView* rtv,
-	const RECT& view) noexcept {
+	const RECT& view, ID3D11ShaderResourceView* srv) noexcept {
 	ID3D11Device* device = _frontendResources.GetD3DDevice();
 	ID3D11DeviceContext* dc = _frontendResources.GetD3DDC();
 
@@ -1150,6 +1188,8 @@ void Renderer::_DrawPhotoSceneScaled(ID3D11Texture2D* scene, ID3D11RenderTargetV
 		}
 	}
 
+	// Свой SRV (оригинал фото - приватная текстура фронта) рисуется как есть, без копии
+	if (!srv) {
 	// Копия обязательно приватной текстурой: общая (ключевой мьютекс) допускает
 	// только копирование с себя, SRV на ней создаётся с отказом каждый кадр.
 	// Приватная — того же размера и формата (требование CopyResource), пересоздаётся
@@ -1181,6 +1221,8 @@ void Renderer::_DrawPhotoSceneScaled(ID3D11Texture2D* scene, ID3D11RenderTargetV
 		}
 	}
 	dc->CopyResource(_photoSceneCopy.get(), scene);
+	srv = _photoSceneSrv.get();
+	}
 
 	ID3D11RenderTargetView* targets[] = { rtv };
 	dc->OMSetRenderTargets(1, targets, nullptr);
@@ -1200,7 +1242,6 @@ void Renderer::_DrawPhotoSceneScaled(ID3D11Texture2D* scene, ID3D11RenderTargetV
 	dc->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 	dc->VSSetShader(_photoBlitVS.get(), nullptr, 0);
 	dc->PSSetShader(_photoBlitPS.get(), nullptr, 0);
-	ID3D11ShaderResourceView* srv = _photoSceneSrv.get();
 	dc->PSSetShaderResources(0, 1, &srv);
 	ID3D11SamplerState* sampler = _photoBlitSampler.get();
 	dc->PSSetSamplers(0, 1, &sampler);
@@ -1365,7 +1406,7 @@ bool Renderer::_FrontendRender(
 	// XeSS must keep receiving the processed stream, even behind the overlay.
 	ID3D11Texture2D* scene = baseTexture;
 	if (_isPassThroughActive && !uiInIndependentLayer) {
-		if (auto reference = _passThroughFrames.FrontendTexture(stableBaseOnly)) scene = reference;
+		if (auto reference = _PassThroughScene(stableBaseOnly)) scene = reference;
 	}
 	{
 		FrameTrace::Scope traceScene(FrameTrace::Event::FrontendSceneCopy);
@@ -1636,7 +1677,7 @@ bool Renderer::_FrontendOverlayRender(bool contentChanged) noexcept {
 	ID3D11Texture2D* cursorBackground =
 		_frontendPresentedBaseValid ? _frontendPresentedBaseTexture.get() : nullptr;
 	if (_isPassThroughActive) {
-		if (auto reference = _passThroughFrames.FrontendTexture(true)) {
+		if (auto reference = _PassThroughScene(true)) {
 			_CopySceneToTarget(reference, frameTex.get(), frameRtv.get(), drawOffset);
 			cursorBackground = reference;
 		}
@@ -1676,6 +1717,7 @@ uint32_t Renderer::_FrontendDiagnosticReasons() noexcept {
 
 bool Renderer::Render(bool force, bool waitForGpu) noexcept {
 	if (_presenter && _presenter->HasFatalError()) { _ReportPresenterFailure(); return false; }
+	if (ScalingWindow::Get().Options().photoSession) _TakePhotoOriginal();
 	if (_pendingFrontendFrame) return _SubmitFrontendFrame();
 	_frontendPacingDeadline.reset();
 	// In synchronous DLSSFG mode regular capture work remains owned by the FIFO.
@@ -2201,16 +2243,21 @@ void Renderer::RestoreOverlayState(const OverlaySessionState& state) noexcept {
 	Render();
 }
 
+ID3D11Texture2D* Renderer::_PassThroughScene(bool stableBaseOnly) noexcept {
+	if (ScalingWindow::Get().Options().photoSession) {
+		return _frontendPhotoOriginalValid ? _frontendPhotoOriginal.get() : nullptr;
+	}
+	return _passThroughFrames.FrontendTexture(stableBaseOnly);
+}
+
 bool Renderer::SetPassThroughActive(bool value) noexcept {
-	if (value && ScalingWindow::Get().Options().photoSession) {
-		// Сравнение — инструмент непрерывных захватов: опорный кадр живёт на событиях
-		// захвата, а фото-источник между страницами спит. Включённый pass-through
-		// вешает показ следующей фотографии на слоте опорного кадра, поэтому в
-		// фото-сессии он не включается вовсе (кнопки «глаз» в HUD там тоже нет).
-		Logger::Get().Info("Pass-through в фото-сессии выключен (Compare рассчитан на непрерывный захват)");
+	if (value && ScalingWindow::Get().Options().photoSession && !_frontendPhotoOriginalValid) {
+		// Опорный кадр захвата в фото-сессии не используется (фото-источник между страницами спит, и
+		// pass-through вешал смену страницы) - сравниваем с оригиналом страницы, а его ещё нет
+		Logger::Get().Info("Фото: Compare недоступен - оригинал текущей страницы не получен");
 		return false;
 	}
-	if (value && !_passThroughFrames.FrontendTexture(true)) {
+	if (value && !_PassThroughScene(true)) {
 		const auto& window = ScalingWindow::Get();
 		if (const auto& report = window.Options().reportErrorDetails) {
 			report(window.SrcTracker().Handle(), ScalingError::PassThroughUnavailable,
@@ -2288,7 +2335,20 @@ void Renderer::_UpdatePhotoSrcRect() noexcept {
 	_photoSrcRect = { 0, 0, static_cast<LONG>(desc.Width), static_cast<LONG>(desc.Height) };
 }
 
+void Renderer::_RequestPhotoOriginal(std::wstring path) noexcept {
+	{
+		std::scoped_lock lock(_photoOriginalMutex);
+		_photoOriginalRequest = std::move(path);
+		if (!_photoOriginalThread.joinable()) {
+			_photoOriginalThread = std::jthread(std::bind_front(&Renderer::_PhotoOriginalThreadProc, this));
+		}
+	}
+	_photoOriginalCv.notify_one();
+}
+
 void Renderer::RequestPhotoFile(std::wstring path) noexcept {
+	// Оригинал - своему потоку, апскейл - бэкенду; друг друга они не ждут
+	_RequestPhotoOriginal(path);
 	if (_frameSource) {
 		_frameSource->RequestPhotoFile(std::move(path));
 	}
@@ -2304,6 +2364,8 @@ bool Renderer::_InitFrameSource() noexcept {
 	if (ScalingWindow::Get().Options().photoSession) {
 		// В фото-режиме нет захвата окна: вход — декодированное исходное изображение
 		_frameSource = std::make_unique<PhotoFrameSource>();
+		// Оригинал первой страницы - тоже своим потоком (он же нужен Compare)
+		_RequestPhotoOriginal(ScalingWindow::Get().Options().photoSession->firstFile);
 	} else switch (ScalingWindow::Get().Options().captureMethod) {
 	case CaptureMethod::GraphicsCapture:
 		_frameSource = std::make_unique<GraphicsCaptureFrameSource>();
@@ -2490,6 +2552,26 @@ ID3D11Texture2D* Renderer::_BuildEffects() noexcept {
 
 	if (anyFailure) {
 		return nullptr;
+	}
+
+	// Фото-сессия, первая сборка: полный список нужен только чтобы запомнить его и предсказать стадии.
+	// Фото не меньше экрана апскейлер не нужен - и не создаём его (VSR на уменьшении отказывает и ронял старт).
+	if (options.photoSession && _photoEffectOptionsAll.empty()) {
+		_photoEffectOptionsAll = _runtimeEffectOptions;
+		_photoEffectDescsAll = _effectDescs;
+		D3D11_TEXTURE2D_DESC srcDesc{};
+		_frameSource->GetPipelineTexture()->GetDesc(&srcDesc);
+		const SIZE srcSize{ LONG(srcDesc.Width), LONG(srcDesc.Height) };
+		const size_t keep = CalcPhotoEffectStages(_photoEffectOptionsAll, _photoEffectDescsAll, srcSize,
+			Win32Helper::GetSizeOfRect(ScalingWindow::Get().RendererRect()));
+		_photoChainSource = srcSize;
+		_photoChainTextureSerial = _frameSource->PipelineTextureSerial();
+		if (keep < _runtimeEffectOptions.size()) {
+			Logger::Get().Info(fmt::format("Фото-сессия: первая страница {}x{} - этапов {} из {}",
+				srcDesc.Width, srcDesc.Height, keep, _runtimeEffectOptions.size()));
+			_runtimeEffectOptions.resize(keep);
+			return _BuildEffects();
+		}
 	}
 
 	if (effectCount > 1) {
@@ -3325,6 +3407,7 @@ ID3D11Texture2D* Renderer::_ResizePhotoEffects() noexcept {
 		// (сбрасывается только при смене группы эффектов).
 		_photoEffectDescsAll = _effectDescs;
 	}
+	if (!_photoPrefetchListenerSet) _UpdatePhotoVsrPlan();
 
 	D3D11_TEXTURE2D_DESC srcDesc{};
 	if (ID3D11Texture2D* src = _frameSource ? _frameSource->GetPipelineTexture() : nullptr) {
@@ -3339,7 +3422,8 @@ ID3D11Texture2D* Renderer::_ResizePhotoEffects() noexcept {
 	// Страницы альбома обычно одного размера — этот шаг целиком снимает постраничный перестрой (компиляция эффектов, аллокация текстур).
 	if (!_effectDrawers.empty() && keep == _effectDescs.size()
 		&& srcDesc.Width == static_cast<UINT>(_photoChainSource.cx)
-		&& srcDesc.Height == static_cast<UINT>(_photoChainSource.cy)) {
+		&& srcDesc.Height == static_cast<UINT>(_photoChainSource.cy)
+		&& _frameSource->PipelineTextureSerial() == _photoChainTextureSerial) {
 		// Логируем только первый раз: писать на каждую страницу при быстром листании бессмысленно
 		static bool reuseLogged = false;
 		if (!reuseLogged) {
@@ -3374,6 +3458,7 @@ ID3D11Texture2D* Renderer::_ResizePhotoEffects() noexcept {
 		return nullptr;
 	}
 	_photoChainSource = { static_cast<LONG>(srcDesc.Width), static_cast<LONG>(srcDesc.Height) };
+	_photoChainTextureSerial = _frameSource->PipelineTextureSerial();
 	_overlayDrawer.UpdateAfterActiveEffectsChanged();
 	if (_effectsProfiler.IsProfiling()) {
 		uint32_t passes = 0;
@@ -3409,6 +3494,194 @@ ID3D11Texture2D* Renderer::_ResizePhotoEffects() noexcept {
 	}
 
 	return result;
+}
+
+// Первая стадия - RTX VSR: модель привязана к размеру входа, и её загрузка (~2 с) на каждом новом размере
+// держала листание. Предзагрузчик фото сообщает размер следующей страницы, и модель под неё грузится
+// заранее на его потоке - к показу она уже в кэше RTXVideoDenoiser. Сам результат не меняется.
+void Renderer::_UpdatePhotoVsrPlan() noexcept {
+	if (_photoEffectOptionsAll.empty() || _photoEffectDescsAll.size() != _photoEffectOptionsAll.size()) return;
+	_photoPrefetchListenerSet = true;
+	const EffectOption& first = _photoEffectOptionsAll.front();
+	const auto category = first.parameters.find("category");
+	if (first.name != RTXVideoCanonicalId<char>(1) ||
+		(category != first.parameters.end() && NvidiaVfxCategory(category->second) != 0)) {
+		Logger::Get().Info("Фото: первая стадия не RTX VSR - фоновая подготовка модели не нужна");
+		return;
+	}
+	const auto strength = first.parameters.find("strength");
+	{
+		std::scoped_lock lock(_photoVsrPlanMutex);
+		_photoVsrPlan = PhotoVsrPlan{
+			.options = _photoEffectOptionsAll,
+			.descs = _photoEffectDescsAll,
+			.frame = Win32Helper::GetSizeOfRect(ScalingWindow::Get().RendererRect()),
+			.qualityLevel = RTXVideoQualityLevel(1, strength == first.parameters.end()
+				? RTX_VIDEO_DEFAULT_STRENGTH : NormalizeRTXVideoStrength(strength->second))
+		};
+	}
+	_frameSource->SetPrefetchListener([this](uint32_t width, uint32_t height) {
+		std::optional<PhotoVsrPlan> plan;
+		{
+			std::scoped_lock lock(_photoVsrPlanMutex);
+			plan = _photoVsrPlan;
+		}
+		if (!plan) return;
+		const SIZE src{ LONG(width), LONG(height) };
+		// Фото не меньше экрана - VSR для него не запускается
+		if (CalcPhotoEffectStages(plan->options, plan->descs, src, plan->frame) == 0) return;
+		const SIZE out = EffectDrawer::CalcOutputSize(plan->descs.front(), plan->options.front(), src);
+		if (out.cx <= 0 || out.cy <= 0) return;
+		RTXVideoDenoiser::Preload(width, height, uint32_t(out.cx), uint32_t(out.cy), plan->qualityLevel);
+	});
+	Logger::Get().Info("Фото: включена фоновая подготовка модели RTX VSR под следующую страницу");
+}
+
+// Поток быстрого показа: берёт последний запрошенный файл (промежуточные при быстром листании пропадают),
+// декодирует сразу в размер экрана и будит фронт. Ни бэкенд, ни апскейл, ни видеокарта его не задерживают.
+void Renderer::_PhotoOriginalThreadProc(std::stop_token stop) noexcept {
+	// Декодер - WinRT: потоку нужна COM-квартира (как у потока предзагрузки PhotoFrameSource)
+	try {
+		winrt::init_apartment(winrt::apartment_type::multi_threaded);
+	} catch (...) {
+	}
+	const SIZE frame = Win32Helper::GetSizeOfRect(ScalingWindow::Get().RendererRect());
+	Logger::Get().Info(fmt::format("Фото: поток оригиналов запущен, thread={}", GetCurrentThreadId()));
+	const HWND window = ScalingWindow::Get().Handle();
+	while (true) {
+		std::wstring path;
+		{
+			std::unique_lock lock(_photoOriginalMutex);
+			if (!_photoOriginalCv.wait(lock, stop, [&] { return !_photoOriginalRequest.empty(); })) return;
+			path.swap(_photoOriginalRequest);
+		}
+		const auto started = std::chrono::steady_clock::now();
+		PhotoOriginal original{ .page = FrameSourceBase::PhotoPageIdOf(path) };
+		if (!PhotoFrameSource::DecodeCanvas(path, original.canvas, frame)) continue;
+		Logger::Get().Info(fmt::format("Фото: оригинал {}x{} декодирован за {:.0f} мс",
+			original.canvas.width, original.canvas.height,
+			std::chrono::duration<double, std::milli>(std::chrono::steady_clock::now() - started).count()));
+		{
+			std::scoped_lock lock(_photoOriginalMutex);
+			// Пока декодировали, могли попросить следующую - её очередь, эту не показываем
+			if (!_photoOriginalRequest.empty()) continue;
+			_photoOriginalReady = std::move(original);
+		}
+		PostMessage(window, CommonSharedConstants::WM_FRONTEND_RENDER, 0, 0);
+	}
+}
+
+void Renderer::_TakePhotoOriginal() noexcept {
+	std::optional<PhotoOriginal> original;
+	{
+		std::scoped_lock lock(_photoOriginalMutex);
+		original.swap(_photoOriginalReady);
+	}
+	if (!original) return;
+	const auto& canvas = original->canvas;
+	const D3D11_TEXTURE2D_DESC desc{
+		.Width = canvas.width, .Height = canvas.height, .MipLevels = 1, .ArraySize = 1,
+		.Format = DXGI_FORMAT_B8G8R8A8_UNORM, .SampleDesc = { 1, 0 },
+		// DEFAULT, а не IMMUTABLE: в Compare сюда приходят кадры анимации
+		.Usage = D3D11_USAGE_DEFAULT, .BindFlags = D3D11_BIND_SHADER_RESOURCE
+	};
+	const D3D11_SUBRESOURCE_DATA data{ canvas.pixels.data(), canvas.width * 4, 0 };
+	winrt::com_ptr<ID3D11Texture2D> texture;
+	winrt::com_ptr<ID3D11ShaderResourceView> srv;
+	ID3D11Device* device = _frontendResources.GetD3DDevice();
+	if (FAILED(device->CreateTexture2D(&desc, &data, texture.put())) ||
+		FAILED(device->CreateShaderResourceView(texture.get(), nullptr, srv.put()))) {
+		Logger::Get().Error("Фото: текстура оригинала не создана");
+		return;
+	}
+	_frontendPhotoOriginal = std::move(texture);
+	_frontendPhotoOriginalSrv = std::move(srv);
+	_frontendPhotoOriginalPage = original->page;
+	_frontendPhotoOriginalValid = true;
+	// Вписать по центру по пропорциям фото - как _UpdateDestRect для кадра бэкенда
+	const RECT& renderer = ScalingWindow::Get().RendererRect();
+	const LONG frameW = renderer.right - renderer.left, frameH = renderer.bottom - renderer.top;
+	const double scale = std::min(double(frameW) / canvas.width, double(frameH) / canvas.height);
+	const LONG w = std::max(1L, LONG(std::lround(canvas.width * scale)));
+	const LONG h = std::max(1L, LONG(std::lround(canvas.height * scale)));
+	_frontendPhotoOriginalDestRect.left = (renderer.left + renderer.right - w) / 2;
+	_frontendPhotoOriginalDestRect.top = (renderer.top + renderer.bottom - h) / 2;
+	_frontendPhotoOriginalDestRect.right = _frontendPhotoOriginalDestRect.left + w;
+	_frontendPhotoOriginalDestRect.bottom = _frontendPhotoOriginalDestRect.top + h;
+	// Оригинал уже заполняет экран по одной из сторон (фото не меньше экрана - декодер вписал его) - апскейлу
+	// делать нечего, «ждём апскейл» красным здесь неверно. Иначе: апскейл этой страницы мог прийти раньше
+	// оригинала - тогда его состояние и остаётся
+	const bool fillsFrame = LONG(canvas.width) >= frameW || LONG(canvas.height) >= frameH;
+	NotifyPhotoUpscaleState(fillsFrame ? CommonSharedConstants::PHOTO_UPSCALE_NOT_NEEDED
+		: _frontendFrameMetadata.photoPage == original->page
+		? _frontendFrameMetadata.photoUpscaleState : CommonSharedConstants::PHOTO_UPSCALE_PENDING);
+	// Перерисовка идёт поверх базы фронта; до первого кадра бэкенда её нет - оригинал покажется вместе с ним
+	if (_frontendBaseValid) {
+		_frontendBaseNeedsPresent = true;
+	} else {
+		// Без базы оригинал нарисовать не на чем, ждать его бэкенду бессмысленно
+		_photoOriginalOnScreenPage.store(original->page, std::memory_order_release);
+	}
+	Logger::Get().Info(fmt::format("Фото: оригинал {}x{} на экране (база готова: {}, thread={})",
+		canvas.width, canvas.height, _frontendBaseValid, GetCurrentThreadId()));
+}
+
+void Renderer::SavePhotoUpscaled(std::filesystem::path savePath, std::wstring sourcePath) noexcept {
+	const auto& window = ScalingWindow::Get();
+	const HWND target = window.SrcTracker().Handle();
+	const auto toast = window.Options().showToast;
+	const uint64_t page = FrameSourceBase::PhotoPageIdOf(sourcePath);
+	// Кадр бэкенда на экране - апскейл этой страницы; пока его нет (листали, апскейл ещё идёт) сохранять нечего
+	if (_frontendFrameMetadata.photoPage != page) {
+		Logger::Get().Info("Фото: «Сохранить как» - апскейл страницы ещё не готов");
+		if (toast) toast(target, std::wstring(window.GetLocalizedString(L"Message_PhotoUpscaleNotReady")));
+		return;
+	}
+	if (_frontendFrameMetadata.photoUpscaleState != CommonSharedConstants::PHOTO_UPSCALE_APPLIED) {
+		// Фото не меньше экрана: апскейла нет, лучшее качество - сам файл. Расширение - исходное, не .png
+		savePath.replace_extension(std::filesystem::path(sourcePath).extension());
+		if (!CopyFileW(sourcePath.c_str(), savePath.c_str(), FALSE)) {
+			Logger::Get().Win32Error("Фото: копия исходного файла не сохранена");
+			return;
+		}
+		if (toast) toast(target, fmt::format(fmt::runtime(std::wstring_view(
+			window.GetLocalizedString(L"Message_ScreenshotSaved"))), savePath.filename().native()));
+		return;
+	}
+	// Выход последней стадии увеличения - фото после апскейла в его собственном разрешении,
+	// без нормализующего Bicubic до экрана
+	const uint32_t lastUpscale = uint32_t(_runtimeEffectOptions.size() - 1);
+	Logger::Get().Info(fmt::format("Фото: «Сохранить как» - выход стадии {} ({})", lastUpscale + 1,
+		_runtimeEffectOptions[lastUpscale].name));
+	TakeScreenshot(lastUpscale, std::numeric_limits<uint32_t>::max(), std::numeric_limits<uint32_t>::max(),
+		std::move(savePath));
+}
+
+// Фронтенд: дождаться, пока видеокарта выполнит прорисовку оригинала, и отпустить бэкенд с апскейлом
+void Renderer::_WaitPhotoOriginalDrawn() noexcept {
+	auto device = _frontendResources.GetD3DDevice();
+	auto context = _frontendResources.GetD3DDC();
+	if (!_photoOriginalQuery) {
+		const D3D11_QUERY_DESC desc{ D3D11_QUERY_EVENT, 0 };
+		if (FAILED(device->CreateQuery(&desc, _photoOriginalQuery.put()))) {
+			_photoOriginalOnScreenPage.store(_frontendPhotoOriginalPage, std::memory_order_release);
+			return;
+		}
+	}
+	context->End(_photoOriginalQuery.get());
+	context->Flush();
+	const auto start = std::chrono::steady_clock::now();
+	// Таймаут на случай зависшего GPU: бэкенд всё равно ждёт оригинал ограниченное время
+	while (context->GetData(_photoOriginalQuery.get(), nullptr, 0, 0) == S_FALSE &&
+		std::chrono::steady_clock::now() - start < std::chrono::milliseconds(500)) {
+		Sleep(1);
+	}
+	_photoOriginalOnScreenPage.store(_frontendPhotoOriginalPage, std::memory_order_release);
+}
+
+bool Renderer::_IsPhotoOriginalShown() const noexcept {
+	return _frontendPhotoOriginalValid &&
+		(_isPassThroughActive || _frontendFrameMetadata.photoPage != _frontendPhotoOriginalPage);
 }
 
 std::string Renderer::NvidiaVfxProcessDescription(size_t effect) const {
@@ -3758,7 +4031,7 @@ void Renderer::_UpdateDestRect() noexcept {
 	assert(_destRect.left + destWidth == _destRect.right);
 	assert(_destRect.top + destHeight == _destRect.bottom);
 
-	if (ScalingWindow::Get().Options().photoSession) {
+	if (ScalingWindow::Get().Options().photoSession && _photoNewPage) {
 		// Истина момента: прямоугольник, с которым страница уходит на экран.
 		// Строка «Геометрия» печатается до этого пересчёта — в ней прямоугольник
 		// ещё прошлой страницы, не путать.
@@ -4235,6 +4508,13 @@ void Renderer::_BackendThreadProc() noexcept {
 				// The output texture has no defined contents before first capture.
 				break;
 			}
+			// Фото-сессия: страница была пропущена после смены текстуры источника, а перестройка цепи отложена до
+			// следующей страницы. Старая цепь читает освобождённые дескрипторы прошлой текстуры - перерисовка ею
+			// роняла драйвер (AV в nvwgf2umx). Рисовать нечем до перестройки, она будет на следующей странице.
+			if (_photoRebindPending) {
+				Logger::Get().Info("Фото: принудительная перерисовка пропущена - цепь ждёт перестройки");
+				break;
+			}
 			// A same-capture update may replace the completed base only after the
 			// previous FG batch has drained. A new capture retains its normal FIFO
 			// admission and is always selected before considering this redraw.
@@ -4246,18 +4526,8 @@ void Renderer::_BackendThreadProc() noexcept {
 			if (noWaitSource && frameSourceState == FrameSourceState::NewFrame) {
 				lastNoWaitCaptureTime = std::chrono::steady_clock::now();
 			}
-			// Фото-сессия: пока эта страница грузилась, пользователь уже нажал дальше. GPU-работа над ней (цепь,
-			// VSR) задержала бы показ нужной страницы, особенно на перегруженной видеокарте. Пропускаем - следующий
-			// Update возьмёт свежий запрос. Не дольше PHOTO_SKIP_WINDOW подряд: зажатая стрелка иначе не показывала бы
-			// ничего. Без нового запроса (обычное листание) условие ложно - быстрый путь не меняется.
-			static constexpr auto PHOTO_SKIP_WINDOW = std::chrono::milliseconds(200);
 			const bool isPhotoFrame = frameSourceState == FrameSourceState::NewFrame &&
 				ScalingWindow::Get().Options().photoSession;
-			if (isPhotoFrame && _frameSource->HasPendingPhotoRequest() &&
-				photoUpdateEnd - _lastPhotoRender < PHOTO_SKIP_WINDOW) {
-				Logger::Get().Info("Фото: страница пропущена - уже запрошена следующая");
-				break;
-			}
 			const FrameUpdateReason updateReason = frameSourceState == FrameSourceState::NewFrame ?
 				FrameUpdateReason::NewCapture : _forceNextRender ? FrameUpdateReason::ParameterUpdate :
 				nativeOutputReady && _nativeOutputIdleClock.Remaining(std::chrono::steady_clock::now()).count() == 0 ?
@@ -4278,13 +4548,56 @@ void Renderer::_BackendThreadProc() noexcept {
 				}
 			}
 			_forceNextRender = false;
-			if (frameSourceState == FrameSourceState::NewFrame && _frameSource->RequiresRebind()) {
+			// Флаг источника читается со сбросом: копим его, пока страницы пропускаются без перестройки цепи
+			if (frameSourceState == FrameSourceState::NewFrame && _frameSource->RequiresRebind()) _photoRebindPending = true;
+			if (isPhotoFrame) {
+				// Оригинал страницы показывает фронт сам (_PhotoOriginalThreadProc), здесь только апскейл.
+				// Перестройка цепи под новый размер бывает долгой (RTX VSR грузит модель ~2 с) и не прерывается:
+				// если прошлая была долгой, даём пользователю PHOTO_SETTLE на следующее нажатие. Быстрая (ACNet) не ждёт.
+				static constexpr auto PHOTO_SETTLE = std::chrono::milliseconds(700);
+				static constexpr auto SLOW_REBUILD = std::chrono::milliseconds(300);
+				D3D11_TEXTURE2D_DESC sourceDesc{};
+				_frameSource->GetPipelineTexture()->GetDesc(&sourceDesc);
+				// Тот же размер - цепь переиспользуется без перестройки, ждать нечего
+				if (_photoRebindPending && _lastPhotoRebuildCost > SLOW_REBUILD &&
+					(LONG(sourceDesc.Width) != _photoChainSource.cx || LONG(sourceDesc.Height) != _photoChainSource.cy)) {
+					const auto settleEnd = std::chrono::steady_clock::now() + PHOTO_SETTLE;
+					while (!_frameSource->HasPendingPhotoRequest() && !_sessionLifetime->IsStopping() &&
+						std::chrono::steady_clock::now() < settleEnd) Sleep(10);
+				}
+				// Пока страница грузилась, пользователь уже нажал дальше: перестройка и апскейл этой страницы
+				// только задержали бы следующую, а её оригинал фронт и так показал
+				if (_frameSource->HasPendingPhotoRequest()) {
+					_lastPhotoRender = std::chrono::steady_clock::now();
+					Logger::Get().Info("Фото: апскейл пропущен - уже запрошена следующая");
+					break;
+				}
+				// Апскейл начинается только после того, как оригинал этой страницы дорисован на экране
+				const uint64_t page = _frameSource->PhotoPageId();
+				const auto waitStart = std::chrono::steady_clock::now();
+				// Следующий кадр анимации той же страницы ждать нечего - на экране уже её апскейл
+				while (page != _lastUpscaledPhotoPage && _photoOriginalOnScreenPage.load(std::memory_order_acquire) != page &&
+					!_frameSource->HasPendingPhotoRequest() && !_sessionLifetime->IsStopping() &&
+					std::chrono::steady_clock::now() - waitStart < std::chrono::seconds(1)) Sleep(2);
+				if (_frameSource->HasPendingPhotoRequest()) {
+					_lastPhotoRender = std::chrono::steady_clock::now();
+					Logger::Get().Info("Фото: апскейл пропущен - уже запрошена следующая");
+					break;
+				}
+				_photoNewPage = page != _lastUpscaledPhotoPage;
+				_lastUpscaledPhotoPage = page;
+			}
+			if (std::exchange(_photoRebindPending, false)) {
 				// Смена фотографии: у входной текстуры мог смениться объект или размер — сначала перестроить цепь
 				// под новый размер, затем рисовать только что загруженную фотографию
+				const auto rebuildStart = std::chrono::steady_clock::now();
 				if (!_ResizeEffects()) {
 					Logger::Get().Error("После смены фотографии цепь эффектов не перестроена — кадр пропущен");
 					break;
 				}
+				_lastPhotoRebuildCost = std::chrono::steady_clock::now() - rebuildStart;
+				if (_photoNewPage) Logger::Get().Info(fmt::format("Фото: перестройка цепи {:.0f} мс",
+					std::chrono::duration<double, std::milli>(_lastPhotoRebuildCost).count()));
 				// Целевой прямоугольник считается по аспекту самой фотографии — после её смены обязано пересчитаться,
 				// иначе останется пропорция прошлой страницы (картинка растянет или отрежет края).
 				// Та же принятая в файле практика записи _destRect из другого потока, что и у _MoveRenderer.
@@ -4303,7 +4616,7 @@ void Renderer::_BackendThreadProc() noexcept {
 				const auto submitted = std::chrono::steady_clock::now();
 				_lastPhotoRender = submitted;
 				// Где уходит время переключения: загрузка/декод и подготовка + отправка кадра (без ожидания GPU)
-				Logger::Get().Info(fmt::format("Фото: загрузка {:.1f} мс, цепь и отправка {:.1f} мс",
+				if (_photoNewPage) Logger::Get().Info(fmt::format("Фото: загрузка {:.1f} мс, цепь и отправка {:.1f} мс",
 					std::chrono::duration<double, std::milli>(photoUpdateEnd - photoUpdateStart).count(),
 					std::chrono::duration<double, std::milli>(submitted - photoUpdateEnd).count()));
 			}
@@ -5322,6 +5635,12 @@ bool Renderer::_PublishBackendTexture(
 	publicationMetadata.updateReason = generatedFrame ? FrameUpdateReason::GeneratedFrame : _backendOutputUpdateReason;
 	publicationMetadata.outputHistoryRevision = _backendOutputHistoryRevision;
 	publicationMetadata.contentRedraw = _HasProxyFrameGenerator() && _backendOutputRedraw;
+	if (ScalingWindow::Get().Options().photoSession && _frameSource) {
+		publicationMetadata.photoPage = _frameSource->PhotoPageId();
+		// Без стадий увеличения (фото не меньше экрана) апскейлу применяться не к чему
+		publicationMetadata.photoUpscaleState = _runtimeEffectOptions.empty()
+			? CommonSharedConstants::PHOTO_UPSCALE_NOT_NEEDED : CommonSharedConstants::PHOTO_UPSCALE_APPLIED;
+	}
 	if (_nvidiaVfxFrameGenerator) {
 		publicationMetadata.stage = generatedFrame ? HdrFrameStage::GeneratedOutput : HdrFrameStage::PublishedOutput;
 		publicationMetadata.parameterRevision = _vfxParameterRevision;
@@ -5622,7 +5941,7 @@ bool Renderer::_UpdateDynamicConstants(uint32_t frameCount) const noexcept {
 	return true;
 }
 
-winrt::IAsyncOperation<bool> Renderer::_TakeScreenshotImpl(
+winrt::IAsyncOperation<bool> Renderer::_TakeScreenshotImpl(std::filesystem::path savePath,
 	uint32_t effectIdx,
 	uint32_t passIdx,
 	uint32_t outputIdx
@@ -5820,17 +6139,26 @@ winrt::IAsyncOperation<bool> Renderer::_TakeScreenshotImpl(
 	// Serialize disk naming and writing, not rendering. This also avoids
 	// holding a reference to a destroyed Renderer while scanning the folder.
 	std::lock_guard saveLock(ScreenshotHelper::SaveMutex());
-	if (!Win32Helper::CreateDir(screenshotsDir.c_str(), true)) {
-		fail(ScalingError::ScreenshotDirectoryFailed, "CreateDir", GetLastError());
-		co_return false;
+	std::wstring fileName;
+	std::filesystem::path fullPath;
+	if (!savePath.empty()) {
+		// «Сохранить как»: замену существующего файла пользователь уже подтвердил в диалоге
+		fileName = savePath.filename().native();
+		fullPath = std::move(savePath);
+		DeleteFileW(fullPath.c_str());
+	} else {
+		if (!Win32Helper::CreateDir(screenshotsDir.c_str(), true)) {
+			fail(ScalingError::ScreenshotDirectoryFailed, "CreateDir", GetLastError());
+			co_return false;
+		}
+		const auto stem = ScreenshotHelper::FindUnusedScreenshotStem(screenshotsDir, timestamp);
+		if (stem.empty()) {
+			fail(ScalingError::ScreenshotDirectoryFailed, "Enumerate screenshot directory");
+			co_return false;
+		}
+		fileName = fmt::format(L"{}_{}.{}", stem, exportSide, imgFormat);
+		fullPath = screenshotsDir / fileName;
 	}
-	const auto stem = ScreenshotHelper::FindUnusedScreenshotStem(screenshotsDir, timestamp);
-	if (stem.empty()) {
-		fail(ScalingError::ScreenshotDirectoryFailed, "Enumerate screenshot directory");
-		co_return false;
-	}
-	const std::wstring fileName = fmt::format(L"{}_{}.{}", stem, exportSide, imgFormat);
-	const auto fullPath = screenshotsDir / fileName;
 	TextureSaveError saveError;
 	if (!TextureHelper::SaveTextureExclusive(fullPath.c_str(), desc.Width, desc.Height,
 		desc.Format, pixelData, mapped.RowPitch, &saveError, exportHdr ? &exportColor : nullptr)) {

@@ -203,6 +203,13 @@ struct Win32Helper {
 
 	static const std::filesystem::path& GetExePath() noexcept;
 
+	// Оперативной памяти мало (загружено больше 80%): заготовки впрок вытолкнут чужое в подкачку, а она
+	// бывает на медленном диске - запас оставляем заранее, а не на последних процентах
+	static bool IsSystemMemoryTight() noexcept {
+		MEMORYSTATUSEX status{ .dwLength = sizeof(MEMORYSTATUSEX) };
+		return GlobalMemoryStatusEx(&status) && status.dwMemoryLoad > 80;
+	}
+
 	template<typename T, std::enable_if_t<std::is_function_v<T>, int> = 0>
 	static T* LoadSystemFunction(const wchar_t* dllName, const char* funcName) noexcept {
 		assert(dllName && funcName);

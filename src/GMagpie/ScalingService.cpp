@@ -607,6 +607,16 @@ void ScalingService::RequestPhotoPrefetch(std::wstring path) {
 	_scalingRuntime->RequestPhotoPrefetch(std::move(path));
 }
 
+void ScalingService::SetPhotoMenuOpen(bool value) {
+	if (!_photoSessionActive || !_scalingRuntime) return;
+	_scalingRuntime->SetPhotoMenuOpen(value);
+}
+
+void ScalingService::SavePhotoUpscaled(std::filesystem::path savePath, std::wstring sourcePath) {
+	if (!_photoSessionActive || !_scalingRuntime) return;
+	_scalingRuntime->SavePhotoUpscaled(std::move(savePath), std::move(sourcePath));
+}
+
 std::vector<EffectOption> ScalingService::PhotoEffectsSnapshot() const {
 	return _photoWorkingEffects;
 }

@@ -84,6 +84,9 @@ public:
 	// В фото-сессии — намёк заранее декодировать следующую фотографию; в остальных режимах игнорируется
 	void RequestPhotoPrefetch(std::wstring path) noexcept;
 
+	// Фото-сессия: «Сохранить как» - апскейл показываемой страницы в файл
+	void SavePhotoUpscaled(std::filesystem::path savePath, std::wstring sourcePath) noexcept;
+
 	void Render() noexcept;
 	void RenderOverlay() noexcept;
 	bool RenderNextDLSSFGFrame() noexcept;

@@ -693,6 +693,12 @@ void ScalingWindow::RequestPhotoFile(std::wstring path) noexcept {
 	}
 }
 
+void ScalingWindow::SavePhotoUpscaled(std::filesystem::path savePath, std::wstring sourcePath) noexcept {
+	if (_renderer && _options.photoSession) {
+		_renderer->SavePhotoUpscaled(std::move(savePath), std::move(sourcePath));
+	}
+}
+
 void ScalingWindow::RequestPhotoPrefetch(std::wstring path) noexcept {
 	if (_renderer && _options.photoSession) {
 		_renderer->RequestPhotoPrefetch(std::move(path));

@@ -87,6 +87,17 @@ struct HomeViewModel : HomeViewModelT<HomeViewModel>, wil::notify_property_chang
 	// Прогресс идущего показа рядом с «Продолжить»: "N / M", как в строке состояния
 	// показа; пусто, когда показа нет
 	hstring GalleryProgressText() const noexcept;
+	// Состояния карточки альбома: показ идёт / есть что продолжить / альбома ещё нет
+	bool IsGalleryRunning() const noexcept;
+	bool ShowGalleryContinue() const noexcept { return !IsGalleryRunning() && HasGalleryResume(); }
+	bool ShowGalleryEmpty() const noexcept { return !IsGalleryRunning() && !HasGalleryResume(); }
+	// Имя папки альбома - заголовок карточки (полный путь - в описании)
+	hstring GalleryAlbumName() const noexcept;
+	// Папка «В избранное»: свой путь или описание варианта по умолчанию (..\favorite рядом с альбомом)
+	hstring GalleryFavoriteFolder() const noexcept;
+	bool HasCustomFavoriteFolder() const noexcept;
+	fire_and_forget PickGalleryFavoriteFolder() noexcept;
+	void ResetGalleryFavoriteFolder() noexcept;
 
 	bool IsTouchSupportEnabled() const noexcept;
 	fire_and_forget IsTouchSupportEnabled(bool value);

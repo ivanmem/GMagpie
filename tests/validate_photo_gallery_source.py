@@ -85,7 +85,7 @@ def run_checks():
           "an empty effect chain (a photo not smaller than the screen) must publish the "
           "pipeline texture instead of back() on an empty vector")
 
-    switch_block = backend[backend.index("RequiresRebind()"):][:1200]
+    switch_block = backend[backend.index("std::exchange(_photoRebindPending, false)"):][:1200]
     check("photo-switch-rebind",
           "_ResizeEffects()" in switch_block and "_UpdateDestRect()" in switch_block
           and switch_block.index("_ResizeEffects()") < switch_block.index("_UpdateDestRect()"),
@@ -117,16 +117,16 @@ def run_checks():
     passthrough_body = body(renderer, "bool Renderer::SetPassThroughActive(")
     eye_guard = text("GMagpie.Core/OverlayDrawer.cpp")
     eye_at = eye_guard.index("Overlay_Toolbar_PassThrough")
+    scene_body = body(renderer, "ID3D11Texture2D* Renderer::_PassThroughScene(")
     check("compare-off-in-photo-session",
-          "Options().photoSession" in passthrough_body
-          and passthrough_body.index("Options().photoSession")
-              < passthrough_body.index("_isPassThroughActive = value;")
-          and "Options().photoSession" in eye_guard[max(0, eye_at - 1500):eye_at],
-          "Compare (pass-through) is built for continuous capture sources - the photo "
-          "source sleeps between pages, so enabling it hangs the next photo on the "
-          "reference-frame slot (reproduced: page requested, backend never published). "
-          "The photo session must refuse pass-through before any state change, and the "
-          "toolbar must not even offer the eye button there")
+          0 <= passthrough_body.find("_frontendPhotoOriginalValid")
+              < passthrough_body.find("_isPassThroughActive = value;")
+          and 0 <= scene_body.find("if (ScalingWindow::Get().Options().photoSession)")
+              < scene_body.find("_passThroughFrames.FrontendTexture")
+          and "Options().photoSession" not in eye_guard[max(0, eye_at - 1500):eye_at],
+          "Compare in a photo session must show the page's original (the preview frame), never "
+          "the capture reference frame: the photo source sleeps between pages, and the capture "
+          "pass-through hung the next photo on the reference slot. The eye button stays offered")
 
     # --- PhotoFrameSource: the first page is presented like every other page --
     photos = text("GMagpie.Core/PhotoFrameSource.cpp")
@@ -269,7 +269,7 @@ def run_checks():
     renderer_cpp = text("GMagpie.Core/Renderer.cpp")
     check("frontend-dest-rect-snapshot",
           "_frontendDestRect = _destRect;\n\t\t_frontendMotionAvailability" in renderer_cpp
-          and "CalcPhotoSceneViewport(_frontendDestRect," in renderer_cpp
+          and "CalcPhotoSceneViewport(original ? _frontendPhotoOriginalDestRect : _frontendDestRect," in renderer_cpp
           and "CopySubresourceRegion(target, 0,\n\t\t\tdrawOffset.x + _frontendDestRect.left" in renderer_cpp,
           "the backend rewrites _destRect for the NEW photo before the frontend adopts its "
           "frame; a redraw of the old base frame with the live rectangle painted the old "
@@ -302,10 +302,36 @@ def run_checks():
           "status line (WIC file read) must be deferred, or a loaded system stalls the hook and "
           "the next key press")
     check("stale-photo-skipped-with-limit",
-          "HasPendingPhotoRequest()" in renderer_cpp and "PHOTO_SKIP_WINDOW" in renderer_cpp
-          and "photoUpdateEnd - _lastPhotoRender < PHOTO_SKIP_WINDOW" in renderer_cpp,
-          "a page the user already moved past must not cost GPU time, but never for longer than "
-          "the window - a held arrow would otherwise show nothing")
+          "\t\t\t\tif (_frameSource->HasPendingPhotoRequest()) {\n\t\t\t\t\t_lastPhotoRender" in renderer_cpp,
+          "a page the user already moved past must not cost GPU time (chain rebuild, upscale); "
+          "its original is shown by the frontend anyway, so a held arrow still shows every page")
+    cycle_loop = body(gallery, "bool GalleryService::Start(")
+    cycle_loop = cycle_loop[cycle_loop.find("for (const std::string& name : UPSCALER_CANDIDATES)"):][:600]
+    check("fixed-ratio-upscalers-listed",
+          "GetEffect(" in cycle_loop and "CanScale()" not in cycle_loop
+          and "if (_upscalerCycle.empty()) return false;" not in gallery,
+          "ACNet has a fixed 2x output, so CanScale is false for it - filtering the menu list by "
+          "CanScale dropped it silently, and an empty list hid even the current upscaler")
+    check("chain-reuse-needs-same-texture",
+          "&& _frameSource->PipelineTextureSerial() == _photoChainTextureSerial) {" in renderer_cpp,
+          "the same size is not the same source texture: 1920 -> 2560 (skipped) -> 1920 recreates it, "
+          "and a chain reused by size alone drew from the freed first texture (AV in d3d11 inside "
+          "EffectDrawer::Draw)")
+    check("no-forced-redraw-with-stale-chain",
+          "\t\t\tif (_photoRebindPending) {\n\t\t\t\tLogger::Get().Info(\"Фото: принудительная перерисовка пропущена" in renderer_cpp,
+          "a skipped page swaps the source texture (its descriptors are released) while the chain rebuild "
+          "is deferred - a forced redraw with the old chain read freed descriptors and crashed the "
+          "driver (AV in nvwgf2umx right after a skipped page of a different size)")
+    request_body = body(renderer, "void Renderer::RequestPhotoFile(")
+    copy_body = body(renderer, "void Renderer::_CopySceneToTarget(")
+    check("photo-original-independent-of-upscale",
+          0 <= request_body.find("_RequestPhotoOriginal(") < request_body.find("_frameSource->RequestPhotoFile(")
+          and "const bool original = _IsPhotoOriginalShown();" in copy_body
+          and "_PublishPhotoPreview" not in renderer_cpp,
+          "the page's original is decoded by its own thread and drawn by the frontend - never "
+          "queued behind the backend: a running upscale (seconds for VSR) kept the previous photo "
+          "on screen while the status percent was already red. A backend frame is shown only for "
+          "the page it belongs to")
     delete_body = body(gallery, "void GalleryService::_DeleteCurrentPhoto(")
     check("status-percent-respects-exif",
           "System.Photo.Orientation" in body(gallery, "bool TryGetImageSize(")
@@ -483,7 +509,8 @@ REGRESSIONS = {
         [("if (const auto next = PhotoIndexAfterDelete(_index, _playlist.size() + 1)) {",
           "if (const auto next = std::optional<size_t>(_index)) {")]),
     "compare-off-in-photo-session": ("GMagpie.Core/Renderer.cpp",
-        [("if (value && ScalingWindow::Get().Options().photoSession) {", "if (false) {")]),
+        [("\tif (ScalingWindow::Get().Options().photoSession) {\n\t\treturn _frontendPhotoOriginalValid",
+          "\tif (false) {\n\t\treturn _frontendPhotoOriginalValid")]),
     "home-shows-gallery-progress": ("GMagpie/GalleryService.cpp",
         [("\tProgressChanged.Invoke(_index + 1, _playlist.size());\n", "")]),
     "gallery-lite-coexists": ("GMagpie/App.cpp",
@@ -501,7 +528,8 @@ REGRESSIONS = {
         [("const auto it = std::find(_playlist.begin(), _playlist.end(), path);",
           "auto it = _playlist.begin() + (long long)_index;")]),
     "frontend-dest-rect-snapshot": ("GMagpie.Core/Renderer.cpp",
-        [("CalcPhotoSceneViewport(_frontendDestRect,", "CalcPhotoSceneViewport(_destRect,")]),
+        [("CalcPhotoSceneViewport(original ? _frontendPhotoOriginalDestRect : _frontendDestRect,",
+          "CalcPhotoSceneViewport(original ? _frontendPhotoOriginalDestRect : _destRect,")]),
     "ngx-fault-keeps-frame-source": ("GMagpie.Core/Renderer.cpp",
         [("\t\t\twhile (GetMessage(&msg, NULL, 0, 0) > 0) {\n\t\t\t\tDispatchMessage(&msg);\n\t\t\t}\n\t\t\treturn;\n\t\t}\n\t\tif (_sessionLifetime->IsStopping())",
           "\t\t\treturn;\n\t\t}\n\t\tif (_sessionLifetime->IsStopping())")]),
@@ -516,9 +544,20 @@ REGRESSIONS = {
         [("\tScalingService::Get().RequestPhoto(_playlist[_index]);\n\t_PrefetchNext();",
           "\t_UpdateStatusOverlay();\n\tScalingService::Get().RequestPhoto(_playlist[_index]);\n\t_PrefetchNext();")]),
     "stale-photo-skipped-with-limit": ("GMagpie.Core/Renderer.cpp",
-        [("photoUpdateEnd - _lastPhotoRender < PHOTO_SKIP_WINDOW", "true")]),
+        [("\t\t\t\tif (_frameSource->HasPendingPhotoRequest()) {\n\t\t\t\t\t_lastPhotoRender",
+          "\t\t\t\tif (false) {\n\t\t\t\t\t_lastPhotoRender")]),
+    "fixed-ratio-upscalers-listed": ("GMagpie/GalleryService.cpp",
+        [("if (EffectsService::Get().GetEffect(StrHelper::UTF8ToUTF16(name))) {",
+          "if (const auto info = EffectsService::Get().GetEffect(StrHelper::UTF8ToUTF16(name)); info && info->CanScale()) {")]),
+    "chain-reuse-needs-same-texture": ("GMagpie.Core/Renderer.cpp",
+        [("\n\t\t&& _frameSource->PipelineTextureSerial() == _photoChainTextureSerial) {", ") {")]),
+    "no-forced-redraw-with-stale-chain": ("GMagpie.Core/Renderer.cpp",
+        [("\t\t\tif (_photoRebindPending) {\n\t\t\t\tLogger::Get().Info(\"Фото: принудительная перерисовка пропущена",
+          "\t\t\tif (false) {\n\t\t\t\tLogger::Get().Info(\"Фото: принудительная перерисовка пропущена")]),
+    "photo-original-independent-of-upscale": ("GMagpie.Core/Renderer.cpp",
+        [("const bool original = _IsPhotoOriginalShown();", "const bool original = false;")]),
     "photo-scene-scaled-to-dest": ("GMagpie.Core/Renderer.cpp",
-        [("\t\t\t\t_DrawPhotoSceneScaled(scene, rtv, view);", "")]),
+        [("\t\t\t\t_DrawPhotoSceneScaled(scene, rtv, view, original ? _frontendPhotoOriginalSrv.get() : nullptr);", "")]),
     "photo-scene-copy-before-draw": ("GMagpie.Core/Renderer.cpp",
         [("\tdc->CopyResource(_photoSceneCopy.get(), scene);", "")]),
     "overlay-owned-reanchors-below-photo": ("GMagpie/GalleryService.cpp",
@@ -562,7 +601,7 @@ SUMMARY = ("source invariants checked: always-normalize and its order, predicted
            "toggles once, the picker stays open on choice and never hides itself, the profile effect is never listed twice, RTX VSR is "
            "in the cycled list, restart keeps the page, the photo scene is drawn scaled into the fitted rectangle and copied to a private texture before drawing, overlay windows are ownerless topmost windows (not owned, not layered) re-asserted by a z-order timer, the picker highlight follows the choice, wheel data source and focus gating, "
            "tested cycle index, Delete only ever goes to the Recycle Bin and keeps the position, "
-            "Compare is off and hidden in photo sessions, the home page mirrors the "
+            "Compare shows the page original in photo sessions, the home page mirrors the "
             "slideshow position, "
            "clamped resume, state save order, direction-aware prefetch, config round-trip, "
            "CLI and UI interval defaults")

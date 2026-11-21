@@ -49,7 +49,8 @@ HomeViewModel::HomeViewModel() {
 	});
 	// Прогресс показа у кнопки «Продолжить»: галерея сообщает о каждой странице с UI-потока
 	_galleryProgressRevoker = GalleryService::Get().ProgressChanged(auto_revoke, [this](size_t, size_t) {
-		RaisePropertyChanged(L"GalleryProgressText");
+		// Начало и конец показа меняют и состояние карточки, не только счётчик
+		_RaiseGalleryResumeChanged();
 	});
 	ScalingService& ScalingService = ScalingService::Get();
 
@@ -565,6 +566,52 @@ fire_and_forget HomeViewModel::PickGalleryFolder() noexcept {
 	_RaiseGalleryResumeChanged();
 }
 
+hstring HomeViewModel::GalleryFavoriteFolder() const noexcept {
+	if (HasCustomFavoriteFolder()) {
+		return hstring(AppSettings::Get().GalleryFavoriteFolder().native());
+	}
+	return ResourceLoader::GetForCurrentView(CommonSharedConstants::APP_RESOURCE_MAP_ID)
+		.GetString(L"Home_Gallery_FavoriteDefault");
+}
+
+bool HomeViewModel::HasCustomFavoriteFolder() const noexcept {
+	return !AppSettings::Get().GalleryFavoriteFolder().empty();
+}
+
+fire_and_forget HomeViewModel::PickGalleryFavoriteFolder() noexcept {
+	const hstring titleStr = ResourceLoader::GetForCurrentView(CommonSharedConstants::APP_RESOURCE_MAP_ID)
+		.GetString(L"Dialog_SelectFavoriteFolder_Title");
+	auto weakThis = get_weak();
+
+	// IFileOpenDialog в главном потоке ведёт себя проблемно, особенно в Win10
+	co_await resume_background();
+
+	com_ptr<IFileOpenDialog> dialog = try_create_instance<IFileOpenDialog>(CLSID_FileOpenDialog);
+	if (!dialog) {
+		Logger::Get().Error("Не удалось создать FileOpenDialog");
+		co_return;
+	}
+	dialog->SetTitle(titleStr.c_str());
+	std::optional<std::filesystem::path> folder = FileDialogHelper::OpenFileDialog(dialog.get(), FOS_PICKFOLDERS);
+	if (!folder || folder->empty()) {
+		co_return;
+	}
+
+	co_await App::Get().Dispatcher();
+	if (!weakThis.get()) {
+		co_return;
+	}
+	AppSettings::Get().GalleryFavoriteFolder(std::move(*folder));
+	RaisePropertyChanged(L"GalleryFavoriteFolder");
+	RaisePropertyChanged(L"HasCustomFavoriteFolder");
+}
+
+void HomeViewModel::ResetGalleryFavoriteFolder() noexcept {
+	AppSettings::Get().GalleryFavoriteFolder({});
+	RaisePropertyChanged(L"GalleryFavoriteFolder");
+	RaisePropertyChanged(L"HasCustomFavoriteFolder");
+}
+
 // Продолжить прошлый просмотр: та же папка и та же страница, что были при последней остановке
 void HomeViewModel::ResumeGallery() {
 	if (!HasGalleryResume()) {
@@ -600,30 +647,45 @@ bool HomeViewModel::HasGalleryResume() const noexcept {
 	return std::filesystem::is_directory(folder, ec);
 }
 
-// Подпись кнопки: папка и страница. Полный путь, а не имя: альбомов может быть несколько
+// Описание карточки альбома: полный путь (альбомов с одинаковым именем папки может быть несколько);
+// позиция - отдельным счётчиком рядом с кнопкой
 hstring HomeViewModel::GalleryResumeInfo() const noexcept {
-	const auto& folder = AppSettings::Get().GalleryLastFolder();
-	if (folder.empty()) {
-		return {};
-	}
-	// номер страницы — как в строке состояния показа, с единицы
-	return hstring(fmt::format(L"{} — {}", folder.native(), AppSettings::Get().GalleryLastIndex() + 1));
+	return hstring(AppSettings::Get().GalleryLastFolder().native());
 }
 
-// Прогресс идущего показа — те же «N / M», что в строке состояния показа; когда
-// показа нет, пустая строка (кнопка «Продолжить» остаётся с прошлой подписью в тултипе)
+// Те же «N / M», что в строке состояния показа: идущий показ, а без него - место, откуда продолжит
+// «Продолжить» (галерея обычно идёт в отдельном процессе, здесь видна сохранённая позиция)
 hstring HomeViewModel::GalleryProgressText() const noexcept {
-	const size_t index = GalleryService::Get().ProgressIndex();
-	const size_t total = GalleryService::Get().ProgressTotal();
+	size_t index = GalleryService::Get().ProgressIndex();
+	size_t total = GalleryService::Get().ProgressTotal();
 	if (index == 0 || total == 0) {
-		return {};
+		if (!HasGalleryResume()) return {};
+		index = AppSettings::Get().GalleryLastIndex() + 1;
+		total = AppSettings::Get().GalleryLastTotal();
+		if (total == 0) return hstring(fmt::format(L"{}", index));
 	}
 	return hstring(fmt::format(L"{} / {}", index, total));
+}
+
+bool HomeViewModel::IsGalleryRunning() const noexcept {
+	return GalleryService::Get().ProgressTotal() != 0;
+}
+
+hstring HomeViewModel::GalleryAlbumName() const noexcept {
+	const auto& folder = AppSettings::Get().GalleryLastFolder();
+	const auto name = folder.filename();
+	// Корень диска («D:\») имени не имеет - тогда весь путь
+	return hstring(name.empty() ? folder.native() : name.native());
 }
 
 void HomeViewModel::_RaiseGalleryResumeChanged() {
 	RaisePropertyChanged(L"HasGalleryResume");
 	RaisePropertyChanged(L"GalleryResumeInfo");
+	RaisePropertyChanged(L"GalleryProgressText");
+	RaisePropertyChanged(L"IsGalleryRunning");
+	RaisePropertyChanged(L"ShowGalleryContinue");
+	RaisePropertyChanged(L"ShowGalleryEmpty");
+	RaisePropertyChanged(L"GalleryAlbumName");
 }
 
 // Причины разные: «в папке нет картинок» и «ещё идёт масштабирование» требуют разных

@@ -15,6 +15,8 @@ struct CommonSharedConstants {
 	static constexpr const wchar_t* TOUCH_HELPER_WINDOW_CLASS_NAME = L"Magpie_TouchHelper";
 	static constexpr const wchar_t* TOUCH_HELPER_HOLE_WINDOW_CLASS_NAME = L"Magpie_TouchHelperHole";
 	static constexpr const wchar_t* TOAST_WINDOW_CLASS_NAME = L"Magpie_Toast";
+	// Строка состояния фотогалереи; рендер сообщает ей, применён ли апскейл к показанной странице
+	static constexpr const wchar_t* GALLERY_STATUS_WINDOW_CLASS_NAME = L"GMagpie.GalleryStatus";
 
 	static constexpr const wchar_t* LOGS_DIR = L"logs";
 	static constexpr const wchar_t* LOG_PATH = L"logs\\magpie.log";
@@ -34,6 +36,9 @@ struct CommonSharedConstants {
 	static constexpr UINT WM_NOTIFY_ICON = WM_USER;
 	static constexpr UINT WM_FRONTEND_RENDER = WM_USER + 1;
 	static constexpr UINT WM_FRONTEND_RENDER_DLSSFG = WM_USER + 2;
+	// wParam - PhotoUpscaleState
+	static constexpr UINT WM_GALLERY_UPSCALE_STATE = WM_APP + 0x47;
+	enum PhotoUpscaleState : WPARAM { PHOTO_UPSCALE_PENDING = 0, PHOTO_UPSCALE_APPLIED = 1, PHOTO_UPSCALE_NOT_NEEDED = 2 };
 
 	static constexpr const wchar_t* WM_MAGPIE_SHOWME = L"WM_MAGPIE_SHOWME";
 	static constexpr const wchar_t* WM_MAGPIE_QUIT = L"WM_MAGPIE_QUIT";

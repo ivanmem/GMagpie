@@ -706,14 +706,23 @@ void AppSettings::ScreenshotsDir(const std::filesystem::path& value) noexcept {
 	SaveAsync();
 }
 
-void AppSettings::GalleryLastSession(std::wstring folder, uint32_t index) noexcept {
+void AppSettings::GalleryLastSession(std::wstring folder, uint32_t index, uint32_t total) noexcept {
 	const std::filesystem::path path{ std::move(folder) };
-	if (path == _galleryLastFolder && index == _galleryLastIndex) {
+	if (path == _galleryLastFolder && index == _galleryLastIndex && total == _galleryLastTotal) {
 		return;
 	}
 
 	_galleryLastFolder = std::move(path);
 	_galleryLastIndex = index;
+	_galleryLastTotal = total;
+	SaveAsync();
+}
+
+void AppSettings::GalleryFavoriteFolder(std::filesystem::path value) noexcept {
+	if (value == _galleryFavoriteFolder) {
+		return;
+	}
+	_galleryFavoriteFolder = std::move(value);
 	SaveAsync();
 }
 
@@ -865,6 +874,12 @@ std::string AppSettings::_Serialize(const _AppSettingsData& data) {
 		writer.String(StrHelper::UTF16ToUTF8(data._galleryLastFolder.native()).c_str());
 		writer.Key("galleryLastIndex");
 		writer.Uint(data._galleryLastIndex);
+		writer.Key("galleryLastTotal");
+		writer.Uint(data._galleryLastTotal);
+	}
+	if (!data._galleryFavoriteFolder.empty()) {
+		writer.Key("galleryFavoriteFolder");
+		writer.String(StrHelper::UTF16ToUTF8(data._galleryFavoriteFolder.native()).c_str());
 	}
 	writer.Key("experimentalFrameRefreshVersion");
 	writer.Uint(1);
@@ -1109,6 +1124,10 @@ void AppSettings::_LoadSettings(const rapidjson::GenericObject<true, rapidjson::
 		JsonHelper::ReadString(root, "galleryLastFolder", galleryFolder);
 		_galleryLastFolder = std::move(galleryFolder);
 		JsonHelper::ReadUInt(root, "galleryLastIndex", _galleryLastIndex);
+		JsonHelper::ReadUInt(root, "galleryLastTotal", _galleryLastTotal);
+		std::wstring favoriteFolder;
+		JsonHelper::ReadString(root, "galleryFavoriteFolder", favoriteFolder);
+		_galleryFavoriteFolder = std::move(favoriteFolder);
 	}
 
 	[[maybe_unused]] bool result = ScalingModesService::Get().Import(root, true);

@@ -2855,14 +2855,50 @@
   <data name="Home_Gallery.Header" xml:space="preserve">
     <value>Photo Gallery</value>
   </data>
-  <data name="Home_Gallery_Play.Header" xml:space="preserve">
-    <value>Play photos from a folder</value>
+  <data name="Home_Gallery_Empty.Header" xml:space="preserve">
+    <value>Start viewing</value>
   </data>
-  <data name="Home_Gallery_Play.Description" xml:space="preserve">
-    <value>Browse with arrow keys or the mouse wheel, pause with Space, switch the upscaler with Num6, exit with Esc. Auto-advance every N seconds; 0 means manual only. Hotkeys work while the slideshow window is in focus. Continue returns to the same photo as the last time.</value>
+  <data name="Home_Gallery_Empty.Description" xml:space="preserve">
+    <value>Choose a folder with photos - the gallery opens full screen</value>
   </data>
-  <data name="Home_Gallery_Interval.Text" xml:space="preserve">
-    <value>Interval, s</value>
+  <data name="Home_Gallery_Other.Header" xml:space="preserve">
+    <value>Another album</value>
+  </data>
+  <data name="Home_Gallery_Other.Description" xml:space="preserve">
+    <value>Open photos from a different folder</value>
+  </data>
+  <data name="Home_Gallery_Autoplay.Header" xml:space="preserve">
+    <value>Auto-advance</value>
+  </data>
+  <data name="Home_Gallery_Autoplay.Description" xml:space="preserve">
+    <value>Seconds before moving to the next photo; 0 means manual only</value>
+  </data>
+  <data name="Home_Gallery_Keys.Header" xml:space="preserve">
+    <value>Controls</value>
+  </data>
+  <data name="Home_Gallery_Keys.Description" xml:space="preserve">
+    <value>Arrow keys or mouse wheel - browse, Space - pause, right click or Num6 - menu (upscaler, favorites, delete), Insert - add to favorites, Delete - move to Recycle Bin, Esc - exit. Keys work while the slideshow window is in focus.</value>
+  </data>
+  <data name="Home_Gallery_Favorite.Header" xml:space="preserve">
+    <value>Favorites folder</value>
+  </data>
+  <data name="Home_Gallery_FavoriteDefault" xml:space="preserve">
+    <value>Default: a favorite folder next to the photo's folder (..\favorite)</value>
+  </data>
+  <data name="Home_Gallery_FavoritePick.Content" xml:space="preserve">
+    <value>Choose folder…</value>
+  </data>
+  <data name="Home_Gallery_FavoriteReset.Content" xml:space="preserve">
+    <value>Use default</value>
+  </data>
+  <data name="Dialog_SelectFavoriteFolder_Title" xml:space="preserve">
+    <value>Select a favorites folder</value>
+  </data>
+  <data name="Gallery_Menu_Favorite" xml:space="preserve">
+    <value>Add to favorites</value>
+  </data>
+  <data name="Gallery_FavoriteToast" xml:space="preserve">
+    <value>Moved to favorites</value>
   </data>
   <data name="Home_Gallery_Pick.Content" xml:space="preserve">
     <value>Choose folder…</value>
@@ -2908,6 +2944,15 @@
   </data>
   <data name="Gallery_Menu_Delete" xml:space="preserve">
     <value>Move to Recycle Bin</value>
+  </data>
+  <data name="Gallery_Menu_SaveAs" xml:space="preserve">
+    <value>Save as…</value>
+  </data>
+  <data name="Gallery_SaveAs_Filter" xml:space="preserve">
+    <value>PNG image</value>
+  </data>
+  <data name="Message_PhotoUpscaleNotReady" xml:space="preserve">
+    <value>The upscale of this photo is not ready yet - wait until the percent turns green</value>
   </data>
   <data name="Gallery_Menu_Stop" xml:space="preserve">
     <value>Close gallery</value>

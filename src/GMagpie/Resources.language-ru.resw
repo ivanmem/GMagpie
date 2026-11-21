@@ -1457,14 +1457,50 @@
   <data name="Home_Gallery.Header" xml:space="preserve">
     <value>Фотогалерея</value>
   </data>
-  <data name="Home_Gallery_Play.Header" xml:space="preserve">
-    <value>Показывать фото из папки</value>
+  <data name="Home_Gallery_Empty.Header" xml:space="preserve">
+    <value>Начните просмотр</value>
   </data>
-  <data name="Home_Gallery_Play.Description" xml:space="preserve">
-    <value>Листание — стрелки или колесо мыши, пауза — Space, смена апскейлера — Num6, выход — Esc. Автолистание каждые N секунд; 0 — только вручную. Клавиши действуют, пока окно показа в фокусе. «Продолжить» вернёт к тому же фото последнего просмотра.</value>
+  <data name="Home_Gallery_Empty.Description" xml:space="preserve">
+    <value>Выберите папку с фотографиями - галерея откроется на весь экран</value>
   </data>
-  <data name="Home_Gallery_Interval.Text" xml:space="preserve">
-    <value>Интервал, с</value>
+  <data name="Home_Gallery_Other.Header" xml:space="preserve">
+    <value>Другой альбом</value>
+  </data>
+  <data name="Home_Gallery_Other.Description" xml:space="preserve">
+    <value>Открыть фотографии из другой папки</value>
+  </data>
+  <data name="Home_Gallery_Autoplay.Header" xml:space="preserve">
+    <value>Автолистание</value>
+  </data>
+  <data name="Home_Gallery_Autoplay.Description" xml:space="preserve">
+    <value>Через сколько секунд переходить к следующему фото; 0 - листать только вручную</value>
+  </data>
+  <data name="Home_Gallery_Keys.Header" xml:space="preserve">
+    <value>Управление</value>
+  </data>
+  <data name="Home_Gallery_Keys.Description" xml:space="preserve">
+    <value>Стрелки или колесо мыши - листать, Space - пауза, правая кнопка или Num6 - меню (апскейлер, избранное, удаление), Insert - в избранное, Delete - в корзину, Esc - выход. Клавиши действуют, пока окно показа в фокусе.</value>
+  </data>
+  <data name="Home_Gallery_Favorite.Header" xml:space="preserve">
+    <value>Папка избранного</value>
+  </data>
+  <data name="Home_Gallery_FavoriteDefault" xml:space="preserve">
+    <value>По умолчанию - папка favorite рядом с папкой фото (..\favorite)</value>
+  </data>
+  <data name="Home_Gallery_FavoritePick.Content" xml:space="preserve">
+    <value>Выбрать папку…</value>
+  </data>
+  <data name="Home_Gallery_FavoriteReset.Content" xml:space="preserve">
+    <value>По умолчанию</value>
+  </data>
+  <data name="Dialog_SelectFavoriteFolder_Title" xml:space="preserve">
+    <value>Выберите папку избранного</value>
+  </data>
+  <data name="Gallery_Menu_Favorite" xml:space="preserve">
+    <value>В избранное</value>
+  </data>
+  <data name="Gallery_FavoriteToast" xml:space="preserve">
+    <value>Перемещено в избранное</value>
   </data>
   <data name="Home_Gallery_Pick.Content" xml:space="preserve">
     <value>Выбрать папку…</value>
@@ -1510,6 +1546,15 @@
   </data>
   <data name="Gallery_Menu_Delete" xml:space="preserve">
     <value>Удалить в корзину</value>
+  </data>
+  <data name="Gallery_Menu_SaveAs" xml:space="preserve">
+    <value>Сохранить как…</value>
+  </data>
+  <data name="Gallery_SaveAs_Filter" xml:space="preserve">
+    <value>Изображение PNG</value>
+  </data>
+  <data name="Message_PhotoUpscaleNotReady" xml:space="preserve">
+    <value>Апскейл этого фото ещё не готов - подождите, пока процент станет зелёным</value>
   </data>
   <data name="Gallery_Menu_Stop" xml:space="preserve">
     <value>Закрыть галерею</value>

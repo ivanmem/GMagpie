@@ -70,6 +70,9 @@ public:
 	void RequestPhotoPrefetch(std::wstring path);
 	// Рабочая копия эффектов текущей сессии (с фото-переопределениями и заменой апскейлера)
 	std::vector<EffectOption> PhotoEffectsSnapshot() const;
+	// «Сохранить как» из меню галереи: апскейл показываемой страницы в файл
+	void SavePhotoUpscaled(std::filesystem::path savePath, std::wstring sourcePath);
+	void SetPhotoMenuOpen(bool value);
 	// Перезапустить текущую фото-сессию на месте с новым списком эффектов (смена апскейлера по Num6)
 	bool RestartPhotoEffects(std::vector<EffectOption>&& effects);
 

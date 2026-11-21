@@ -2855,14 +2855,50 @@
   <data name="Home_Gallery.Header" xml:space="preserve">
     <value>照片幻灯片</value>
   </data>
-  <data name="Home_Gallery_Play.Header" xml:space="preserve">
-    <value>播放文件夹中的照片</value>
+  <data name="Home_Gallery_Empty.Header" xml:space="preserve">
+    <value>开始浏览</value>
   </data>
-  <data name="Home_Gallery_Play.Description" xml:space="preserve">
-    <value>方向键或鼠标滚轮翻页，Space 暂停，Num6 切换放大器，Esc 退出。每 N 秒自动翻页，0 表示仅手动。快捷键仅在放映窗口处于前台时生效。「继续」可回到上次观看的那张照片。</value>
+  <data name="Home_Gallery_Empty.Description" xml:space="preserve">
+    <value>选择照片所在的文件夹，图库将全屏打开</value>
   </data>
-  <data name="Home_Gallery_Interval.Text" xml:space="preserve">
-    <value>间隔（秒）</value>
+  <data name="Home_Gallery_Other.Header" xml:space="preserve">
+    <value>其他相册</value>
+  </data>
+  <data name="Home_Gallery_Other.Description" xml:space="preserve">
+    <value>打开其他文件夹中的照片</value>
+  </data>
+  <data name="Home_Gallery_Autoplay.Header" xml:space="preserve">
+    <value>自动翻页</value>
+  </data>
+  <data name="Home_Gallery_Autoplay.Description" xml:space="preserve">
+    <value>多少秒后切换到下一张照片；0 表示仅手动</value>
+  </data>
+  <data name="Home_Gallery_Keys.Header" xml:space="preserve">
+    <value>操作</value>
+  </data>
+  <data name="Home_Gallery_Keys.Description" xml:space="preserve">
+    <value>方向键或鼠标滚轮翻页，Space 暂停，右键或 Num6 打开菜单（放大器、收藏、删除），Insert 添加到收藏，Delete 移到回收站，Esc 退出。快捷键仅在放映窗口处于前台时生效。</value>
+  </data>
+  <data name="Home_Gallery_Favorite.Header" xml:space="preserve">
+    <value>收藏文件夹</value>
+  </data>
+  <data name="Home_Gallery_FavoriteDefault" xml:space="preserve">
+    <value>默认：照片所在文件夹旁的 favorite 文件夹（..\favorite）</value>
+  </data>
+  <data name="Home_Gallery_FavoritePick.Content" xml:space="preserve">
+    <value>选择文件夹…</value>
+  </data>
+  <data name="Home_Gallery_FavoriteReset.Content" xml:space="preserve">
+    <value>恢复默认</value>
+  </data>
+  <data name="Dialog_SelectFavoriteFolder_Title" xml:space="preserve">
+    <value>选择收藏文件夹</value>
+  </data>
+  <data name="Gallery_Menu_Favorite" xml:space="preserve">
+    <value>添加到收藏</value>
+  </data>
+  <data name="Gallery_FavoriteToast" xml:space="preserve">
+    <value>已移到收藏</value>
   </data>
   <data name="Home_Gallery_Pick.Content" xml:space="preserve">
     <value>选择文件夹…</value>
@@ -2908,6 +2944,15 @@
   </data>
   <data name="Gallery_Menu_Delete" xml:space="preserve">
     <value>移到回收站</value>
+  </data>
+  <data name="Gallery_Menu_SaveAs" xml:space="preserve">
+    <value>另存为…</value>
+  </data>
+  <data name="Gallery_SaveAs_Filter" xml:space="preserve">
+    <value>PNG 图像</value>
+  </data>
+  <data name="Message_PhotoUpscaleNotReady" xml:space="preserve">
+    <value>这张照片的放大尚未完成，请等百分比变为绿色</value>
   </data>
   <data name="Gallery_Menu_Stop" xml:space="preserve">
     <value>关闭图库</value>

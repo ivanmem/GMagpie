@@ -11,6 +11,7 @@
 #include "OverlayDrawer.h"
 #include "IdlePresentationClock.h"
 #include "PassThroughFrames.h"
+#include "PhotoFrameSource.h"
 #include "PresenterBase.h"
 #include "ReflexController.h"
 #include "PresentationFrameRate.h"
@@ -164,11 +165,17 @@ public:
 		return _overlayDrawer.IsCursorOnCaptionArea();
 	}
 
+	// savePath задан - сохранить ровно туда (PNG), а не в папку снимков под сгенерированным именем
 	winrt::fire_and_forget TakeScreenshot(
 		uint32_t effectIdx,
 		uint32_t passIdx = std::numeric_limits<uint32_t>::max(),
-		uint32_t outputIdx = std::numeric_limits<uint32_t>::max()
+		uint32_t outputIdx = std::numeric_limits<uint32_t>::max(),
+		std::filesystem::path savePath = {}
 	) noexcept;
+
+	// Фото-сессия, «Сохранить как»: результат апскейла показываемой страницы в PNG. Апскейл не нужен
+	// (фото не меньше экрана) - копия исходного файла рядом с выбранным именем. Поток фронта.
+	void SavePhotoUpscaled(std::filesystem::path savePath, std::wstring sourcePath) noexcept;
 
 private:
 	// Frontend-only admission/output and backend-only request; input handoff
@@ -302,7 +309,7 @@ private:
 	// масштабированная прорисовка сцены вцелевой прямоугольник — копия 1:1 его бы
 	// игнорировала («фото растягивается на весь экран»). Вызывается из _CopySceneToTarget.
 	void _DrawPhotoSceneScaled(ID3D11Texture2D* scene, ID3D11RenderTargetView* rtv,
-		const RECT& view) noexcept;
+		const RECT& view, ID3D11ShaderResourceView* srv = nullptr) noexcept;
 	void _RecordDLSSFGFrontendTimings(
 		bool usesFrameLatencyWaitableObject,
 		const PresentationJobTiming& timings,
@@ -346,6 +353,60 @@ private:
 	std::vector<EffectDesc> _photoEffectDescsAll;
 	// Под какой размер фото построена текущая цепь: совпадает — переиспользуем, не перестраивая
 	SIZE _photoChainSource = {};
+	// ...и под какой объект текстуры источника (PipelineTextureSerial): одинаковый размер - ещё не та же текстура
+	uint64_t _photoChainTextureSerial = 0;
+	// Только поток backend: смена фото требует перестройки цепи, но страница была пропущена
+	bool _photoRebindPending = false;
+	// Фоновая подготовка RTX VSR под следующую страницу (поток предзагрузки фото читает, бэкенд пишет)
+	struct PhotoVsrPlan {
+		std::vector<EffectOption> options;
+		std::vector<EffectDesc> descs;
+		SIZE frame{};
+		uint32_t qualityLevel = 0;
+	};
+	std::mutex _photoVsrPlanMutex;
+	std::optional<PhotoVsrPlan> _photoVsrPlan;
+	bool _photoPrefetchListenerSet = false;
+	void _UpdatePhotoVsrPlan() noexcept;
+	// Сколько заняла последняя перестройка цепи под новый размер фото (решает, ждать ли следующего нажатия)
+	std::chrono::steady_clock::duration _lastPhotoRebuildCost{};
+	// Показ оригинала страницы - полностью мимо бэкенда и апскейла: свой поток декодирует файл сразу в размер
+	// экрана, фронт сам загружает его в текстуру и рисует. Апскейл бэкенда подменяет оригинал, только когда
+	// пришёл для этой же страницы (photoPage); результат для пролистанной страницы на экран не попадает.
+	struct PhotoOriginal {
+		uint64_t page = 0;
+		PhotoFrameSource::Canvas canvas;
+	};
+	std::mutex _photoOriginalMutex;
+	std::condition_variable_any _photoOriginalCv;
+	std::wstring _photoOriginalRequest;              // под mutex: что декодировать (пусто - нечего)
+	std::optional<PhotoOriginal> _photoOriginalReady; // под mutex: декодировано, ждёт фронт
+	void _PhotoOriginalThreadProc(std::stop_token stop) noexcept;
+	void _RequestPhotoOriginal(std::wstring path) noexcept;
+	// Объявлен после своих mutex/cv/полей: уничтожается (stop + join) раньше них
+	std::jthread _photoOriginalThread;
+	// Только фронт: забрать готовый оригинал в текстуру
+	void _TakePhotoOriginal() noexcept;
+	// Только фронт: оригинал показываемой страницы (он же - картинка для Compare)
+	winrt::com_ptr<ID3D11Texture2D> _frontendPhotoOriginal;
+	winrt::com_ptr<ID3D11ShaderResourceView> _frontendPhotoOriginalSrv;
+	RECT _frontendPhotoOriginalDestRect{};
+	uint64_t _frontendPhotoOriginalPage = 0;
+	bool _frontendPhotoOriginalValid = false;
+	// Страница, чей оригинал видеокарта уже дорисовала: бэкенд начинает апскейл только после этого,
+	// иначе долгий проход VSR под нагрузкой GPU задерживает показ оригинала на секунды
+	std::atomic<uint64_t> _photoOriginalOnScreenPage = 0;
+	winrt::com_ptr<ID3D11Query> _photoOriginalQuery;
+	uint64_t _lastUpscaledPhotoPage = 0;  // поток бэкенда
+	bool _photoNewPage = true;           // поток бэкенда: кадр - новая страница, а не следующий кадр анимации (для журнала)
+	// Фронтенд: последний взятый кадр анимации для Compare
+	uint64_t _frontendAnimationSerial = 0;
+	std::vector<uint8_t> _frontendAnimationPixels;
+	// На экране оригинал, а не апскейл: апскейла этой страницы ещё нет или включён Compare
+	bool _IsPhotoOriginalShown() const noexcept;
+	void _WaitPhotoOriginalDrawn() noexcept;
+	// Что показывать при включённом Compare: оригинал фото или опорный кадр захвата (nullptr - нечего)
+	ID3D11Texture2D* _PassThroughScene(bool stableBaseOnly) noexcept;
 
 	void _BuildEffectParameterRuntimeInfos() noexcept;
 	void _SetDlssNrStatus(uint32_t index, DlssNrState state, DlssNrFailure failure = {}) noexcept;
@@ -389,7 +450,7 @@ private:
 	bool _UpdateDynamicConstants(uint32_t frameCount) const noexcept;
 
 
-	winrt::IAsyncOperation<bool> _TakeScreenshotImpl(
+	winrt::IAsyncOperation<bool> _TakeScreenshotImpl(std::filesystem::path savePath,
 		uint32_t effectIdx,
 		uint32_t passIdx,
 		uint32_t outputIdx

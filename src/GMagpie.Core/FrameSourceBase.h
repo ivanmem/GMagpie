@@ -100,6 +100,27 @@ public:
 	// Только фото-сессия: пользователь уже запросил другую страницу, пока готовился текущий кадр. Любой поток.
 	virtual bool HasPendingPhotoRequest() const noexcept { return false; }
 
+	// Только фото-сессия: номер объекта текстуры источника, растёт при каждом её пересоздании. Совпавший размер
+	// не значит ту же текстуру: A(1920) -> B(2560, пропущена) -> C(1920) - цепь от A читала бы освобождённое.
+	virtual uint64_t PipelineTextureSerial() const noexcept { return 0; }
+
+	// Только фото-сессия: какая страница сейчас в текстуре источника (PhotoPageIdOf её пути). Поток бэкенда.
+	virtual uint64_t PhotoPageId() const noexcept { return 0; }
+
+	// Только фото-сессия, любой поток: последний кадр анимации страницы page (BGRA w*h), если он новее serial.
+	// Нужен Compare - оригинал анимации тоже должен двигаться
+	virtual bool CopyAnimationFrame(uint64_t /*page*/, uint64_t& /*serial*/, std::vector<uint8_t>& /*pixels*/,
+		uint32_t /*width*/, uint32_t /*height*/) noexcept { return false; }
+	// Номер страницы по пути файла: один и тот же у источника и у быстрого показа оригинала на фронте.
+	// Не ноль - ноль значит «страницы нет».
+	static uint64_t PhotoPageIdOf(std::wstring_view path) noexcept {
+		return std::hash<std::wstring_view>{}(path) | 1;
+	}
+
+	// Только фото-сессия: вызывается с потока предзагрузки, когда следующая страница декодирована (её размер) -
+	// рендерер заранее готовит под неё тяжёлые эффекты. Задаётся до первой предзагрузки.
+	virtual void SetPrefetchListener(std::function<void(uint32_t width, uint32_t height)> /*listener*/) noexcept {}
+
 	// Только фото-сессия: запросить смену текущего изображения. Реализация по умолчанию игнорирует.
 	virtual void RequestPhotoFile(std::wstring /*path*/) noexcept {}
 

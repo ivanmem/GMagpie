@@ -112,6 +112,10 @@ struct HdrFrameMetadata {
 	// UI paper white travels with processed/published pixels. Legacy native SDR
 	// mapping applies exposure; paired restoration does not. Zero is unspecified.
 	float overlayReferenceWhiteNits = 0;
+	// Фото-сессия: страница кадра (FrameSourceBase::PhotoPageIdOf) - фронт показывает апскейл только своей
+	// страницы - и применён ли к нему апскейл (CommonSharedConstants::PhotoUpscaleState)
+	uint64_t photoPage = 0;
+	uintptr_t photoUpscaleState = 0;
     bool IsValid() const noexcept;
 };
 

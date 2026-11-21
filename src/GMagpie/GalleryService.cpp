@@ -13,6 +13,7 @@
 #include <optional>
 #include <shellapi.h>
 #include <shlobj_core.h>
+#include <shobjidl_core.h>
 #include <unordered_set>
 #include <wincodec.h>
 
@@ -52,10 +53,15 @@ bool IsSupportedPhoto(std::wstring_view path) {
 // запуске галереи (GetEffect + CanScale); отсутствующий — пропускается с логом.
 // В меню остались только ACNet (нейросетевой апскейлер, единственный конкурент VSR) и VSR; прочие
 // ресемплеры (Lanczos, Jinc, NIS) скрыты по просьбе пользователя. Оригинал профиля - всегда первая строка.
+// Не эффект, а сочетание: RTX VSR в режиме Deblur (тот же размер, снимает мыло) и затем обычный RTX VSR.
+// На мыльных фото и анимациях один VSR почти не отличается от простого увеличения
+static constexpr std::string_view VSR_DEBLUR_ID = "RTXVideo\\RTXVideo_VSR+Deblur";
+
 static const std::vector<std::string> UPSCALER_CANDIDATES = {
 	"ACNet"
 #ifdef MP_ENABLE_RTX_VIDEO_DENOISE
 	, std::string(NVIDIA_VFX_VSR_ID)
+	, std::string(VSR_DEBLUR_ID)
 #endif
 };
 
@@ -69,6 +75,8 @@ static std::wstring UpscalerDisplayName(const std::string& name) {
 	}
 	if (shown == "RTXVideo_VSR") {
 		shown = "RTX VSR";
+	} else if (shown == "RTXVideo_VSR+Deblur") {
+		shown = "RTX VSR + Deblur";
 	}
 	return StrHelper::UTF8ToUTF16(shown);
 }
@@ -116,7 +124,7 @@ static bool PhotoAppliesExifRotation(unsigned short orientation) noexcept {
 
 namespace gallery_status {
 
-constexpr wchar_t CLASS_NAME[] = L"GMagpie.GalleryStatus";
+constexpr const wchar_t* CLASS_NAME = CommonSharedConstants::GALLERY_STATUS_WINDOW_CLASS_NAME;
 
 constexpr int PADDING_X = 16;
 constexpr int PADDING_Y = 10;
@@ -124,9 +132,15 @@ constexpr int MARGIN = 24;          // отступ от угла кадра
 constexpr COLORREF BG_COLOR = RGB(16, 16, 16);
 constexpr COLORREF FG_COLOR = RGB(240, 240, 240);
 
+// Процент окрашен по состоянию апскейла показанной страницы: красный - ещё не применён (виден оригинал),
+// зелёный - применён; апскейл не нужен (фото не меньше экрана) - обычный цвет
+constexpr COLORREF PENDING_COLOR = RGB(255, 99, 71);
+constexpr COLORREF APPLIED_COLOR = RGB(108, 203, 95);
+
 std::wstring g_text;
 int g_textW = 0;
 int g_textH = 0;
+WPARAM g_upscaleState = CommonSharedConstants::PHOTO_UPSCALE_NOT_NEEDED;
 wil::unique_hwnd g_hwnd;
 wil::unique_hfont g_font;
 
@@ -142,16 +156,32 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 		FillRect(hdc, &rc, background.get());
 		if (g_font && !g_text.empty()) {
 			SetBkMode(hdc, TRANSPARENT);
-			SetTextColor(hdc, FG_COLOR);
 			const auto oldFont = SelectObject(hdc, g_font.get());
 			// NODRAWTEXT в Common.Post.props — центрируем вручную размерами из замера
-			TextOutW(hdc, (rc.right - rc.left - g_textW) / 2,
-				(rc.bottom - rc.top - g_textH) / 2, g_text.c_str(), static_cast<int>(g_text.size()));
+			const int x = (rc.right - rc.left - g_textW) / 2;
+			const int y = (rc.bottom - rc.top - g_textH) / 2;
+			// Процент - после последнего «·»; до него обычным цветом, его - цветом состояния
+			const size_t split = g_text.find_last_of(L'\x00B7');
+			const size_t percentAt = split == std::wstring::npos ? g_text.size() : split + 1;
+			SetTextColor(hdc, FG_COLOR);
+			TextOutW(hdc, x, y, g_text.c_str(), static_cast<int>(percentAt));
+			SIZE prefix{};
+			GetTextExtentPoint32W(hdc, g_text.c_str(), static_cast<int>(percentAt), &prefix);
+			SetTextColor(hdc, g_upscaleState == CommonSharedConstants::PHOTO_UPSCALE_PENDING ? PENDING_COLOR
+				: g_upscaleState == CommonSharedConstants::PHOTO_UPSCALE_APPLIED ? APPLIED_COLOR : FG_COLOR);
+			TextOutW(hdc, x + prefix.cx, y, g_text.c_str() + percentAt,
+				static_cast<int>(g_text.size() - percentAt));
 			SelectObject(hdc, oldFont);
 		}
 		EndPaint(hWnd, &ps);
 		return 0;
 	}
+	case CommonSharedConstants::WM_GALLERY_UPSCALE_STATE:
+		if (g_upscaleState != wParam) {
+			g_upscaleState = wParam;
+			InvalidateRect(hWnd, nullptr, FALSE);
+		}
+		return 0;
 	case WM_TIMER:
 		// Страховка z-порядка: если окно вывода перетянул на себя кадр, вернуться
 		if (IsBelowOutputWindow(hWnd)) {
@@ -301,6 +331,8 @@ constexpr UINT ID_UPSCALER_BASE = 1000;  // + строка списка (0 - о�
 constexpr UINT ID_PAUSE = 2000;
 constexpr UINT ID_DELETE = 2001;
 constexpr UINT ID_STOP = 2002;
+constexpr UINT ID_SAVE_AS = 2003;
+constexpr UINT ID_FAVORITE = 2004;
 
 } // namespace gallery_menu
 
@@ -503,7 +535,7 @@ bool GalleryService::Start(std::wstring folder, uint32_t intervalSeconds, int sc
 		_lastStartFailure = GalleryStartFailure::NoImages;
 		if (AppSettings::Get().GalleryLastFolder().native() == folder) {
 			// продолжать больше некуда: сохранённая сессия ведёт в пустую папку
-			AppSettings::Get().GalleryLastSession({}, 0);
+			AppSettings::Get().GalleryLastSession({}, 0, 0);
 		}
 		return false;
 	}
@@ -520,8 +552,10 @@ bool GalleryService::Start(std::wstring folder, uint32_t intervalSeconds, int sc
 
 	_upscalerCycle.clear();
 	for (const std::string& name : UPSCALER_CANDIDATES) {
-		const auto info = EffectsService::Get().GetEffect(StrHelper::UTF8ToUTF16(name));
-		if (info && info->CanScale()) {
+		// Достаточно, что эффект есть: CanScale значит «размер выхода свободный», а ACNet увеличивает
+		// ровно вдвое - с этой проверкой он молча пропадал из списка
+		const std::string_view effect = name == VSR_DEBLUR_ID ? NVIDIA_VFX_VSR_ID : std::string_view(name);
+		if (EffectsService::Get().GetEffect(StrHelper::UTF8ToUTF16(effect))) {
 			_upscalerCycle.push_back(name);
 		} else {
 			Logger::Get().Warn(fmt::format("Галерея: апскейлер недоступен, пропущен: {}", name));
@@ -659,7 +693,8 @@ void GalleryService::_PersistSession(bool force) noexcept {
 	if (!force && tick - _lastPersistTick < 3000) return;
 	_lastPersistTick = tick;
 
-	AppSettings::Get().GalleryLastSession(_folder, static_cast<uint32_t>(_index));
+	AppSettings::Get().GalleryLastSession(_folder, static_cast<uint32_t>(_index),
+		static_cast<uint32_t>(_playlist.size()));
 }
 
 // Какой кадр предзагружать следующим — в ту сторону, куда пользователь сейчас
@@ -696,17 +731,37 @@ static double PhotoScalePercent(UINT width, UINT height, UINT frameWidth, UINT f
 // Строка информации: "3 / 5001 · 155%". Проценты показывают, во сколько раз
 // фото будет увеличено/уменьшен при подгонке под экран (режим Fit сохраняет
 // пропорции, поэтому масштаб = min по сторонам); 100% — родной размер файла
+// Где на экране фото: окно вывода, а пока его нет (старт сессии, перезапуск при смене апскейлера) -
+// сцена фото, она уже стоит на мониторе показа. Основной монитор - только если нет ни того, ни другого,
+// иначе на втором мониторе строка и меню уезжали на основной.
+static RECT PhotoFrameRect() noexcept {
+	RECT rect{};
+	for (const wchar_t* cls : { CommonSharedConstants::SCALING_WINDOW_CLASS_NAME, ScalingService::PHOTO_STAGE_CLASS_NAME }) {
+		if (HWND hwnd = FindWindowW(cls, nullptr); hwnd && IsWindowVisible(hwnd) && GetWindowRect(hwnd, &rect)) return rect;
+	}
+	Logger::Get().Info("Галерея: окно фото не найдено - строка состояния на основном мониторе");
+	return { 0, 0, GetSystemMetrics(SM_CXSCREEN), GetSystemMetrics(SM_CYSCREEN) };
+}
+
 void GalleryService::_UpdateStatusOverlay() {
 	std::wstring percent = L"?";
 
-	RECT frameRect{};
-	if (HWND output = FindWindowW(CommonSharedConstants::SCALING_WINDOW_CLASS_NAME, nullptr);
-		output && IsWindowVisible(output)) {
-		GetWindowRect(output, &frameRect);
-	} else {
-		// на старте сессии окно может ещё не существовать — берём основной монитор
-		frameRect = { 0, 0, GetSystemMetrics(SM_CXSCREEN), GetSystemMetrics(SM_CYSCREEN) };
+	// Пока фото не на экране (первая страница, перезапуск при смене апскейлера), окна вывода нет: строка встала бы
+	// по окну-сцене не туда и с неверным процентом. Ждём окно вывода и показываем строку вместе с фото.
+	HWND output = FindWindowW(CommonSharedConstants::SCALING_WINDOW_CLASS_NAME, nullptr);
+	if (!output || !IsWindowVisible(output)) {
+		if (!_statusRetryTimer) {
+			_statusRetryTimer = App::Get().Dispatcher().CreateTimer();
+			_statusRetryTimer.Interval(std::chrono::milliseconds(100));
+			_statusRetryTimer.IsRepeating(false);
+			_statusRetryTimer.Tick([this](auto const&, auto const&) {
+				if (_running) _UpdateStatusOverlay();
+			});
+		}
+		_statusRetryTimer.Start();
+		return;
 	}
+	const RECT frameRect = PhotoFrameRect();
 
 	if (UINT w = 0, h = 0; gallery_status::TryGetImageSize(_playlist[_index], w, h)) {
 		percent = fmt::format(L"{:.0f}%", PhotoScalePercent(w, h,
@@ -767,7 +822,7 @@ static std::optional<size_t> PhotoIndexAfterDelete(size_t index, size_t oldSize)
 }
 
 bool GalleryService::_EnsureUpscalerSnapshot() {
-	if (_upscalerCycle.empty()) return false;
+	// Пустой список других апскейлеров - не повод прятать раздел: текущий режим меню показывает всегда
 	if (_cyclePos != -2) return true;
 
 	_originalFirst = ScalingService::Get().PhotoEffectsSnapshot();
@@ -792,12 +847,34 @@ void GalleryService::_ApplyUpscaler(int next, bool silent) {
 	if (next == -1) {
 		displayName = UpscalerDisplayName(_originalFirst[0].name);
 	} else {
+		const bool deblur = _upscalerCycle[next] == VSR_DEBLUR_ID;
 		EffectOption& first = effects[0];
-		first.name = _upscalerCycle[next];
+		first.name = deblur ? std::string(NVIDIA_VFX_VSR_ID) : _upscalerCycle[next];
 		first.parameters.clear();
-		// единственный ресайл делает первый эффект — как при запуске сессии
-		first.scalingType = ScalingType::Fit;
-		first.scale = { 1.f, 1.f };
+		const auto info = EffectsService::Get().GetEffect(StrHelper::UTF8ToUTF16(first.name));
+		if (info && info->CanScale()) {
+			// единственный ресайл делает первый эффект — как при запуске сессии
+			first.scalingType = ScalingType::Fit;
+			first.scale = { 1.f, 1.f };
+		} else {
+			// Кратность зашита в эффекте (ACNet - ровно 2x): масштаб от профиля ему не задаём, до кадра доводит
+			// нормализующая стадия
+			first.scalingType = ScalingType::Normal;
+			first.scale = { 1.f, 1.f };
+		}
+		if (deblur) {
+			// Увеличение - с качеством VSR из профиля, если профиль и так на VSR
+			if (_originalFirst[0].name == NVIDIA_VFX_VSR_ID) {
+				first.parameters = _originalFirst[0].parameters;
+			}
+			// Сначала Deblur в исходном размере (category 4 - Deblur, strength 3 - самый сильный), потом увеличение VSR.
+			// Между ними копия Nearest 1:1: выход одного VSR нельзя второй раз привязать к CUDA входом другого
+			// (NvCVImage_InitFromD3D11Texture: invalid resource handle)
+			EffectOption deblurStage{ .name = std::string(NVIDIA_VFX_VSR_ID) };
+			deblurStage.parameters["category"] = 4.f;
+			deblurStage.parameters["strength"] = 3.f;
+			effects.insert(effects.begin(), { std::move(deblurStage), EffectOption{ .name = "Nearest" } });
+		}
 		displayName = UpscalerDisplayName(_upscalerCycle[next]);
 	}
 
@@ -822,10 +899,45 @@ void GalleryService::_ApplyUpscaler(int next, bool silent) {
 	}
 }
 
+// Папка избранного для фото: из настроек, а по умолчанию - favorite рядом с папкой фото (..\favorite)
+static std::filesystem::path FavoriteFolderFor(const std::filesystem::path& photo) {
+	if (const auto& custom = AppSettings::Get().GalleryFavoriteFolder(); !custom.empty()) {
+		return custom;
+	}
+	const std::filesystem::path folder = photo.parent_path();
+	const std::filesystem::path parent = folder.parent_path();
+	// У папки в корне диска родителя нет - тогда favorite внутри неё
+	return (parent.empty() || parent == folder ? folder : parent) / L"favorite";
+}
+
+// Переместить фото в избранное; занятое имя получает суффикс « (2)», « (3)»...
+static bool MoveToFavorites(const std::filesystem::path& photo) {
+	const std::filesystem::path folder = FavoriteFolderFor(photo);
+	std::error_code ec;
+	std::filesystem::create_directories(folder, ec);
+	if (ec) {
+		Logger::Get().Error(fmt::format("Галерея: папка избранного не создана: {} ({})",
+			StrHelper::UTF16ToUTF8(folder.native()), ec.message()));
+		return false;
+	}
+	std::filesystem::path target = folder / photo.filename();
+	for (int n = 2; std::filesystem::exists(target, ec); ++n) {
+		target = folder / (photo.stem().native() + L" (" + std::to_wstring(n) + L")" + photo.extension().native());
+	}
+	if (!MoveFileExW(photo.c_str(), target.c_str(), MOVEFILE_COPY_ALLOWED)) {
+		Logger::Get().Win32Error(fmt::format("Галерея: фото не перемещено в избранное: {}",
+			StrHelper::UTF16ToUTF8(target.native())));
+		return false;
+	}
+	Logger::Get().Info(fmt::format("Галерея: фото перемещено в избранное — {}", StrHelper::UTF16ToUTF8(target.native())));
+	return true;
+}
+
 // Delete: файл текущей страницы уходит в корзину (FOF_ALLOWUNDO — случайное удаление
-// отменяется проводником), плейлист сжимается на него, показ продолжается следующим
-// фото; на последней странице — сдвиг назад; альбом опустел — показ останавливаем.
-void GalleryService::_DeleteCurrentPhoto() {
+// отменяется проводником); Insert (toFavorites): файл перемещается в папку избранного. Дальше одинаково:
+// плейлист сжимается на него, показ продолжается следующим фото; на последней странице — сдвиг назад;
+// альбом опустел — показ останавливаем.
+void GalleryService::_DeleteCurrentPhoto(bool toFavorites) {
 	if (_deleting) return;
 	_deleting = true;
 	// SHFileOperationW разворачивает модальный насос сообщений: LL-хуки и таймер
@@ -835,18 +947,22 @@ void GalleryService::_DeleteCurrentPhoto() {
 	if (_playlist.empty()) return;
 	const std::wstring path = _playlist[_index];
 
-	// SHFileOperationW хочет список путей, удвоенно-нулевой терминатор
-	std::wstring from = path;
-	from.push_back(L'\0');
-	SHFILEOPSTRUCTW op{  // не const: SHFileOperationW пишет fAnyOperationsAborted
-		.wFunc = FO_DELETE,
-		.pFrom = from.c_str(),
-		.fFlags = FOF_ALLOWUNDO | FOF_SILENT | FOF_NOCONFIRMATION | FOF_NOERRORUI,
-	};
-	if (const int rc = SHFileOperationW(&op); rc != 0 || op.fAnyOperationsAborted) {
-		Logger::Get().Warn(fmt::format(
-			"Галерея: файл не удалён (код {}), показ не изменился", rc));
-		return;
+	if (toFavorites) {
+		if (!MoveToFavorites(path)) return;
+	} else {
+		// SHFileOperationW хочет список путей, удвоенно-нулевой терминатор
+		std::wstring from = path;
+		from.push_back(L'\0');
+		SHFILEOPSTRUCTW op{  // не const: SHFileOperationW пишет fAnyOperationsAborted
+			.wFunc = FO_DELETE,
+			.pFrom = from.c_str(),
+			.fFlags = FOF_ALLOWUNDO | FOF_SILENT | FOF_NOCONFIRMATION | FOF_NOERRORUI,
+		};
+		if (const int rc = SHFileOperationW(&op); rc != 0 || op.fAnyOperationsAborted) {
+			Logger::Get().Warn(fmt::format(
+				"Галерея: файл не удалён (код {}), показ не изменился", rc));
+			return;
+		}
 	}
 
 	// Страховка на будущее: LL-хуки и таймер живут на этом потоке и во время
@@ -859,8 +975,9 @@ void GalleryService::_DeleteCurrentPhoto() {
 	if (it == _playlist.end()) {
 		return;
 	}
-	Logger::Get().Info(fmt::format("Галерея: файл удалён в корзину — {}",
-		StrHelper::UTF16ToUTF8(path)));
+	if (!toFavorites) {
+		Logger::Get().Info(fmt::format("Галерея: файл удалён в корзину — {}", StrHelper::UTF16ToUTF8(path)));
+	}
 	_playlist.erase(it);
 	if (const auto next = PhotoIndexAfterDelete(_index, _playlist.size() + 1)) {
 		_index = *next;
@@ -873,14 +990,50 @@ void GalleryService::_DeleteCurrentPhoto() {
 
 	if (HWND scalingWindow = FindWindowW(CommonSharedConstants::SCALING_WINDOW_CLASS_NAME, nullptr)) {
 		ToastService::Get().ShowMessageOnWindow({},
-			_ResourceString(L"Gallery_DeletedToast"), scalingWindow);
+			_ResourceString(toFavorites ? L"Gallery_FavoriteToast" : L"Gallery_DeletedToast"), scalingWindow);
 	}
 }
 
 // Контекстное меню: апскейлеры (оригинал профиля сверху - то, с чем запускали сессию, ниже доступные
 // способы), затем пауза, удаление и выход. Системное меню даёт мышь и клавиатуру само. Выбор применяется
 // после закрытия меню.
-void GalleryService::_ShowContextMenu(POINT screenPoint) {
+void GalleryService::_SaveCurrentAs(HWND owner) {
+	if (_playlist.empty()) return;
+	const std::wstring source = _playlist[_index];
+	com_ptr<IFileSaveDialog> dialog = try_create_instance<IFileSaveDialog>(CLSID_FileSaveDialog);
+	if (!dialog) {
+		Logger::Get().Error("Галерея: диалог сохранения не создан");
+		return;
+	}
+	const std::wstring filterName = _ResourceString(L"Gallery_SaveAs_Filter");
+	const COMDLG_FILTERSPEC filter{ filterName.c_str(), L"*.png" };
+	dialog->SetFileTypes(1, &filter);
+	dialog->SetDefaultExtension(L"png");
+	dialog->SetOptions(FOS_OVERWRITEPROMPT | FOS_FORCEFILESYSTEM | FOS_NOCHANGEDIR);
+	const std::filesystem::path sourcePath(source);
+	dialog->SetFileName((sourcePath.stem().native() + L"_upscaled.png").c_str());
+	com_ptr<IShellItem> folder;
+	if (SUCCEEDED(SHCreateItemFromParsingName(sourcePath.parent_path().c_str(), nullptr, IID_PPV_ARGS(folder.put())))) {
+		dialog->SetFolder(folder.get());
+	}
+
+	// Пока диалог открыт, хуки галереи пропускают ввод (как при открытом меню)
+	_menuOpen = true;
+	const HRESULT shown = dialog->Show(owner);
+	_menuOpen = false;
+	if (FAILED(shown)) return;  // отмена - тоже FAILED (ERROR_CANCELLED)
+
+	com_ptr<IShellItem> item;
+	wil::unique_cotaskmem_string path;
+	if (FAILED(dialog->GetResult(item.put())) || FAILED(item->GetDisplayName(SIGDN_FILESYSPATH, path.put()))) {
+		Logger::Get().Error("Галерея: путь сохранения не получен");
+		return;
+	}
+	Logger::Get().Info(fmt::format("Галерея: «Сохранить как» {}", StrHelper::UTF16ToUTF8(path.get())));
+	ScalingService::Get().SavePhotoUpscaled(path.get(), source);
+}
+
+void GalleryService::_ShowContextMenu(POINT screenPoint, bool atCursor) {
 	using namespace gallery_menu;
 	if (!_running || _menuOpen) return;
 	const HWND stage = FindWindowW(ScalingService::PHOTO_STAGE_CLASS_NAME, nullptr);
@@ -904,12 +1057,21 @@ void GalleryService::_ShowContextMenu(POINT screenPoint) {
 	}
 	AppendMenuW(menu.get(), MF_STRING, ID_PAUSE,
 		_ResourceString(_paused ? L"Gallery_Menu_Resume" : L"Gallery_Menu_Pause").c_str());
+	AppendMenuW(menu.get(), MF_STRING, ID_SAVE_AS, _ResourceString(L"Gallery_Menu_SaveAs").c_str());
+	AppendMenuW(menu.get(), MF_STRING, ID_FAVORITE, _ResourceString(L"Gallery_Menu_Favorite").c_str());
 	AppendMenuW(menu.get(), MF_STRING, ID_DELETE, _ResourceString(L"Gallery_Menu_Delete").c_str());
 	AppendMenuW(menu.get(), MF_SEPARATOR, 0, nullptr);
 	AppendMenuW(menu.get(), MF_STRING, ID_STOP, _ResourceString(L"Gallery_Menu_Stop").c_str());
 
 	// Окно-владелец обязано быть на переднем плане, иначе меню не закрывается кликом мимо
 	_menuOpen = true;
+	// Захват курсора Magpie держит реальный курсор в координатах источника - клик мышью не попадал в пункты меню.
+	// На время меню курсор отпускается; поток окна масштабирования применяет это асинхронно, поэтому ждём его
+	// и ставим меню у настоящего курсора (у Num6 точка - центр кадра)
+	ScalingService::Get().SetPhotoMenuOpen(true);
+	const auto releaseCursor = wil::scope_exit([] { ScalingService::Get().SetPhotoMenuOpen(false); });
+	Sleep(50);
+	if (atCursor) GetCursorPos(&screenPoint);
 	SetForegroundWindow(stage);
 	const UINT command = static_cast<UINT>(TrackPopupMenuEx(menu.get(),
 		TPM_RETURNCMD | TPM_NONOTIFY | TPM_RIGHTBUTTON | TPM_LEFTALIGN | TPM_TOPALIGN,
@@ -922,6 +1084,10 @@ void GalleryService::_ShowContextMenu(POINT screenPoint) {
 		_ApplyUpscaler(static_cast<int>(command - ID_UPSCALER_BASE) - 1);
 	} else if (command == ID_PAUSE) {
 		_SetPaused(!_paused);
+	} else if (command == ID_SAVE_AS) {
+		_SaveCurrentAs(stage);
+	} else if (command == ID_FAVORITE) {
+		_DeleteCurrentPhoto(true);
 	} else if (command == ID_DELETE) {
 		_DeleteCurrentPhoto();
 	} else if (command == ID_STOP) {
@@ -941,6 +1107,10 @@ void GalleryService::_Cleanup() noexcept {
 		if (_autoTimer) {
 			_autoTimer.Stop();
 			_autoTimer = nullptr;
+		}
+		if (_statusRetryTimer) {
+			_statusRetryTimer.Stop();
+			_statusRetryTimer = nullptr;
 		}
 		_scalingChangedRevoker.Revoke();
 	} catch (...) {
@@ -986,6 +1156,8 @@ static GalleryKeyAction DecideGalleryKey(unsigned vkCode) noexcept {
 		return GalleryKeyAction::OpenMenu;
 	case VK_DELETE:
 		return GalleryKeyAction::DeletePhoto;
+	case VK_INSERT:
+		return GalleryKeyAction::FavoritePhoto;
 	case VK_ESCAPE:
 	case VK_F11:
 		// F11 как Esc: пользователь ждёт от F11 (полноэкранный) выхода из просмотра, а «чужой»
@@ -1034,16 +1206,20 @@ LRESULT CALLBACK GalleryService::_MouseHookProc(int nCode, WPARAM wParam, LPARAM
 		} else if (wParam == WM_LBUTTONDOWN) {
 			// потеряв фокус, галерея недоступна для клавиш — клик по фото
 			// возвращает её на передний план (окно click-through, само не активируется)
+			// Открытое меню лежит поверх фото: его клик не «возврат фокуса», иначе пункт мышью не выбрать
 			if (!self._IsSessionForeground() &&
 				self._TryFocusFromPhotoClick(((MSLLHOOKSTRUCT*)lParam)->pt)) {
 				return 1;
 			}
-		} else if ((wParam == WM_RBUTTONDOWN || wParam == WM_RBUTTONUP) && self._IsSessionForeground()) {
+		} else if ((wParam == WM_RBUTTONDOWN || wParam == WM_RBUTTONUP) &&
+			(self._IsSessionForeground() || self._IsClickOnPhoto(((MSLLHOOKSTRUCT*)lParam)->pt))) {
 			// Правая кнопка открывает контекстное меню. Меню модальное, а LL-хуку нельзя блокироваться
-			// (LowLevelHooksTimeout отключит хук), поэтому открываем его из очереди диспетчера
+			// (LowLevelHooksTimeout отключит хук), поэтому открываем его из очереди диспетчера.
+			// Правый клик по фото вне фокуса тоже открывает меню: раньше он молча уходил окну под фото
 			if (wParam == WM_RBUTTONUP) {
 				const POINT pt = ((MSLLHOOKSTRUCT*)lParam)->pt;
-				App::Get().Dispatcher().TryEnqueue([pt] { GalleryService::Get()._ShowContextMenu(pt); });
+				if (!self._IsSessionForeground()) self._TryFocusFromPhotoClick(pt);
+				App::Get().Dispatcher().TryEnqueue([pt] { GalleryService::Get()._ShowContextMenu(pt, true); });
 			}
 			return 1;
 		}
@@ -1073,6 +1249,27 @@ bool GalleryService::_IsSessionForeground() const noexcept {
 // мышь насквозь) возвращает галерее фокус. Клики по own-окнам приложения и по
 // поверх лежащим topmost окнам (always-on-top панели, трей) не трогаем
 bool GalleryService::_TryFocusFromPhotoClick(POINT pt) noexcept {
+	if (!_IsClickOnPhoto(pt)) return false;
+	const HWND stage = FindWindowW(ScalingService::PHOTO_STAGE_CLASS_NAME, nullptr);
+
+	// SetForegroundWindow чужого окна верхнего плана почти всегда отклоняется —
+	// временно присоединяем вход потока того окна к нашему (классический Win32-приём)
+	if (HWND fg = Win32Helper::GetRealForegroundWindow()) {
+		if (const DWORD fgThread = GetWindowThreadProcessId(fg, nullptr);
+			fgThread && fgThread != GetCurrentThreadId()) {
+			if (AttachThreadInput(fgThread, GetCurrentThreadId(), TRUE)) {
+				SetForegroundWindow(stage);
+				AttachThreadInput(fgThread, GetCurrentThreadId(), FALSE);
+				return true;
+			}
+		}
+	}
+	SetForegroundWindow(stage);
+	return true;
+}
+
+// Клик пришёлся на само фото, а не на окна нашего процесса (меню, тулбар) или topmost-окна поверх него
+bool GalleryService::_IsClickOnPhoto(POINT pt) const noexcept {
 	const HWND output = FindWindowW(CommonSharedConstants::SCALING_WINDOW_CLASS_NAME, nullptr);
 	const HWND stage = FindWindowW(ScalingService::PHOTO_STAGE_CLASS_NAME, nullptr);
 	if (!output || !stage || !IsWindowVisible(output)) return false;
@@ -1091,20 +1288,6 @@ bool GalleryService::_TryFocusFromPhotoClick(POINT pt) noexcept {
 			}
 		}
 	}
-
-	// SetForegroundWindow чужого окна верхнего плана почти всегда отклоняется —
-	// временно присоединяем вход потока того окна к нашему (классический Win32-приём)
-	if (HWND fg = Win32Helper::GetRealForegroundWindow()) {
-		if (const DWORD fgThread = GetWindowThreadProcessId(fg, nullptr);
-			fgThread && fgThread != GetCurrentThreadId()) {
-			if (AttachThreadInput(fgThread, GetCurrentThreadId(), TRUE)) {
-				SetForegroundWindow(stage);
-				AttachThreadInput(fgThread, GetCurrentThreadId(), FALSE);
-				return true;
-			}
-		}
-	}
-	SetForegroundWindow(stage);
 	return true;
 }
 
@@ -1151,19 +1334,16 @@ void GalleryService::_OnKeyAction(GalleryKeyAction action) {
 	case GalleryKeyAction::OpenMenu:
 	{
 		// Num6: меню по центру кадра (у правой кнопки точка - курсор). Из хука нельзя блокироваться - через диспетчер
-		RECT frame{};
-		if (HWND output = FindWindowW(CommonSharedConstants::SCALING_WINDOW_CLASS_NAME, nullptr);
-			output && IsWindowVisible(output)) {
-			GetWindowRect(output, &frame);
-		} else {
-			frame = { 0, 0, GetSystemMetrics(SM_CXSCREEN), GetSystemMetrics(SM_CYSCREEN) };
-		}
+		const RECT frame = PhotoFrameRect();
 		const POINT center{ (frame.left + frame.right) / 2, (frame.top + frame.bottom) / 3 };
-		App::Get().Dispatcher().TryEnqueue([center] { GalleryService::Get()._ShowContextMenu(center); });
+		App::Get().Dispatcher().TryEnqueue([center] { GalleryService::Get()._ShowContextMenu(center, false); });
 		break;
 	}
 	case GalleryKeyAction::DeletePhoto:
 		_DeleteCurrentPhoto();
+		break;
+	case GalleryKeyAction::FavoritePhoto:
+		_DeleteCurrentPhoto(true);
 		break;
 	case GalleryKeyAction::Stop:
 		Stop();

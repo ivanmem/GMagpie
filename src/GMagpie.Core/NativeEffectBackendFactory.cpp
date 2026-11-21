@@ -305,7 +305,9 @@ NativeEffectBackendResult CreateNativeEffectBackend(
 			categoryParameter == option.parameters.end() ? 0.f : categoryParameter->second);
 		// The legacy SDK supports Standard and Denoise only. Reject newer
 		// categories rather than silently replacing them with another effect.
-		if (category != 0 && category != 3) {
+		// Deblur (12..15) - тот же эффект VideoSuperRes без изменения размера, как Denoise; галерея ставит его
+		// перед увеличением для мыльных фото
+		if (category != 0 && category != 3 && category != 4) {
 			Logger::Get().Error("This build's legacy RTX Video backend does not support the selected VFX category");
 			return { true, nullptr, ScalingError::NoError, "Unsupported legacy RTX Video category" };
 		}
@@ -313,7 +315,7 @@ NativeEffectBackendResult CreateNativeEffectBackend(
 		const auto strength = option.parameters.find("strength");
 		const int tier = strength == option.parameters.end() ? RTX_VIDEO_DEFAULT_STRENGTH
 			: NormalizeRTXVideoStrength(strength->second);
-		const uint32_t qualityLevel = RTXVideoQualityLevel(isVsr ? 1 : 0, tier);
+		const uint32_t qualityLevel = category == 4 ? NvidiaVfxQualityLevel(4, tier) : RTXVideoQualityLevel(isVsr ? 1 : 0, tier);
 		auto backend = std::make_unique<RTXVideoDenoiser>();
 		Logger::DiagnosticCapture diagnostic;
 		if (!backend->Initialize(resources, input, output, qualityLevel,

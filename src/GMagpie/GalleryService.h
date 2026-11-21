@@ -26,6 +26,7 @@ enum class GalleryKeyAction {
 	TogglePause,    // Space
 	OpenMenu,       // Num6 — контекстное меню (как правая кнопка мыши)
 	DeletePhoto,    // Delete — удалить файл текущей фотографии в корзину
+	FavoritePhoto,  // Insert — переместить фото в папку избранного
 	Stop,           // Esc / F11
 };
 
@@ -94,18 +95,21 @@ private:
 	void _SetPaused(bool paused);
 	bool _IsSessionForeground() const noexcept;
 	bool _TryFocusFromPhotoClick(POINT pt) noexcept;
+	bool _IsClickOnPhoto(POINT pt) const noexcept;
 	// Выбрать апскейлер по позиции списка (-1 - оригинал профиля, иначе индекс в _upscalerCycle)
 	void _ApplyUpscaler(int position, bool silent = false);
 	// Подготовить снимок цепи профиля и убрать его эффект из цикла; false - применять нечего
 	bool _EnsureUpscalerSnapshot();
 	// Delete: текущий файл в корзину, плейлист и страница — следом за ним
-	void _DeleteCurrentPhoto();
+	void _DeleteCurrentPhoto(bool toFavorites = false);
+	// «Сохранить как»: диалог выбора файла, затем апскейл текущей страницы в PNG
+	void _SaveCurrentAs(HWND owner);
 	// На время модального SHFileOperationW блокирует реентер навигации/удаления из
 	// LL-хуков и таймера (они живут на том же UI-потоке во время насоса сообщений)
 	bool _deleting = false;
 	// Контекстное меню (правая кнопка, Num6): апскейлеры, пауза, удаление, выход. Модальное:
 	// вызывать из очереди диспетчера, не из LL-хука
-	void _ShowContextMenu(POINT screenPoint);
+	void _ShowContextMenu(POINT screenPoint, bool atCursor);
 	void _Navigate(long long delta);
 	void _Cleanup() noexcept;
 
@@ -141,6 +145,8 @@ private:
 	wil::unique_hhook _keyboardHook;
 	wil::unique_hhook _mouseHook;
 	winrt::DispatcherQueueTimer _autoTimer{ nullptr };
+	// Строка состояния ждёт окна вывода: до него место и процент считать не от чего
+	winrt::DispatcherQueueTimer _statusRetryTimer{ nullptr };
 	Event<bool>::EventRevoker _scalingChangedRevoker;
 };
 
