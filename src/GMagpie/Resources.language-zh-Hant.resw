@@ -2710,6 +2710,12 @@
   <data name="Home_Gallery_Header" xml:space="preserve">
     <value>照片幻燈片</value>
   </data>
+  <data name="Home_Gallery_ShellMenuCard.Header" xml:space="preserve">
+    <value>檔案總管右鍵選單</value>
+  </data>
+  <data name="Home_Gallery_ShellMenuCard.Description" xml:space="preserve">
+    <value>在圖片的右鍵選單與「開啟檔案」清單中加入「在 GMagpie 圖庫中開啟」</value>
+  </data>
   <data name="Home_Gallery_ShellMenu" xml:space="preserve">
     <value>在 GMagpie 圖庫中開啟</value>
   </data>

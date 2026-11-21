@@ -503,6 +503,18 @@ void HomeViewModel::GalleryInterval(double value) noexcept {
 	_galleryInterval = value;
 }
 
+bool HomeViewModel::GalleryShellMenu() const noexcept {
+	return GalleryService::IsShellRegistered();
+}
+
+void HomeViewModel::GalleryShellMenu(bool value) {
+	if (value != GalleryShellMenu() && !GalleryService::RegisterShell(value)) {
+		Logger::Get().Error("Галерея: контекстное меню не изменено, см. предыдущие записи лога");
+	}
+	// при неудаче переключатель вернётся к фактическому состоянию реестра
+	RaisePropertyChanged(L"GalleryShellMenu");
+}
+
 // Выбор папки и (пере)запуск галереи: повторный выбор остановит текущую сессию
 fire_and_forget HomeViewModel::PickGalleryFolder() noexcept {
 	const ResourceLoader resourceLoader =

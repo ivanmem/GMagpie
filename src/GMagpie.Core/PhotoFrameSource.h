@@ -21,6 +21,7 @@ public:
 
 	// Для рендерера в фото-сессии (реализация виртуальных методов FrameSourceBase)
 	void RequestPhotoFile(std::wstring path) noexcept override { RequestLoad(std::move(path)); }
+	bool HasPendingPhotoRequest() const noexcept override { return HasPendingLoad(); }
 	void RequestPhotoPrefetch(std::wstring path) noexcept override;
 
 	bool RequiresRebind() noexcept override;

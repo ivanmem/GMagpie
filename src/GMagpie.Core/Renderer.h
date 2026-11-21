@@ -433,6 +433,8 @@ private:
 	bool _frontendPresentedBaseValid = false;
 	bool _frontendBaseNeedsPresent = false;
 	RECT _destRect{};
+	// Фото-сессия, только поток backend: когда последний раз отрисовывали страницу (защита зажатой стрелки от голодания)
+	std::chrono::steady_clock::time_point _lastPhotoRender{};
 	// Геометрия, привязанная к кадру, который лежит во фронтенд-базе (только фронт-поток): backend обновляет
 	// _destRect под новую фотографию раньше, чем фронт заберёт её кадр, и перерисовка со старым кадром
 	// рисовала бы старое фото в новых полосах («вспышка пропорций»).

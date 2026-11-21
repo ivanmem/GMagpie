@@ -95,9 +95,9 @@ $PICKER_CLASS = 'GMagpie.GalleryPicker'
 
 $rows = [WinZ]::TopDown()
 
-# Окна только нашего GMagpie (F:\Projects\cpp\GMagpie\bin), не любой системы
+# Окна только нашего GMagpie (F:\Projects\cpp\Magpie\bin), не любой системы
 $magpie = Get-Process GMagpie -ErrorAction SilentlyContinue | Where-Object {
-    try { $_.Path -like 'F:\Projects\cpp\GMagpie\bin\*' } catch { $false }
+    try { $_.Path -like 'F:\Projects\cpp\Magpie\bin\*' } catch { $false }
 }
 if (-not $magpie) { Write-Output 'GMagpie (наш) не запущен — проверять нечего.'; exit 2 }
 $pids = @($magpie.Id)

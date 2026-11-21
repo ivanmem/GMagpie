@@ -392,6 +392,18 @@ void TestGalleryLiteArgument() {
 		wchar_t* argv[] = { (wchar_t*)L"GMagpie.exe", (wchar_t*)L"D:\\doc\\readme.txt" };
 		assert(FindPhotoArgument(2, argv).empty());
 	}
+	// путь к открываемому файлу: только существующий, нормализованный; нет файла - пусто
+	{
+		const fs::path photo = fs::temp_directory_path() / "gmagpie_open_arg" / "p.png";
+		fs::create_directories(photo.parent_path());
+		std::ofstream(photo) << "x";
+		const std::wstring dotted = (photo.parent_path() / L"." / L"p.png").wstring();
+		wchar_t* argv[] = { (wchar_t*)L"GMagpie.exe", (wchar_t*)dotted.c_str() };
+		assert(OpenFileArgument(2, argv) == photo.lexically_normal().wstring());
+		wchar_t* missing[] = { (wchar_t*)L"GMagpie.exe", (wchar_t*)L"D:\\no\\such\\file.png" };
+		assert(OpenFileArgument(2, missing).empty());
+		fs::remove_all(photo.parent_path());
+	}
 	{
 		wchar_t* argv[] = { (wchar_t*)L"GMagpie.exe", (wchar_t*)L"--register-shell" };
 		assert(FindShellCommand(2, argv) == std::optional<bool>(true));

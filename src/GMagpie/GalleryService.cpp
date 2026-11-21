@@ -560,6 +560,93 @@ bool GalleryService::RegisterShell(bool enable) {
 	return ok;
 }
 
+bool GalleryService::IsShellRegistered() {
+	const std::wstring key = fmt::format(
+		L"Software\\Classes\\SystemFileAssociations\\{}\\shell\\GMagpie.Gallery\\command", *SUPPORTED_EXTENSIONS.begin());
+	return RegGetValueW(HKEY_CURRENT_USER, key.c_str(), nullptr, RRF_RT_REG_SZ, nullptr, nullptr, nullptr) == ERROR_SUCCESS;
+}
+
+// Приём файлов от второго запуска: message-only окно, WM_COPYDATA с путём. Обработка уходит в очередь
+// диспетчера - внутри SendMessage отправителя нельзя запускать показ.
+static constexpr const wchar_t* IPC_WINDOW_CLASS = L"GMagpie_GalleryIpc";
+static constexpr ULONG_PTR IPC_OPEN_FILE = 0x47414C31;
+
+static LRESULT CALLBACK GalleryIpcProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam) {
+	if (msg == WM_COPYDATA) {
+		const auto* data = reinterpret_cast<const COPYDATASTRUCT*>(lParam);
+		if (data && data->dwData == IPC_OPEN_FILE && data->lpData && data->cbData >= sizeof(wchar_t)) {
+			std::wstring file(static_cast<const wchar_t*>(data->lpData), data->cbData / sizeof(wchar_t));
+			file.resize(wcsnlen(file.c_str(), file.size()));
+			App::Get().Dispatcher().TryEnqueue([file = std::move(file)]() mutable {
+				GalleryService::Get().OpenFile(std::move(file));
+			});
+			return TRUE;
+		}
+		return FALSE;
+	}
+	return DefWindowProcW(hWnd, msg, wParam, lParam);
+}
+
+void GalleryService::CreateIpcWindow() {
+	const WNDCLASSEXW wc{
+		.cbSize = sizeof(WNDCLASSEXW),
+		.lpfnWndProc = GalleryIpcProc,
+		.hInstance = GetModuleHandle(nullptr),
+		.lpszClassName = IPC_WINDOW_CLASS
+	};
+	RegisterClassExW(&wc);
+	if (!CreateWindowExW(0, IPC_WINDOW_CLASS, nullptr, 0, 0, 0, 0, 0, HWND_MESSAGE, nullptr, wc.hInstance, nullptr)) {
+		Logger::Get().Win32Error("Окно приёма файлов галереи не создано");
+	}
+}
+
+bool GalleryService::ForwardToRunning(std::wstring_view file) {
+	const std::wstring path(file);
+	const COPYDATASTRUCT data{
+		.dwData = IPC_OPEN_FILE,
+		.cbData = static_cast<DWORD>((path.size() + 1) * sizeof(wchar_t)),
+		.lpData = const_cast<wchar_t*>(path.c_str())
+	};
+	// Первый экземпляр мог только что стартовать и ещё не создать окно приёма
+	for (int attempt = 0; attempt < 30; ++attempt) {
+		if (const HWND target = FindWindowExW(HWND_MESSAGE, nullptr, IPC_WINDOW_CLASS, nullptr)) {
+			DWORD_PTR result = 0;
+			if (SendMessageTimeoutW(target, WM_COPYDATA, 0, reinterpret_cast<LPARAM>(&data),
+				SMTO_ABORTIFHUNG, 3000, &result) && result) {
+				return true;
+			}
+			return false;
+		}
+		Sleep(100);
+	}
+	return false;
+}
+
+void GalleryService::OpenFile(std::wstring file) {
+	std::error_code ec;
+	if (!IsSupportedPhoto(file) || !fs::is_regular_file(file, ec)) {
+		Logger::Get().Warn(fmt::format("Галерея: переданный файл не открыт ({})", StrHelper::UTF16ToUTF8(file)));
+		return;
+	}
+	std::wstring folder = fs::path(file).parent_path().wstring();
+	if (!_running) {
+		Start(std::move(folder), 0, -1, 0, std::move(file));
+		return;
+	}
+	// Идущий показ: тот же плейлист-«соседи по папке», что и при обычном открытии файла
+	const auto playlist = BuildPhotoPlaylist(folder, false);
+	const auto it = std::ranges::find_if(playlist, [&](const std::wstring& path) {
+		return _wcsicmp(path.c_str(), file.c_str()) == 0;
+	});
+	if (it == playlist.end()) return;
+	_playlist = playlist;
+	_folder = std::move(folder);
+	_index = static_cast<size_t>(it - playlist.begin());
+	_stepDirection = 1;
+	_ResetAutoTimer();
+	_ShowCurrent();
+}
+
 // Сохранённая страница может оказаться за пределами текущего альбома (файлы
 // удалили, добавили подпапку) — восстанавливаем ближайшую существующую.
 static size_t PhotoResumeIndex(size_t saved, size_t count) noexcept {
@@ -718,11 +805,22 @@ void GalleryService::_BuildPlaylist(const std::wstring& folder, bool recursive) 
 
 void GalleryService::_ShowCurrent() {
 	if (_index >= _playlist.size()) return;
-	Logger::Get().Info(fmt::format("Галерея: {}/{} — {}", _index + 1, _playlist.size(),
-		StrHelper::UTF16ToUTF8(_playlist[_index])));
+	// Запрос страницы - первым делом: это единственное, что ждёт пользователь. Остальное (лог, строка состояния
+	// с чтением размера файла через WIC, сохранение) может подождать: _ShowCurrent зовётся прямо из LL-хука клавиш
 	ScalingService::Get().RequestPhoto(_playlist[_index]);
 	_PrefetchNext();
-	_UpdateStatusOverlay();
+	Logger::Get().Info(fmt::format("Галерея: {}/{} — {}", _index + 1, _playlist.size(),
+		StrHelper::UTF16ToUTF8(_playlist[_index])));
+	// Строку состояния обновляем после возврата из хука и один раз на серию нажатий; чтение файла в хуке на
+	// загруженной системе съедало бы LowLevelHooksTimeout и тормозило следующее нажатие
+	if (!std::exchange(_statusUpdateQueued, true)) {
+		App::Get().Dispatcher().TryEnqueue(winrt::DispatcherQueuePriority::Low, [this] {
+			_statusUpdateQueued = false;
+			if (_running) {
+				_UpdateStatusOverlay();
+			}
+		});
+	}
 	_PersistSession(false);
 	ProgressChanged.Invoke(_index + 1, _playlist.size());
 }

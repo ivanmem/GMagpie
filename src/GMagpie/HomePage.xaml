@@ -190,6 +190,13 @@
 						        Click="{x:Bind ViewModel.StopGallery}" />
 					</local:WrapPanel>
 				</local:SettingsCard>
+				<local:SettingsCard x:Uid="Home_Gallery_ShellMenuCard" IsWrapEnabled="True">
+					<local:SettingsCard.HeaderIcon>
+						<FontIcon Glyph="&#xE8A5;" />
+					</local:SettingsCard.HeaderIcon>
+					<ToggleSwitch x:Uid="ToggleSwitch"
+					              IsOn="{x:Bind ViewModel.GalleryShellMenu, Mode=TwoWay}" />
+				</local:SettingsCard>
 			</local:SettingsGroup>
 			<local:SettingsGroup x:Uid="Home_Toolbar">
 				<local:SettingsExpander x:Uid="Home_Toolbar_Shortcuts"

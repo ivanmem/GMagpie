@@ -9,7 +9,7 @@ import sys
 from datetime import datetime
 from pathlib import Path
 
-logs = sorted(Path(r"F:/Projects/cpp/GMagpie/bin/x64/Release/logs").glob("magpie*.log"))
+logs = sorted(Path(r"F:/Projects/cpp/Magpie/bin/x64/Release/logs").glob("magpie*.log"))
 events = []
 ts = "%Y-%m-%d %H:%M:%S.%f"
 for path in logs:

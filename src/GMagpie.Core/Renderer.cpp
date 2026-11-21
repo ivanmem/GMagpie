@@ -4183,7 +4183,9 @@ void Renderer::_BackendThreadProc() noexcept {
 		_stepTimer.CaptureStarting();
 		FrameTrace::Mark(FrameTrace::Event::CaptureStart, static_cast<int64_t>(ActiveFrameSyncBackend()),
 			_frameSource->CaptureSequence());
+		const auto photoUpdateStart = std::chrono::steady_clock::now();
 		const FrameSourceState frameSourceState = _frameSource->Update();
+		const auto photoUpdateEnd = std::chrono::steady_clock::now();
 		_effectsProfiler.SetSuspended(_backendResources.GetD3DDevice(), _frameSource->IsCaptureInterrupted());
 		_effectsProfiler.Poll(_backendResources.GetD3DDC());
 		_captureAllowsIdle.store(frameSourceState != FrameSourceState::Error &&
@@ -4242,6 +4244,18 @@ void Renderer::_BackendThreadProc() noexcept {
 			if (noWaitSource && frameSourceState == FrameSourceState::NewFrame) {
 				lastNoWaitCaptureTime = std::chrono::steady_clock::now();
 			}
+			// Фото-сессия: пока эта страница грузилась, пользователь уже нажал дальше. GPU-работа над ней (цепь,
+			// VSR) задержала бы показ нужной страницы, особенно на перегруженной видеокарте. Пропускаем - следующий
+			// Update возьмёт свежий запрос. Не дольше PHOTO_SKIP_WINDOW подряд: зажатая стрелка иначе не показывала бы
+			// ничего. Без нового запроса (обычное листание) условие ложно - быстрый путь не меняется.
+			static constexpr auto PHOTO_SKIP_WINDOW = std::chrono::milliseconds(200);
+			const bool isPhotoFrame = frameSourceState == FrameSourceState::NewFrame &&
+				ScalingWindow::Get().Options().photoSession;
+			if (isPhotoFrame && _frameSource->HasPendingPhotoRequest() &&
+				photoUpdateEnd - _lastPhotoRender < PHOTO_SKIP_WINDOW) {
+				Logger::Get().Info("Фото: страница пропущена - уже запрошена следующая");
+				break;
+			}
 			const FrameUpdateReason updateReason = frameSourceState == FrameSourceState::NewFrame ?
 				FrameUpdateReason::NewCapture : _forceNextRender ? FrameUpdateReason::ParameterUpdate :
 				nativeOutputReady && _nativeOutputIdleClock.Remaining(std::chrono::steady_clock::now()).count() == 0 ?
@@ -4283,6 +4297,14 @@ void Renderer::_BackendThreadProc() noexcept {
 				: _effectDrawers.back().GetExternalOutputTexture(),
 				updateReason);
 			_backendMayDeferFG = false;
+			if (isPhotoFrame) {
+				const auto submitted = std::chrono::steady_clock::now();
+				_lastPhotoRender = submitted;
+				// Где уходит время переключения: загрузка/декод и подготовка + отправка кадра (без ожидания GPU)
+				Logger::Get().Info(fmt::format("Фото: загрузка {:.1f} мс, цепь и отправка {:.1f} мс",
+					std::chrono::duration<double, std::milli>(photoUpdateEnd - photoUpdateStart).count(),
+					std::chrono::duration<double, std::milli>(submitted - photoUpdateEnd).count()));
+			}
 			if (!_pendingFrameGenerationInput && !_pendingFrameSyncOutput)
 				_backendContentInFlight.store(false, std::memory_order_release);
 			// DLSSFG uses synchronous, individually paced presentation so generated

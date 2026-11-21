@@ -75,6 +75,9 @@ struct HomeViewModel : HomeViewModelT<HomeViewModel>, wil::notify_property_chang
 	// Фотогалерея: выбор папки и запуск GalleryService, интервал автолистания
 	double GalleryInterval() const noexcept;
 	void GalleryInterval(double value) noexcept;
+	// Пункт «Открыть в галерее» в контекстном меню Проводника (реестр HKCU)
+	bool GalleryShellMenu() const noexcept;
+	void GalleryShellMenu(bool value);
 	fire_and_forget PickGalleryFolder() noexcept;
 	void ResumeGallery();
 	void StopGallery() noexcept;

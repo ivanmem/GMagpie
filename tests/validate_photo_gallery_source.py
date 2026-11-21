@@ -304,6 +304,19 @@ def run_checks():
           and "try {\n\t\tProgressChanged.Invoke(0, 0);" in gallery,
           "a throwing timer or progress subscriber must not leave hooks/session hanging "
           "or terminate the noexcept cleanup")
+    show_body = body(gallery, "void GalleryService::_ShowCurrent(")
+    check("page-request-first-in-hook",
+          show_body.index("RequestPhoto(") < show_body.index("_UpdateStatusOverlay(")
+          and "_UpdateStatusOverlay();\n\t_PersistSession" not in show_body
+          and "_statusUpdateQueued" in show_body,
+          "_ShowCurrent runs inside the LL keyboard hook: the page request must go first and the "
+          "status line (WIC file read) must be deferred, or a loaded system stalls the hook and "
+          "the next key press")
+    check("stale-photo-skipped-with-limit",
+          "HasPendingPhotoRequest()" in renderer_cpp and "PHOTO_SKIP_WINDOW" in renderer_cpp
+          and "photoUpdateEnd - _lastPhotoRender < PHOTO_SKIP_WINDOW" in renderer_cpp,
+          "a page the user already moved past must not cost GPU time, but never for longer than "
+          "the window - a held arrow would otherwise show nothing")
     delete_body = body(gallery, "void GalleryService::_DeleteCurrentPhoto(")
     check("status-percent-respects-exif",
           "System.Photo.Orientation" in body(gallery, "bool TryGetImageSize(")
@@ -506,6 +519,11 @@ REGRESSIONS = {
           "if (false) {\n\t\t\t\t_photoStage.reset();")]),
     "gallery-start-timer-failure-cleans-up": ("GMagpie/GalleryService.cpp",
         [("} catch (const winrt::hresult_error& e) {", "} catch (...) {")]),
+    "page-request-first-in-hook": ("GMagpie/GalleryService.cpp",
+        [("\tScalingService::Get().RequestPhoto(_playlist[_index]);\n\t_PrefetchNext();",
+          "\t_UpdateStatusOverlay();\n\tScalingService::Get().RequestPhoto(_playlist[_index]);\n\t_PrefetchNext();")]),
+    "stale-photo-skipped-with-limit": ("GMagpie.Core/Renderer.cpp",
+        [("photoUpdateEnd - _lastPhotoRender < PHOTO_SKIP_WINDOW", "true")]),
     "photo-scene-scaled-to-dest": ("GMagpie.Core/Renderer.cpp",
         [("\t\t\t\t_DrawPhotoSceneScaled(scene, rtv, view);", "")]),
     "photo-scene-copy-before-draw": ("GMagpie.Core/Renderer.cpp",

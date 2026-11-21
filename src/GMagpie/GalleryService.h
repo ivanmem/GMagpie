@@ -61,9 +61,18 @@ public:
 	// старт со страницы этого файла; startIndex при этом игнорируется
 	bool Start(std::wstring folder, uint32_t intervalSeconds, int scalingModeIdx, size_t startIndex = 0,
 		std::wstring openFile = {});
+	// Открыть файл в этом экземпляре: идущий показ переключается на его папку без перезапуска сессии,
+	// остановленный - стартует. Вызывается из окна приёма файлов от второго запуска
+	void OpenFile(std::wstring file);
+	// Окно приёма (message-only): второй запуск «GMagpie.exe <файл>» шлёт сюда путь через WM_COPYDATA
+	void CreateIpcWindow();
+	// Передать файл уже запущенному экземпляру галереи; false - никто не ответил
+	static bool ForwardToRunning(std::wstring_view file);
 	// Пункт «Открыть в галерее» в контекстном меню Проводника и запись в «Открыть с помощью» для
 	// всех поддерживаемых форматов (HKCU, без прав администратора); enable=false — убрать
 	static bool RegisterShell(bool enable);
+	// Зарегистрирован ли пункт (по ключу команды для первого формата)
+	static bool IsShellRegistered();
 	// Продолжить прошлый просмотр: папка и страница из сохранённого состояния
 	bool StartLast(uint32_t intervalSeconds);
 	void Stop();
@@ -108,6 +117,8 @@ private:
 	void _OnMouseWheel(short wheelDelta);
 
 	bool _running = false;
+	// Обновление строки состояния уже стоит в очереди диспетчера (одно на серию нажатий)
+	bool _statusUpdateQueued = false;
 	bool _paused = false;
 	size_t _index = 0;
 	// Направление последнего перелистывания (+1/−1): по нему предзагружаем следующий кадр

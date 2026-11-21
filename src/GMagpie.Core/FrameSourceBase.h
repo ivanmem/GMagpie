@@ -97,6 +97,9 @@ public:
 	// (после вызова гасится). Вызывается только потоком бэкенда перед отрисовкой нового кадра; по нему рендерер перепривязывает цепь.
 	virtual bool RequiresRebind() noexcept { return false; }
 
+	// Только фото-сессия: пользователь уже запросил другую страницу, пока готовился текущий кадр. Любой поток.
+	virtual bool HasPendingPhotoRequest() const noexcept { return false; }
+
 	// Только фото-сессия: запросить смену текущего изображения. Реализация по умолчанию игнорирует.
 	virtual void RequestPhotoFile(std::wstring /*path*/) noexcept {}
 

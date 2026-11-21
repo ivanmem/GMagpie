@@ -148,6 +148,19 @@ static std::wstring FindPhotoArgument(int argc, LPWSTR* argv) {
 	return {};
 }
 
+// Полный путь открываемого файла (голый или после --gallery); пусто, если файла нет
+static std::wstring OpenFileArgument(int argc, LPWSTR* argv) {
+	std::wstring file = FindPhotoArgument(argc, argv);
+	for (int i = 1; file.empty() && i + 1 < argc; ++i) {
+		if (std::wstring_view(argv[i]) == L"--gallery" && std::filesystem::is_regular_file(argv[i + 1])) {
+			file = argv[i + 1];
+		}
+	}
+	std::error_code ec;
+	const std::filesystem::path path = std::filesystem::absolute(file, ec).lexically_normal();
+	return !file.empty() && !ec && std::filesystem::is_regular_file(path, ec) ? path.wstring() : std::wstring();
+}
+
 // --register-shell / --unregister-shell: пункт контекстного меню и «Открыть с помощью» (true — добавить)
 static std::optional<bool> FindShellCommand(int argc, LPWSTR* argv) noexcept {
 	for (int i = 1; i < argc; ++i) {
@@ -208,20 +221,16 @@ static void _TryStartGalleryFromCommandLine() {
 		}
 	}
 	// Открываемый файл: либо «голый» путь, либо файл после --gallery; показ идёт по его папке
-	std::wstring openFile = FindPhotoArgument(argc, argv);
-	if (openFile.empty() && hasGallery && std::filesystem::is_regular_file(folder)) {
-		openFile = folder;
-	}
+	const bool hasFileArgument = !FindPhotoArgument(argc, argv).empty() ||
+		(hasGallery && std::filesystem::is_regular_file(folder));
+	std::wstring openFile = OpenFileArgument(argc, argv);
 	LocalFree(argv);
-	if (!openFile.empty()) {
-		std::error_code ec;
-		const std::filesystem::path file = std::filesystem::absolute(openFile, ec).lexically_normal();
-		if (ec || !std::filesystem::is_regular_file(file, ec)) {
-			Logger::Get().Error(fmt::format("Галерея: файл не найден ({})", StrHelper::UTF16ToUTF8(openFile)));
+	if (hasFileArgument) {
+		if (openFile.empty()) {
+			Logger::Get().Error("Галерея: открываемый файл не найден");
 			return;
 		}
-		openFile = file.wstring();
-		folder = file.parent_path().wstring();
+		folder = std::filesystem::path(openFile).parent_path().wstring();
 	} else if (!hasGallery) {
 		return;
 	} else if (!std::filesystem::is_directory(folder)) {
@@ -255,6 +264,17 @@ bool App::Initialize(const wchar_t* arguments) {
 	InitMessages();
 
 	if (!_CheckSingleInstance()) {
+		// Второй запуск с файлом (двойной щелчок в Проводнике) открывает его в уже идущей галерее
+		if (_galleryLiteMode) {
+			int argc = 0;
+			if (LPWSTR* argv = CommandLineToArgvW(GetCommandLineW(), &argc)) {
+				if (const std::wstring file = OpenFileArgument(argc, argv); !file.empty()) {
+					Logger::Get().Info(GalleryService::ForwardToRunning(file) ?
+						"Файл передан в запущенную галерею" : "Запущенная галерея не ответила, файл не открыт");
+				}
+				LocalFree(argv);
+			}
+		}
 		Logger::Get().Info("已经有一个实例正在运行");
 		Logger::Get().Flush();
 		return false;
@@ -363,6 +383,9 @@ bool App::Initialize(const wchar_t* arguments) {
 		AdaptersService::Get().StartMonitor();
 	}
 
+	if (_galleryLiteMode) {
+		GalleryService::Get().CreateIpcWindow();
+	}
 	_TryStartGalleryFromCommandLine();
 
 	return true;

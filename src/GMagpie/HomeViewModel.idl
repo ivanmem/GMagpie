@@ -36,6 +36,7 @@ namespace GMagpie {
 		void ChangeScreenshotSaveDirectory();
 
 		Double GalleryInterval;
+		Boolean GalleryShellMenu;
 		void PickGalleryFolder();
 		void ResumeGallery();
 		void StopGallery();
