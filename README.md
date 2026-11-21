@@ -1,88 +1,67 @@
 <p align="center"><img src="./src/GMagpie/Icons/SVG/GMagpie Icon Full Disabled.svg" width="150" height="150" alt="GMagpie"></p>
 <h1 align="center">GMagpie Experimental</h1>
 
-🌍 **English** | [简体中文](./README_ZH.md)
+**Следующий выпуск: GMagpie Experimental v0.1.0** (первый выпуск GMagpie, ещё не опубликован) · [Заметки к выпуску](docs/RELEASE_NOTES_v0.1.0-experimental.md) · Последняя опубликованная база: [v0.6.11](https://github.com/SAOG0721/Magpie/releases/tag/v0.6.11-experimental)
 
-**Current release: [GMagpie Experimental v0.6.11](https://github.com/SAOG0721/Magpie/releases/tag/v0.6.11-experimental)** · Pre-release · [Release notes](docs/RELEASE_NOTES_v0.6.11-experimental.md)
+GMagpie - полноэкранная фотогалерея для Windows с апскейлом в нативном качестве. Это неофициальный форк [Blinue/Magpie](https://github.com/Blinue/Magpie): он использует его систему масштабирования окон и эффектов (DLSS, XeSS, FSR, RTX Video и другие), но показывает не захват окна просмотрщика, а исходные пиксели файла.
 
-GMagpie Experimental is a Windows tool for processing window content and an unofficial fork of [Blinue/GMagpie](https://github.com/Blinue/Magpie). Built on GMagpie's window-scaling and effect system, it explores DLSS, XeSS, FSR, RTX Video and related technologies for games, video and other windowed content.
+## Фотогалерея
 
-The application captures a target window, processes its images through a user-configured effect group, and displays the result fullscreen or in a window. The source application does not need to integrate these effects itself. This is not an official GMagpie release; please report experimental-fork issues in this repository.
+Каждая картинка декодируется в нативном размере (с учётом EXIF-поворота) и проходит через ту же цепочку эффектов (например, Lanczos или суперразрешение RTX Video), а не через уже уменьшенный кадр просмотрщика.
 
-## Main Features
+- Откройте папку (вместе с подпапками) карточкой на главной странице или командой `GMagpie.exe --gallery <папка> [--interval сек] [--mode "имя режима"]`. В карточке есть «Продолжить» и счётчик «N / M».
+- Одно фото: `GMagpie.exe "<файл>"` открывает файл и его соседей по папке. Повторный запуск с файлом открывает его в уже идущей галерее.
+- Клавиши: стрелки, колесо мыши, Home/End, Space - пауза, Delete - в корзину, Num6 - смена апскейлера, Esc или F11 - выход.
+- Необязательный пункт «Открыть в галерее GMagpie» в контекстном меню Проводника и запись «Открыть с помощью»: переключатель на главной (только для текущего пользователя, права администратора не нужны).
+- Галерея работает как лёгкий экземпляр рядом с обычным GMagpie: без глобальных горячих клавиш и проверки обновлений.
 
-### Image Processing and Frame Generation
+## Эффекты и режимы
 
-| Feature | Example Effects | Purpose |
-| --- | --- | --- |
-| Spatial upscaling and sharpening | Lanczos, FSR and other MagpieFX effects | Enlarge window content and adjust clarity and detail |
-| Experimental temporal super resolution | DLSS SR, FSR 2/3/4, XeSS SR | Explore image reconstruction from captured frames and estimated motion |
-| AI image controls | DLSSNR | Same-resolution SDR processing with tone, structure, shadow, reflection and glow controls |
-| Video enhancement | RTX Video | Video super resolution and denoising for low-resolution or compressed content |
-| Frame generation | DLSSFG, XeSSFG, FSR3FG, NVIDIA VFG | Generate intermediate images between real frames for smoother motion |
+**Режим** (группа эффектов) собирает эффекты в нужном порядке и хранит их параметры. Можно взять встроенные режимы или составить свои. Для галереи подходят пространственные апскейлеры и шарпинг (Lanczos, FSR и другие эффекты MagpieFX), а также RTX Video; временные эффекты и генерацию кадров галерея не использует. Подробности цепочек и общих настроек: [руководство по встроенным эффектам](docs/Built-in%20effects.md#current-branch-setup).
 
-Experimental-effect availability depends on the GPU, driver, runtime components and effect combination. See the [Release notes](https://github.com/SAOG0721/Magpie/releases) for the effects and hardware requirements of each build.
+Доступность экспериментальных эффектов зависит от видеокарты, драйвера и установленных компонентов.
 
-### Effect Groups and Parameter Editing
+## Установка
 
-An **effect group** combines effects in a chosen order, storing their parameters and scaling settings. Use built-in groups or create your own combinations for different applications.
+1. Выберите версию на [GitHub Releases](https://github.com/SAOG0721/Magpie/releases), прочитайте заметки и скачайте основной пакет `GMagpie-Experimental-x64.zip`.
+2. Полностью закройте запущенный GMagpie и распакуйте весь пакет в новую папку.
+3. Запустите `GMagpie.exe`, выберите режим и откройте папку с фотографиями.
 
-See the [built-in effect guide](docs/Built-in%20effects.md#current-branch-setup) for this branch's frame-generation chains, HDR conversion, and shared settings.
+Перед обновлением сохраните вне папки программы настройки и скриншоты, которые хотите оставить, и следуйте инструкции выпуска. Папка настроек: `%LOCALAPPDATA%\Magpie\config\v4e`.
 
-The toolbar's parameter panel lets you adjust effects while viewing the result, with automatic saving. Controls indicate whether a change applies live or requires the group to restart; double-clicking a slider restores the effect's default value. Parameters support groups, drop-down choices and Chinese translations.
+## Требования
 
-The same panel places the Front Edge Sync switch and target frame-rate slider (15–360 FPS, step 1) before the effect controls, so you can adjust frame pacing and image processing in one place. Follow each control's Live or Restart label to see how a change takes effect. The parameter window remembers its position and size and stays within the visible area when the capture area changes.
+- Основной пакет для Windows x64, нужна видеокарта с поддержкой DirectX 11; отдельные ИИ-эффекты требуют большего.
+- Эффекты RTX Video работают только на совместимых видеокартах NVIDIA и с установленной средой выполнения.
+- Результат зависит от содержимого: используйте разные апскейлеры (Num6) и сравнивайте.
 
-### Comparison, Performance Monitoring and Frame Sync
+## Сообщить о проблеме
 
-The toolbar offers original/processed comparison, per-effect timings and frame-rate monitoring, screenshots and parameter editing, with customizable shortcuts. When frame generation is enabled, separate output and real-frame readings help you assess the result and processing cost.
+Откройте журнал (каталог `logs` рядом с программой) и приложите его к [обращению](https://github.com/SAOG0721/Magpie/issues): версия приложения, видеокарта и драйвер, режим, размер фото и шаги воспроизведения. Время переключения страниц пишется в журнал строками «Фото: загрузка … мс, цепь и отправка … мс».
 
-Front Edge Sync controls GMagpie's frame submission pace, regulating real-frame input before FG when frame generation is active. Apply a matching frame-rate cap in the source application; synchronization waits may increase latency. See the [frame-sync guide](docs/FRAME_SYNC_GUIDE.md) for setup details.
+[FAQ оригинального Magpie](https://github.com/Blinue/Magpie/wiki/FAQ) отвечает на общие вопросы по использованию.
 
-## Download and Install
+## Разработка и документация
 
-1. Choose a version from [GitHub Releases](https://github.com/SAOG0721/Magpie/releases), read its notes and download the main `GMagpie-Experimental-x64.zip` package.
-2. Fully exit any running GMagpie instance and extract the complete package into a new directory.
-3. Run `GMagpie.exe`, select an effect group and target window, and use the shortcut shown on Home to enable the effects.
+Проект включает приложение GMagpie, эффекты MagpieFX и экспериментальные нативные бэкенды. Необязательные проприетарные бэкенды в исходной сборке выключены и требуют отдельно полученных SDK и runtime.
 
-Before upgrading, back up any settings and screenshots you want to keep outside the program directory, then follow that release's instructions for the old installation and configuration. The same notes explain optional runtimes, DLL choices and helper tools. GitHub's automatically generated source archives are for development, not ready-to-run application packages.
+- [Сторонние зависимости, лицензии и границы сборки](docs/THIRD_PARTY_AND_REDISTRIBUTION.md)
+- [Базовая линия разработки](docs/experimental/DEVELOPMENT-BASELINE.md) и [заметки следующей версии](docs/RELEASE_NOTES_NEXT.md)
+- [Скрипт сборки и упаковки](scripts/Build-Release.ps1)
+- [Формат эффектов MagpieFX](<docs/MagpieFX (EN).md>)
 
-## Usage and Compatibility
+## Благодарности
 
-- The main release package targets Windows x64 and requires a DirectX 11-capable GPU; individual AI effects may have higher requirements.
-- GMagpie processes complete window images without access to the game engine's full native motion vectors, depth, exposure or separated UI. Estimated optical flow can assist some effects, but this is not equivalent to native in-game DLSS/FSR/XeSS integration.
-- Image processing can affect text and UI along with the scene; temporal effects may also produce ghosting or other artifacts. Use Comparison to judge whether an effect suits the content.
-- Use one frame-generation effect per group and avoid combining it with other frame-generation systems. Generated FPS is not the game's real rendering rate and does not imply a proportional improvement in input responsiveness.
+Проект основан на [Blinue/Magpie](https://github.com/Blinue/Magpie) и работе его участников. Спасибо всем, кто вносит код, переводы, идеи и результаты тестов.
 
-## Reporting Problems
+- [HexBen123](https://github.com/HexBen123): оптимизация оценки глубины, помощь с интеграцией TensorRT и [предложение по локализации параметров DLSSNR](https://github.com/SAOG0721/Magpie/pull/16).
+- [Kristijan1001](https://github.com/Kristijan1001): [эталонная реализация правки параметров эффектов во время масштабирования](https://github.com/SAOG0721/Magpie/pull/4).
+- [LCPD15](https://github.com/LCPD15): [исправление оконного масштабирования 1.0×](https://github.com/SAOG0721/Magpie/pull/3).
+- [TurnX-alt](https://github.com/TurnX-alt): [улучшения сборки, интерфейса и согласованности репозитория](https://github.com/SAOG0721/Magpie/pull/23).
+- [konodiodaaaaa1](https://github.com/konodiodaaaaa1): [поддержка и совместимость HDR](https://github.com/SAOG0721/Magpie/pull/24).
 
-Start with the suggestions and details in Home's recent-issue card, or open the log directory. When filing an [issue](https://github.com/SAOG0721/Magpie/issues), include the application version, GPU and driver, effect group, input/output resolution, reproduction steps and relevant logs.
+Обращения и pull request'ы приветствуются; история вкладов: [Contributors](https://github.com/SAOG0721/Magpie/graphs/contributors).
 
-The [upstream GMagpie FAQ](https://github.com/Blinue/Magpie/wiki/FAQ) also covers general usage questions. Please discuss this fork's experimental effects and compatibility issues in this repository.
+## Лицензия
 
-## Development and Documentation
-
-The next development cycle starts from the [development baseline](docs/experimental/DEVELOPMENT-BASELINE.md). Track its scope in [next-release notes](docs/RELEASE_NOTES_NEXT.md); the next version number and features are not yet assigned.
-
-The project includes the GMagpie application, MagpieFX effects and experimental native effect backends. Optional proprietary backends are disabled by default in source builds and require separately supplied SDKs and runtimes. Configure local paths in the untracked `src/BuildOptions.props.user` file.
-
-- [Third-party dependencies, licenses and build boundaries](docs/THIRD_PARTY_AND_REDISTRIBUTION.md)
-- [Experimental feature designs and development records](docs/experimental/README.md)
-- [Build and packaging script](scripts/Build-Release.ps1)
-- [MagpieFX effect format](<docs/MagpieFX (EN).md>)
-
-## Contributions and Acknowledgments
-
-This project builds on [Blinue/GMagpie](https://github.com/Blinue/Magpie) and its contributors' work. Thanks also to everyone contributing code, translations, design suggestions and testing feedback.
-
-- [HexBen123](https://github.com/HexBen123): early depth-estimation performance optimization and TensorRT integration guidance, plus the [DLSSNR parameter-localization proposal](https://github.com/SAOG0721/Magpie/pull/16).
-- [Kristijan1001](https://github.com/Kristijan1001): the [reference implementation for editing effect parameters while scaling](https://github.com/SAOG0721/Magpie/pull/4), which informed this project's parameter-panel design and implementation.
-- [LCPD15](https://github.com/LCPD15): the [1.0× windowed-scaling fix](https://github.com/SAOG0721/Magpie/pull/3), allowing same-resolution effects to be displayed at the source size without forcing output enlargement.
-- [TurnX-alt](https://github.com/TurnX-alt): [build, UI and repository consistency improvements](https://github.com/SAOG0721/Magpie/pull/23), including ClangCL build fixes without optional SDKs, preset parameter and feedback link corrections, narrow-window text wrapping, scaling-start notifications and a repository consistency check suite.
-- [konodiodaaaaa1](https://github.com/konodiodaaaaa1): [HDR support and compatibility work](https://github.com/SAOG0721/Magpie/pull/24).
-
-Contributions through Issues and Pull Requests are welcome. See [Contributors](https://github.com/SAOG0721/Magpie/graphs/contributors) for the code contribution history.
-
-## License
-
-GMagpie-derived source code is licensed under [GPLv3](LICENSE). Third-party SDKs, models and runtimes have their own licenses; see the [third-party and redistribution notes](docs/THIRD_PARTY_AND_REDISTRIBUTION.md).
+Исходный код, производный от GMagpie, распространяется по [GPLv3](LICENSE). У сторонних SDK, моделей и runtime собственные лицензии: см. [заметки о сторонних компонентах](docs/THIRD_PARTY_AND_REDISTRIBUTION.md).

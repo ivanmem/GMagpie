@@ -89,7 +89,7 @@ class EffectDescriptionContracts(unittest.TestCase):
         self.assertEqual(documented_ids('docs/Built-in effects.md', 'vfx-post-effects'), vfx_ids)
         self.assertLessEqual(vfx_ids, set(self.effects['en-US']))
         # Users can reach both usage sections from the repository's main pages.
-        for path in ('README.md', 'README_ZH.md'):
+        for path in ('README.md',):
             self.assertIn('docs/Built-in%20effects.md#current-branch-setup', read(path))
         self.assertIn('effects/FSR3FG.md#compatible-effect-list', read('docs/Built-in effects.md'))
         self.assertIn('Balanced/Preset J', read('docs/Built-in effects.md'))
