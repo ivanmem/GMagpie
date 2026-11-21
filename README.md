@@ -1,7 +1,7 @@
 <p align="center"><img src="./src/GMagpie/Icons/SVG/GMagpie Icon Full Disabled.svg" width="150" height="150" alt="GMagpie"></p>
 <h1 align="center">GMagpie Experimental</h1>
 
-**Следующий выпуск: GMagpie Experimental v0.1.0** (первый выпуск GMagpie, ещё не опубликован) · [Заметки к выпуску](docs/RELEASE_NOTES_v0.1.0-experimental.md) · Последняя опубликованная база: [v0.6.11](https://github.com/SAOG0721/Magpie/releases/tag/v0.6.11-experimental)
+**Текущий выпуск: [GMagpie Experimental v0.1.0](https://github.com/ivanmem/GMagpie/releases/tag/v0.1.0-experimental)** · [Заметки к выпуску](docs/RELEASE_NOTES_v0.1.0-experimental.md)
 
 GMagpie - полноэкранная фотогалерея для Windows с апскейлом в нативном качестве. Это неофициальный форк [Blinue/Magpie](https://github.com/Blinue/Magpie): он использует его систему масштабирования окон и эффектов (DLSS, XeSS, FSR, RTX Video и другие), но показывает не захват окна просмотрщика, а исходные пиксели файла.
 
@@ -23,7 +23,7 @@ GMagpie - полноэкранная фотогалерея для Windows с а
 
 ## Установка
 
-1. Выберите версию на [GitHub Releases](https://github.com/SAOG0721/Magpie/releases), прочитайте заметки и скачайте основной пакет `GMagpie-Experimental-x64.zip`.
+1. Выберите версию на [GitHub Releases](https://github.com/ivanmem/GMagpie/releases), прочитайте заметки и скачайте основной пакет `GMagpie-Experimental-x64.zip`.
 2. Полностью закройте запущенный GMagpie и распакуйте весь пакет в новую папку.
 3. Запустите `GMagpie.exe`, выберите режим и откройте папку с фотографиями.
 
@@ -37,7 +37,7 @@ GMagpie - полноэкранная фотогалерея для Windows с а
 
 ## Сообщить о проблеме
 
-Откройте журнал (каталог `logs` рядом с программой) и приложите его к [обращению](https://github.com/SAOG0721/Magpie/issues): версия приложения, видеокарта и драйвер, режим, размер фото и шаги воспроизведения. Время переключения страниц пишется в журнал строками «Фото: загрузка … мс, цепь и отправка … мс».
+Откройте журнал (каталог `logs` рядом с программой) и приложите его к [обращению](https://github.com/ivanmem/GMagpie/issues): версия приложения, видеокарта и драйвер, режим, размер фото и шаги воспроизведения. Время переключения страниц пишется в журнал строками «Фото: загрузка … мс, цепь и отправка … мс».
 
 [FAQ оригинального Magpie](https://github.com/Blinue/Magpie/wiki/FAQ) отвечает на общие вопросы по использованию.
 

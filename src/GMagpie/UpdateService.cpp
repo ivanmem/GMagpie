@@ -73,8 +73,8 @@ fire_and_forget UpdateService::CheckForUpdatesAsync(bool isAutoUpdate) {
 	try {
 		HttpClient httpClient;
 		IBuffer buffer = co_await httpClient.GetBufferAsync(
-			Uri(L"https://raw.githubusercontent.com/SAOG0721/Magpie/"
-				L"experimental/rtx-video/version.json"));
+			Uri(L"https://raw.githubusercontent.com/ivanmem/GMagpie/"
+				L"main/version.json"));
 
 		doc.Parse((const char*)buffer.data(), buffer.Length());
 	} catch (const hresult_error& e) {

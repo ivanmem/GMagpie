@@ -155,7 +155,7 @@
 				                 HorizontalSpacing="2"
 				                 Orientation="Horizontal"
 				                 VerticalSpacing="4">
-					<HyperlinkButton NavigateUri="https://github.com/SAOG0721/Magpie">
+					<HyperlinkButton NavigateUri="https://github.com/ivanmem/GMagpie">
 						<TextBlock x:Uid="About_OtherLinks_Repository" />
 					</HyperlinkButton>
 					<!-- ЧаВо и руководство по содействию вели на файлы чужого форка: скрыты до своих документов -->
@@ -165,7 +165,7 @@
 					<HyperlinkButton Click="ContributionGuidelines_Click" Visibility="Collapsed">
 						<TextBlock x:Uid="About_OtherLinks_ContributionGuidelines" />
 					</HyperlinkButton>
-					<HyperlinkButton NavigateUri="https://github.com/SAOG0721/Magpie/blob/experimental/LICENSE">
+					<HyperlinkButton NavigateUri="https://github.com/ivanmem/GMagpie/blob/main/LICENSE">
 						<TextBlock x:Uid="About_OtherLinks_License" />
 					</HyperlinkButton>
 				</local:WrapPanel>

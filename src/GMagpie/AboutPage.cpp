@@ -25,29 +25,29 @@ void AboutPage::VersionTextBlock_DoubleTapped(IInspectable const&, Input::Double
 }
 
 void AboutPage::BugReport_Click(IInspectable const&, RoutedEventArgs const&) {
-	Win32Helper::ShellOpen(L"https://github.com/SAOG0721/Magpie/issues/new?assignees=&labels=bug&template=01_bug.yaml");
+	Win32Helper::ShellOpen(L"https://github.com/ivanmem/GMagpie/issues/new?assignees=&labels=bug&template=01_bug.yaml");
 }
 
 void AboutPage::FeatureRequest_Click(IInspectable const&, RoutedEventArgs const&) {
-	Win32Helper::ShellOpen(L"https://github.com/SAOG0721/Magpie/issues/new?assignees=&labels=enhancement&template=03_request.yaml");
+	Win32Helper::ShellOpen(L"https://github.com/ivanmem/GMagpie/issues/new?assignees=&labels=enhancement&template=03_request.yaml");
 }
 
 void AboutPage::Discussions_Click(IInspectable const&, RoutedEventArgs const&) {
-	Win32Helper::ShellOpen(L"https://github.com/SAOG0721/Magpie/discussions");
+	Win32Helper::ShellOpen(L"https://github.com/ivanmem/GMagpie/discussions");
 }
 
 void AboutPage::FAQ_Click(IInspectable const&, RoutedEventArgs const&) {
 	const bool chinese = std::wstring_view(LocalizationService::Get().Language()).starts_with(L"zh");
 	Win32Helper::ShellOpen(chinese ?
-		L"https://github.com/SAOG0721/Magpie/blob/experimental/docs/FAQ.md" :
-		L"https://github.com/SAOG0721/Magpie/blob/experimental/docs/FAQ%20(EN).md");
+		L"https://github.com/ivanmem/GMagpie/blob/main/docs/FAQ.md" :
+		L"https://github.com/ivanmem/GMagpie/blob/main/docs/FAQ%20(EN).md");
 }
 
 void AboutPage::ContributionGuidelines_Click(IInspectable const&, RoutedEventArgs const&) {
 	const bool chinese = std::wstring_view(LocalizationService::Get().Language()).starts_with(L"zh");
 	Win32Helper::ShellOpen(chinese ?
-		L"https://github.com/SAOG0721/Magpie/blob/experimental/CONTRIBUTING_ZH.md" :
-		L"https://github.com/SAOG0721/Magpie/blob/experimental/CONTRIBUTING.md");
+		L"https://github.com/ivanmem/GMagpie/blob/main/CONTRIBUTING_ZH.md" :
+		L"https://github.com/ivanmem/GMagpie/blob/main/CONTRIBUTING.md");
 }
 
 void AboutPage::InfoBar_SizeChanged(IInspectable const& sender, SizeChangedEventArgs const&) const {
