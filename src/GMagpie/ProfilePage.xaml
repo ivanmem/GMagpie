@@ -708,10 +708,10 @@
 				<local:SettingsExpander Style="{StaticResource ProfileExpanderStyle}"
 					Loaded="ProfileExpander_Loaded"
 					SizeChanged="ProfileExpander_SizeChanged"
-					x:Uid="FrameRefresh_Cursor" Visibility="Collapsed"
+					x:Uid="FrameRefresh_Cursor"
 					IsWrapEnabled="True"
 					IsExpanded="True"
-					Visibility="{x:Bind ViewModel.IsAdvancedFrameRefresh, Mode=OneWay}">
+					Visibility="Collapsed">
 					<local:SettingsExpander.HeaderIcon>
 						<FontIcon Glyph="&#xE7C9;"/>
 					</local:SettingsExpander.HeaderIcon>
